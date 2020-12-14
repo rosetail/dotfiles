@@ -45,6 +45,8 @@ set -x _JAVA_OPTIONS "-Dawt.useSystemAAFontSettings=on -Dswing.aatext=true -Dswi
 set -x _JAVA_AWT_WM_NONREPARENTING "true"
 set -x COLORTERM "truecolor"
 set -x PATH ~/bin $PATH
+set -x BROWSER "qutebrowser"
+set -x EDITOR "em"
 set -x GPG_TTY (tty)
 
 alias ee 'emacsclient -a emacs $PWD'
