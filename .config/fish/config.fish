@@ -55,10 +55,10 @@ alias umountdisk 'udisksctl unmount -b'
 alias cat 'bat'
 
 
-if not set -q $stdenv
-	echo "stdenv set"
-	# source $stdenv/setup
-end
+# if not set -q $stdenv
+#	echo "stdenv set"
+#	# source $stdenv/setup
+# end
 
 function ls
 	command ls --color=auto -N $argv

@@ -1,8 +1,9 @@
-#!/bin/bash
-#xsetroot -xcf /nix/store/xvn47c6hgpy8mdiyz739aimdx2j7ghmj-adwaita-icon-theme-3.34.3/share/icons/Adwaita/cursors/left_ptr 48
-# feh --bg-fill /home/rose/.background.jpg &
+# #!/bin/bash
+# #xsetroot -xcf /nix/store/xvn47c6hgpy8mdiyz739aimdx2j7ghmj-adwaita-icon-theme-3.34.3/share/icons/Adwaita/cursors/left_ptr 48
+# # feh --bg-fill /home/rose/.background.jpg &
 emacs --bg-daemon &
 xrdb -merge ~/.Xresources
+unclutter --timeout 1 -b --ignore-scrolling
 setxkbmap us -variant colemak
 xmodmap -e "keycode 105 = Alt_R"
 xmodmap -e "keycode 108 = Control_R"
