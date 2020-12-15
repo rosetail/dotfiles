@@ -1,0 +1,45 @@
+app-admin/pass -emacs
+media-sound/ncmpcpp taglib visualizer
+sys-boot/refind btrfs
+# required by app-shells/fish-3.0.2::gentoo
+# required by fish (argument)
+>=dev-libs/libpcre2-10.35 pcre32
+x11-misc/polybar mpd network
+# required by dev-python/PyQtWebEngine-5.15.1::gentoo
+# required by www-client/qutebrowser-1.14.1::gentoo
+# required by qutebrowser (argument)
+>=dev-python/PyQt5-5.15.1 sql declarative webchannel
+# required by dev-python/PyQtWebEngine-5.15.1::gentoo
+# required by www-client/qutebrowser-1.14.1::gentoo
+# required by qutebrowser (argument)
+>=dev-qt/qtwebengine-5.15.1 widgets
+# required by dev-qt/qtwebengine-5.15.1::gentoo
+# required by dev-python/PyQtWebEngine-5.15.1::gentoo
+# required by www-client/qutebrowser-1.14.1::gentoo
+# required by qutebrowser (argument)
+>=dev-qt/qtwebchannel-5.15.1 qml
+# required by dev-qt/qtwebengine-5.15.1::gentoo
+# required by dev-python/PyQtWebEngine-5.15.1::gentoo
+# required by www-client/qutebrowser-1.14.1::gentoo
+# required by qutebrowser (argument)
+>=sys-libs/zlib-1.2.11-r2 minizip
+# required by dev-python/PyQt5-5.15.1::gentoo[multimedia]
+# required by dev-python/PyQtWebEngine-5.15.1::gentoo
+# required by www-client/qutebrowser-1.14.1::gentoo
+# required by qutebrowser (argument)
+>=dev-qt/qtmultimedia-5.15.1 widgets
+# required by www-client/firefox-78.5.0::gentoo[system-libvpx]
+# required by firefox (argument)
+>=media-libs/libvpx-1.9.0 postproc
+x11-misc/rofi windowmode
+app-editors/emacs xft gsettings
+# required by net-im/telegram-desktop-2.4.7-r1::gentoo
+# required by telegram-desktop (argument)
+>=dev-qt/qtgui-5.15.1-r1 wayland
+# required by net-im/telegram-desktop-2.4.7-r1::gentoo
+# required by telegram-desktop (argument)
+>=media-video/ffmpeg-4.3.1 opus
+x11-misc/dunst dunstify
+# required by app-misc/neofetch-6.0.0::gentoo[X]
+# required by neofetch (argument)
+>=www-client/w3m-0.5.3_p20180125 imlib
