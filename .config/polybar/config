@@ -46,6 +46,8 @@ font-1 = "Font Awesome 5 Free:style=Solid:size=20;2"
 font-2 = "Lato:size=12;1"
 font-3 = "Font Awesome 5 Free:style=Solid:size=12;2"
 font-4 = "Inconolata:size=12;1"
+font-5 = "Noto Sans Mono:style=Regular:size=12.5;2"
+
 ; font-0 = "Cantarell:size=20;1"
 ; font-1 = "Cantarell:size=8;0"
 ; font-2 = "Cantarell:size=20;1"
@@ -112,7 +114,7 @@ label-song-ellipsis = true
 
 ; Only applies if <bar-progress> is used
 
-bar-progress-width = 30
+bar-progress-width = 60
 bar-progress-indicator = |
 bar-progress-fill = ─
 bar-progress-empty = ─
