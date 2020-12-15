@@ -1,3 +1,4 @@
+app-portage/layman sync-plugin-portage git gpg
 app-admin/pass -emacs
 media-sound/ncmpcpp taglib visualizer
 sys-boot/refind btrfs
