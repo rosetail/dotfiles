@@ -1,0 +1,5 @@
+#!/bin/sh
+
+amixer set Master 2%$1
+vol="$(amixer get Master | grep -o -m 1 '[0-9]*%')"
+notify-send -u low -h "int:value:$vol" ""

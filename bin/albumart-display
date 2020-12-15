@@ -1,0 +1,53 @@
+#!/bin/sh
+
+mpd_music_dir=/home/rose/Music/
+feh_name=cover
+
+close (){
+xdotool search --name "$feh_name" windowkill
+cover_sum=
+}
+
+open (){
+mpd_music_file=$(echo $mpd_music_dir$(mpc current --format "%file%"))
+echo file done $mpd_music_file
+mpd_album_dir=$(dirname "$mpd_music_file")
+echo dir done $mpd_album_dir
+cover_file=$(find "$mpd_album_dir" -name "cover*"|head -n 1)
+if [ -e "$cover_file" ]; then
+    new_cover_sum=$(md5sum "$cover_file"|awk '{print $1;}')
+    echo new_cover_sum $new_cover_sum
+    if [ ! "$new_cover_sum" == "$cover_sum" ]; then
+        # feh geometry can't be negative with -^, idk why
+        feh -x -Z -g "400x400+2750+1075" --scale-down -^ "$feh_name" "$cover_file" &
+        cover_sum=$new_cover_sum
+        echo feh done
+        # echo notify done
+    fi
+else
+    echo "no file found, closing"
+    close
+fi
+}
+
+check (){
+    if [ -n "$(mpc|grep "\[playing\]")" ]; then
+        echo playing
+        open
+        # notify
+    fi
+    if [ ! -n "$(mpc|grep "\[playing\]")" ]; then
+        echo notplaying
+        close
+    fi
+}
+
+notify(){
+    notify-send "$(mpc current)" --app-name=mpd
+}
+
+mpc idleloop player | while read; do
+    check
+    sleep 0.1s
+    check
+done

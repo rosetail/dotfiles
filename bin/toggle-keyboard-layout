@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if setxkbmap -print | grep colemak
+then
+	setxkbmap us
+	notify-send -u low "Switched to qwerty"
+else
+	setxkbmap us -variant colemak
+	xmodmap -e "keycode 105 = Alt_R"
+	xmodmap -e "keycode 108 = Control_R"
+	xmodmap -e "add Control = Control_R"
+	xcape -e 'Control_R=Escape'
+	xcape -e 'Alt_L=Escape'
+	notify-send -u low "Switched to colemak"
+fi

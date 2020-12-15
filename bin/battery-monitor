@@ -1,0 +1,41 @@
+#!/bin/sh
+
+batpath=/sys/class/power_supply/BAT0
+bat_capacity=$batpath/capacity
+bat_status=$batpath/status
+old_capacity="$(cat $bat_capacity)"
+old_status="$(cat $bat_status)"
+
+while true
+do
+	capacity="$(cat $bat_capacity)"
+	status="$(cat $bat_status)"
+	if ! [ $status == $old_status ]
+	then
+		if ! [ $status == "Unknown" ]
+		then
+			notify-send -u normal " $status"
+		fi
+		old_status=$status
+		sleep 5
+
+	elif ! [ $capacity == $old_capacity ]
+	then
+		case $capacity in
+			[8-9]0)
+				notify-send -u low " $capacity"
+				;;
+			[6-7]0)
+				notify-send -u normal " $capacity"
+				;;
+			[4-5]0)
+				notify-send -u normal " $capacity"
+				;;
+			[2-3]0)
+				notify-send -u critical " $capacity"
+				;;
+		esac
+		old_capacity=$capacity
+	fi
+	sleep 5
+done

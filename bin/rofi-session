@@ -1,0 +1,25 @@
+#!/bin/sh
+a='Shut Down'
+b='Reboot'
+c='Quit'
+
+if [ -z $@ ]
+then
+	echo -e "${a}\n${b}" #"\n${c}"
+else
+	selection=$@
+	if [ -n "${selection}" ]
+	then
+		case $selection in
+			$a)
+				shutdown now
+				;;
+			$b)
+				reboot
+				;;
+			# $c)
+			#	FvwmCommand Quit
+			#	;;
+		esac
+	fi
+fi

@@ -1,0 +1,17 @@
+#!/bin/sh
+if ! pgrep -x "Telegram" > /dev/null
+then
+	telegram-desktop &
+	exit
+fi
+window="$(xdotool search --class TelegramDesktop | tail -n1)"
+visibility="$(xdotool search --onlyvisible --class TelegramDesktop | tail -n1)"
+
+if [ $window == $visibility ]; then
+	xdotool windowminimize $window
+else
+	xdotool windowmove $window 822 415
+	xdotool windowmap $window
+	# xdotool windowfocus $window
+	# FvwmCommand "All (Focused) MoveToPage"
+fi

@@ -1,0 +1,53 @@
+#!/bin/sh
+
+B='#00000000'
+C='#2d2d2daa'  # clear ish
+D='#6699ccff'  # default
+H='#66ccccff'  # highlight
+T='#d3d0c8ff'  # text
+W='#f2777aff'  # wrong
+
+# image=/tmp/lock.png
+# scrot $image
+# convert $image -scale 10% -scale 1000% $image
+
+i3lock-color \
+	--insidevercolor=$C   \
+	--ringvercolor=$D     \
+	\
+	--insidewrongcolor=$C \
+	--ringwrongcolor=$W   \
+	\
+	--insidecolor=$C      \
+	--ringcolor=$D        \
+	--linecolor=$B        \
+	--separatorcolor=$D   \
+	\
+	--timecolor=$T        \
+	--datecolor=$T        \
+	--layoutcolor=$T      \
+	--keyhlcolor=$H       \
+	--bshlcolor=$W        \
+	--verifcolor=$T		  \
+	--wrongcolor=$T		  \
+	\
+	--blur 1              \
+	--clock               \
+	--timestr="%l:%M %p"  \
+	--datestr="%A %m/%d" \
+	--indicator \
+	--veriftext="Verifying..." \
+	--wrongtext="Incorrect"
+# -i $image \
+# --timesize="40"		  \
+# --radius="110" \
+# --datesize="20"\
+# --textcolor=$T        \
+# --timepos=w/2-cw/2:h/2-ch/2 \
+# --datepos=tx:ty+50 \
+# --textsize=20
+# --modsize=10
+# --timefont=comic-sans
+# --datefont=monofur
+# etc
+# look at indicator
