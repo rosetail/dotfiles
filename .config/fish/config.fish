@@ -1,9 +1,6 @@
 eval (dircolors -c)
 # direnv hook fish | source
 
-set -x __fish_classic_git_prompt_initialized  \x1d
-set -x __fish_init_2_39_8 \x1d
-set -x __fish_init_2_3_0 \x1d
 set -x fish_color_autosuggestion brblack
 set -x fish_color_command brgreen
 set -x fish_color_comment black
@@ -25,7 +22,7 @@ set -x fish_color_selection white\x1e\x2d\x2dbold\x1e\x2d\x2dbackground\x3dblack
 set -x fish_color_status brred
 set -x fish_color_user green
 set -x fish_color_valid_path brgreen
-set -x fish_greeting \x1d
+set -x fish_greeting
 set -x fish_key_bindings fish_default_key_bindings
 set -x fish_pager_color_completion \x1d
 set -x fish_pager_color_description brgreen
