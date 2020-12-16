@@ -1,6 +1,6 @@
 # #!/bin/bash
-# #xsetroot -xcf /nix/store/xvn47c6hgpy8mdiyz739aimdx2j7ghmj-adwaita-icon-theme-3.34.3/share/icons/Adwaita/cursors/left_ptr 48
 # # feh --bg-fill /home/rose/.background.jpg &
+xsetroot -cursor_name left_ptr
 export GDK_SCALE=2
 export GDK_DPI_SCALE=0.5
 emacs --bg-daemon &
