@@ -12,10 +12,10 @@ else
 	then
 		case $selection in
 			$a)
-				shutdown now
+				loginctl poweroff
 				;;
 			$b)
-				reboot
+				loginctl reboot
 				;;
 			# $c)
 			#	FvwmCommand Quit

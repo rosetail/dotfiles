@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+export XAUTHORITY="/home/rose/.Xauthority"
+export DISPLAY=":0"
+case $1/$2 in
+  pre/*)
+	# Put here any commands expected to be run when suspending or hibernating.
+	  /home/rose/bin/lock
+	;;
+  post/*)
+	# Put here any commands expected to be run when resuming from suspension or thawing from hibernation.
+	;;
+esac
