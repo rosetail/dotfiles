@@ -23,7 +23,6 @@
 (use-package counsel)
 (use-package nix-mode)
 (use-package nix-sandbox)
-(use-package direnv)
 (use-package prescient)
 (use-package ivy-prescient)
 (use-package magit)
