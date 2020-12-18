@@ -51,7 +51,6 @@ alias mountdisk 'udisksctl mount -b'
 alias umountdisk 'udisksctl unmount -b'
 alias cat 'bat'
 
-
 # if not set -q $stdenv
 #	echo "stdenv set"
 #	# source $stdenv/setup

@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/bash
 # # feh --bg-fill /home/rose/.background.jpg &
 export GDK_SCALE=2
 export GDK_DPI_SCALE=0.5
