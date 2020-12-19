@@ -3,4 +3,4 @@ sudo ln -s ~/.sys-files/40-libinput.conf /etc/X11/xorg.conf.d
 sudo ln -s ~/.sys-files/51-gcadapter.rules /etc/udev/rules.d/
 sudo ln -s ~/.sys-files/dispatch-conf.conf /etc/
 sudo ln -s ~/.sys-files/suspend-hook /lib64/elogind/system-sleep/
-sudo ln -s ~/./sys-files/acpi-handler /etc/
+sudo ln -s ~/.sys-files/sddm.conf /etc/

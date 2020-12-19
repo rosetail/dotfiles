@@ -212,3 +212,5 @@ sys-power/linux-x86-power-tools ~amd64
 =app-admin/yadm-2.4.0 ~amd64
 # required by xkcdpass (argument)
 =app-admin/xkcdpass-1.17.3-r1 ~amd64
+# required by aerial-sddm-theme (argument)
+=x11-misc/aerial-sddm-theme-0_pre20191018 ~amd64
