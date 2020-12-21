@@ -19,3 +19,4 @@ xcape -e 'Control_R=Escape' &
 polybar main &
 # sh -c "feh --no-fehbg --bg-fill '/home/rose/.background.png')"
 ~/.fehbg
+redshift -l47:-122 &
