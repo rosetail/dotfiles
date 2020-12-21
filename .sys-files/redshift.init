@@ -1,0 +1,70 @@
+#!/sbin/openrc-run
+# /etc/init.d/redshift
+
+depend() {
+	need xdm
+	need localmount
+	after bootmisc
+}
+DISPLAY="${DISPLAY:-:0}"
+
+# Make it a function in case we have to repeat it in init script later
+set_xauth() {
+
+	# common case (works in almost all tested environments (except of lightdm)):
+	#XAUTHORITY="$(ps wwax -C X,Xorg -o args= --sort=-stime | grep -m 1 -o '\B[-]auth\s*/var\S*' | cut -d ' ' -f 2)"
+
+	# kdm and some others:
+	# XAUTHORITY="$(find /var/run/xauth/A${DISPLAY}-*|tail -n1)"
+
+	# gdm:
+	# XAUTHORITY="/var/gdm/${DISPLAY}.Xauth"
+
+	# slim:
+	# XAUTHORITY="/var/run/slim.auth"
+
+	# lightdm:
+	# XAUTHORITY="/var/run/lightdm/root/${DISPLAY}"
+
+	# lxdm:
+	# XAUTHORITY="/var/run/lxdm/lxdm-${DISPLAY}.auth"
+
+	# sddm:
+	XAUTHORITY="$(ps wwax -C X,Xorg -o args= --sort=-stime | grep -m 1 -o '\B[-]auth\s*/var/run/sddm\S*' | cut -d ' ' -f2)"
+
+}
+# set_xauth
+
+
+start() {
+	ebegin "Starting redshift"
+
+	set_xauth
+
+	if [ -z "${XAUTHORITY}" ]; then
+
+		einfo "Waiting for xauthority..."
+
+		# wait for xauth file
+		while true; do
+			set_xauth
+
+			if [ -e "${XAUTHORITY}" ]; then
+				break
+			fi
+
+			sleep 1
+		done
+	fi
+
+	start-stop-daemon --start --env DISPLAY=${DISPLAY} --env XAUTHORITY=${XAUTHORITY} \
+					  --make-pidfile --background --stdout /var/log/redshift.log --stderr /var/log/redshift-error.log \
+					  --exec /usr/bin/redshift --pidfile /var/run/redshift.pid -- -c /etc/redshift.conf
+	eend $?
+}
+
+stop() {
+    ebegin "Stopping redshift"
+    start-stop-daemon --stop --exec /usr/bin/redshift --pidfile /var/run/redshift.pid
+    eend $?
+}
