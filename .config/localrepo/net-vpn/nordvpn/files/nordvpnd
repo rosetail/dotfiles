@@ -9,4 +9,5 @@ command_background=true
 depend() {
     use logger net
     provide dns
+	need net
 }
