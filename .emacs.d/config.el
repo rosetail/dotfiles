@@ -7,7 +7,7 @@
         ("gnu" . 1)
         ("melpa" . 0)))
 
-(setq-default line-spacing 4)
+;; (setq-default line-spacing 4)
 (require 'use-package)
 (setq use-package-always-ensure t)
 

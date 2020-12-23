@@ -334,24 +334,26 @@ settings:
     - emacs-autoclient
     - '{file}'
   fonts.completion.category:
-    global: 10pt Inconsolata
+    global: 11pt Inconsolata
   fonts.completion.entry:
-    global: 10pt Inconsolata
+    global: 11pt Inconsolata
   fonts.debug_console:
-    global: 10pt Inconsolata
+    global: 11pt Inconsolata
   fonts.default_family:
     global:
     - Inconsolata
+  fonts.default_size:
+    global: 11pt
   fonts.hints:
-    global: 10pt Inconsolata
+    global: 11pt Inconsolata
   fonts.prompts:
-    global: 10pt Inconsolata
+    global: 11pt Inconsolata
   fonts.statusbar:
-    global: 10pt Inconsolata
+    global: 11pt Inconsolata
   fonts.tabs.selected:
-    global: 10pt sans
+    global: 11pt sans
   fonts.tabs.unselected:
-    global: 10pt sans
+    global: 11pt sans
   hints.border:
     global: '1px solid #2d2d2d00'
   hints.chars:
