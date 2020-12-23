@@ -351,9 +351,9 @@ settings:
   fonts.statusbar:
     global: 11pt Inconsolata
   fonts.tabs.selected:
-    global: 11pt sans
+    global: 10pt sans
   fonts.tabs.unselected:
-    global: 11pt sans
+    global: 10pt sans
   hints.border:
     global: '1px solid #2d2d2d00'
   hints.chars:

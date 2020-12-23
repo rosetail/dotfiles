@@ -1,4 +1,4 @@
-eval (dircolors -c)
+eval (dircolors -c ~/.dircolors)
 # direnv hook fish | source
 
 set -x fish_color_autosuggestion brblack
