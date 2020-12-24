@@ -1,0 +1,139 @@
+# zathurarc
+
+# settings
+# set adjust-open width
+# set show-scrollbars true
+# set first-page-column 2
+# set window-title-basename true
+# set database sqlite
+# set recolor-keephue
+# set selection-clipboard clipboard
+
+
+# key bindings
+# map <C-[> abort # Still doesn't work :(
+map [normal]     <F11> toggle_fullscreen
+map [fullscreen] <F11> toggle_fullscreen
+map [normal]     <C-l> reload
+map [fullscreen] <C-l> reload
+
+map [normal]     n scroll down
+map [fullscreen] n scroll down
+map [normal]     e scroll up
+map [fullscreen] e scroll up
+map [normal]     i scroll right
+map [fullscreen] i scroll right
+map [normal]     h scroll left
+map [fullscreen] h scroll left
+
+map [normal]     E navigate previous
+map [fullscreen] E navigate previous
+map [normal]     N navigate next
+map [fullscreen] N navigate next
+
+map [normal] r adjust_window width
+
+map [normal] k search next
+map [normal] K search previous
+map [normal] <C-o> zoom best-fit
+map [normal] <C-i> zoom width
+
+# map [normal]     <A-1> set "first-page-column 1:1"
+# map [fullscreen] <A-1> set "first-page-column 1:1"
+# map [normal]     <A-2> set "first-page-column 1:2"
+# map [fullscreen] <A-2> set "first-page-column 1:2"
+
+# Why are these only defined for normal mode by default?
+map [fullscreen] a adjust_window best-fit
+map [fullscreen] s adjust_window width
+map [fullscreen] f follow
+map [fullscreen] d toggle_page_mode 2
+map [fullscreen] <Tab> toggle_index
+map [fullscreen] <C-d> scroll half-down
+map [fullscreen] <C-u> scroll half-up
+map [fullscreen] <C-o> jumplist backward
+map [fullscreen] <C-i> jumplist forward
+
+map [index] n navigate_index down
+map [index] e navigate_index up
+map [index] i navigate_index expand
+map [index] I navigate_index expand-all
+
+# # colors
+# set recolor-darkcolor  "#ebdbb2"
+# set recolor-lightcolor "#282828"
+# set default-bg "282828"
+# set default-fg "edbdb2"
+# set statusbar-fg "#ebdbb2"
+# set statusbar-bg "#282828"
+# set inputbar-fg "#ebdbb2"
+# set inputbar-bg "#282828"
+# set completion-bg "#282828"
+# set completion-fg "#ebdbb2"
+# set completion-group-bg "#282828"
+# set completion-group-fg "#ebdbb2"
+# set completion-highlight-fg "#282828"
+# set completion-highlight-bg "#83a598"
+# set highlight-color "#504945"
+# set highlight-active-color "#83a598"
+# set highlight-transparency 0.5
+# set notification-fg "#ebdbb3"
+# set notification-bg "#282828"
+# set index-active-bg "#665c54"
+# set index-active-fg "#fbf1c7"
+# set index-fg "#ebdbb2"
+# set index-bg "#282828"
+
+# Base16 Eighties
+# Author: Chris Kempson (http://chriskempson.com)
+
+set default-bg                  "#2d2d2d"
+set default-fg                  "#393939"
+
+set statusbar-fg                "#a09f93"
+set statusbar-bg                "#515151"
+
+set inputbar-bg                 "#2d2d2d"
+set inputbar-fg                 "#f2f0ec"
+
+set notification-bg             "#2d2d2d"
+set notification-fg             "#f2f0ec"
+
+set notification-error-bg       "#2d2d2d"
+set notification-error-fg       "#f2777a"
+
+set notification-warning-bg     "#2d2d2d"
+set notification-warning-fg     "#f2777a"
+
+set highlight-color             "#ffcc66"
+set highlight-active-color      "#6699cc"
+
+set completion-bg               "#393939"
+set completion-fg               "#6699cc"
+set completion-group-bg         "#2d2d2d"
+
+set completion-highlight-fg     "#f2f0ec"
+set highlight-transparency 0.5
+
+set completion-highlight-bg     "#6699cc"
+
+set recolor-lightcolor          "#2d2d2d"
+set recolor-darkcolor           "#e8e6df"
+
+set recolor                     "false"
+set recolor-keephue             "false"
+
+set inputbar-fg "#d3c0c8"
+set inputbar-bg "#2d2d2d"
+
+set index-fg "#d3c0c8"
+set index-bg "#2d2d2d"
+set index-active-bg "#515151"
+set index-active-fg "#d3c0c8"
+
+
+
+set guioptions ""
+set smooth-scroll "true"
+set window-icon "/usr/share/pixmaps/mupdf.xpm"
+set font "Inconsolata 11"
