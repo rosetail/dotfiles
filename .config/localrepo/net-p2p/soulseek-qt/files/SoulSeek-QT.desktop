@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=SoulseekQt
+Exec=/opt/bin/soulseek-qt
+Icon=soulseek
+Comment=File Sharing Network
+Terminal=false
