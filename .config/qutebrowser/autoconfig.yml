@@ -327,6 +327,8 @@ settings:
     https://www.youtube.com/*: true
   content.notifications:
     https://www.reddit.com: false
+    https://www.torlock.com: false
+    https://www.torrentfunk.com: false
   content.register_protocol_handler:
     https://mail.google.com?extsrc=mailto&url=%25s: false
   editor.command:

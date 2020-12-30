@@ -4,6 +4,6 @@ sudo ln -s ~/.sys-files/51-gcadapter.rules /etc/udev/rules.d/
 sudo ln -s ~/.sys-files/dispatch-conf.conf /etc/
 sudo ln -s ~/.sys-files/suspend-hook /lib64/elogind/system-sleep/
 sudo ln -s ~/.sys-files/sddm.conf /etc/
-sudo ln -sf ~/.backrgound.jpg /usr/share/sddm/themes/Elegant/background.jpg
+sudo ln -sf ~/.background.jpg /usr/share/sddm/themes/Elegant/background.jpg
 sudo ln -s ~/.sys-files/redshift.conf /etc/
 sudo ln -s ~/.sys-files/redshift.init /etc/init.d/redshift

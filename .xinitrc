@@ -1,5 +1,5 @@
 #!/bin/bash
-# # feh --bg-fill /home/rose/.background.jpg &
+feh --no-fehbg --bg-fill /home/rose/.background.jpg &
 export GDK_SCALE=2
 export GDK_DPI_SCALE=0.5
 xrdb -merge ~/.Xresources
@@ -17,6 +17,4 @@ picom -b
 xcape -e 'Alt_L=Escape' &
 xcape -e 'Control_R=Escape' &
 polybar main &
-# sh -c "feh --no-fehbg --bg-fill '/home/rose/.background.png')"
-~/.fehbg
 exec dbus-launch --exit-with-session /usr/bin/xmonad
