@@ -8,12 +8,6 @@
                      gcs-done)))
 
 
-;; disabe garbage collection during startup
-;; TODO: see why emacs always reports 13 garbage collections during startup
-(setq gc-cons-threshold most-positive-fixnum
-      gc-cons-percentage 0.6
-      file-name-handler-alist nil)
-
 ;; re-enable garbage collection after everything is done
 (add-hook 'emacs-startup-hook
           (lambda ()
@@ -39,17 +33,15 @@
 (use-package base16-theme
   :init (load-theme 'base16-eighties t)
   :custom
-  ;; disable menubar, toolbar, and scrollbar
+  ;; skip startup screen and go to scratch buffer
   ;; TODO: see about using general-custom
-  (menu-bar-mode nil)
-  (scroll-bar-mode nil)
-  (tool-bar-mode nil)
-  (inhibit-startup-screen t)) ; skip startup screen and go to scratch buffer
+  (inhibit-startup-screen t))
 
 (use-package general)
 
 (use-package evil
-  :after general
+  :demand t
+  ;; :after general
   :init
   (setq-default cursor-in-non-selected-windows nil)
   (setq evil-want-keybinding nil)
@@ -77,14 +69,15 @@
             "TAB"	'indent-for-tab-command)
 
   (:keymaps '(ivy-mode-map ivy-minibuffer-map)
-   "C-e" 'ivy-previous-line)
+            "C-e" 'ivy-previous-line)
+  :config
   (general-translate-key nil '(motion normal visual operator)
     "u" "i"
     "U" "I"
     "I" "L"
     "i" "l")
 
-  :config (evil-mode 1))
+  (evil-mode 1))
 
 ;; enable vim keybindings everywhere
 (use-package evil-collection
