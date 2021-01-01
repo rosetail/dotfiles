@@ -1,19 +1,20 @@
+;;; -*- lexical-binding: t; -*-
+;; lexical binding improves load time
+
 ;; measure startup time
 (add-hook 'emacs-startup-hook
-          (lambda ()
-            (message "Emacs ready in %s with %d garbage collections."
-                     (format "%.2f seconds"
-                             (float-time
-                              (time-subtract after-init-time before-init-time)))
-                     gcs-done)))
-
+	  (lambda ()
+	    (message "Emacs ready in %s with %d garbage collections."
+		     (format "%.2f seconds"
+			     (float-time
+			      (time-subtract after-init-time before-init-time)))
+		     gcs-done)))
 
 ;; re-enable garbage collection after everything is done
 (add-hook 'emacs-startup-hook
-          (lambda ()
-            (setq gc-cons-threshold 16777216 ; 16mb
-                  gc-cons-percentage 0.1)))
-
+	  (lambda ()
+	    (setq gc-cons-threshold 16777216 ; 16mb
+		  gc-cons-percentage 0.1)))
 ;; intialize packages and add repositories
 (require 'package)
 (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/"))
@@ -21,14 +22,16 @@
 (package-initialize)
 (setq package-archive-priorities
       '(("melpa-stable" . 2)
-        ("gnu" . 1)
-        ("melpa" . 0)))
+	("gnu" . 1)
+	("melpa" . 0)))
 
 ;; set up use-package
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-(use-package doom-modeline)
+;; set default font
+(set-frame-font "Inconsolata-11" nil t)
+
 ;; load theme
 (use-package base16-theme
   :init (load-theme 'base16-eighties t)
@@ -37,11 +40,30 @@
   ;; TODO: see about using general-custom
   (inhibit-startup-screen t))
 
+;; setup modeline
+;; TODO: switch to something that starts up faster
+(use-package spaceline
+  :config
+  (spaceline-toggle-minor-modes-off)
+  :init
+  (spaceline-spacemacs-theme)
+  (setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state))
+
+;; show line numbers in fringe, but only in programming modes
+(defun prog-mode-setup ()
+  (display-line-numbers-mode)
+  (highlight-numbers-mode 1))
+
+(add-hook 'prog-mode-hook 'prog-mode-setup)
+(add-hook 'conf-mode-hook 'prog-mode-setup)
+
+;; enable word wrapping in modes derivef from text-mode
+(add-hook 'text-mode-hook 'visual-line-mode)
+
 (use-package general)
 
 (use-package evil
   :demand t
-  ;; :after general
   :init
   (setq-default cursor-in-non-selected-windows nil)
   (setq evil-want-keybinding nil)
@@ -55,21 +77,15 @@
             "E"		'evil-lookup
             "k"		'evil-search-next
             "K"		'evil-search-previous
-            "l"		'undo-tree-undo
             "f"		'evil-forward-word-end
             "F"		'evil-forward-WORD-end
             "t"		'evil-find-char
             "T"		'evil-find-char-backward
             "j"		'evil-find-char-to
             "J"		'evil-find-char-to-backward
-            "C-."	'next-important-buffer
-            "S-SPC"	'evil-execute-in-god-state
-            "SPC"	(lookup-key global-map (kbd "C-c"))
             [escape]	'keyboard-quit
             "TAB"	'indent-for-tab-command)
 
-  (:keymaps '(ivy-mode-map ivy-minibuffer-map)
-            "C-e" 'ivy-previous-line)
   :config
   (general-translate-key nil '(motion normal visual operator)
     "u" "i"
