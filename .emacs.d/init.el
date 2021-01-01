@@ -7,7 +7,7 @@
 	    (message "Emacs ready in %s with %d garbage collections."
 		     (format "%.2f seconds"
 			     (float-time
-			      (time-subtract after-init-time before-init-time)))
+			  (time-subtract after-init-time before-init-time)))
 		     gcs-done)))
 
 ;; re-enable garbage collection after everything is done
@@ -21,7 +21,7 @@
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (package-initialize)
 (setq package-archive-priorities
-      '(("melpa-stable" . 2)
+  '(("melpa-stable" . 2)
 	("gnu" . 1)
 	("melpa" . 0)))
 
@@ -68,31 +68,51 @@
   (setq-default cursor-in-non-selected-windows nil)
   (setq evil-want-keybinding nil)
   :general
-
+  ;; alias C-e and M-e to C-p and M-p so scrolling with vim navigation keys works
+  ;; this leaves us unable to access anything bound to C-e or M-e, but I don't really use thse keys
+  ("C-e" (general-key "C-p"))
+  ("M-e" (general-key "M-p"))
+  ;; modify basic evil keybindings
   (:keymaps 'global-map
             :states '(motion normal visual operator)
+            ;; make evil obey visual-line-mode
             "n"		'evil-next-visual-line
-            "N"		'evil-join
             "e"		'evil-previous-visual-line
-            "E"		'evil-lookup
-            "k"		'evil-search-next
-            "K"		'evil-search-previous
-            "f"		'evil-forward-word-end
-            "F"		'evil-forward-WORD-end
-            "t"		'evil-find-char
-            "T"		'evil-find-char-backward
-            "j"		'evil-find-char-to
-            "J"		'evil-find-char-to-backward
             [escape]	'keyboard-quit
             "TAB"	'indent-for-tab-command)
 
   :config
+  ;; translate keybindings for colemak
   (general-translate-key nil '(motion normal visual operator)
+    ;; change hjkl to hnei
+    "n" "j"
+    "e" "k"
+    "i" "l"
+    "N" "J"
+    "E" "K"
+    "I" "L"
+
+    ;; rotate j t and f so j -> t -> f -> e
+    "j" "t"
+    "t" "f"
+    "f" "e"
+    "J" "T"
+    "T" "F"
+    "F" "E"
+
+    ;; make k function as n so as not to disrupt muscle memory when searching
+    "k" "n"
+    "K" "N"
+
+    ;; rotate u i and l so u -> i -> l -> u
     "u" "i"
+    "i" "l"
+    "l" "u"
     "U" "I"
     "I" "L"
-    "i" "l")
+    "L" "U")
 
+  ;; enable evil mode
   (evil-mode 1))
 
 ;; enable vim keybindings everywhere
@@ -100,24 +120,26 @@
   :after evil
   :init
   (setq evil-collection-setup-minibuffer t
-        evil-collection-company-use-tng nil) ; keep company behavior default, not like vim
+        evil-collection-company-use-tng nil)) ; make company behave like emacs, not vim
 
-  ;; translate hjkl to hnei. Also translate with C- and M- prefixes
-  (defun my-hjkl-rotation (_mode mode-keymaps &rest _rest)
-    (evil-collection-translate-key 'normal mode-keymaps
-      "n" "j"
-      "e" "k"
-      "i" "l"
-      "j" "e"
-      "k" "n"
-      "l" "i"
-      (kbd "C-n") (kbd "C-j")
-      (kbd "C-e") (kbd "C-k")
-      (kbd "C-k") (kbd "C-n")
-      (kbd "C-j") (kbd "C-e")
-      (kbd "M-n") (kbd "M-j")
-      (kbd "M-e") (kbd "M-k")
-      (kbd "M-k") (kbd "M-n")
-      (kbd "M-j") (kbd "M-e"))
-    ;; called after evil-collection makes its keybindings
-    (add-hook 'evil-collection-setup-hook #'my-hjkl-rotation)))
+(use-package ivy
+  :general
+  ("C-x 8 RET" 'counsel-unicode-char)
+  ("M-x"	   'counsel-M-x)
+  ("C-x C-f"   'counsel-find-file)
+  ("C-h f"	   'counsel-describe-function)
+  ("C-h v"	   'counsel-describe-variable)
+  ("M-X"	   'execute-extended-command)
+  ("M-'"	   'swiper)
+  :diminish ivy-mode
+  :config
+  (use-package flx
+    :ensure t)
+  (ivy-mode 1)
+  (setq ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
+  (require 'swiper)
+  (define-key swiper-map [escape] 'minibuffer-keyboard-quit)
+  (define-key ivy-minibuffer-map [escape] 'minibuffer-keyboard-quit)
+  (define-key ivy-minibuffer-map (kbd "C-j") #'ivy-immediate-done)
+  (define-key ivy-minibuffer-map (kbd "RET") #'ivy-alt-done)
+  :defer t)
