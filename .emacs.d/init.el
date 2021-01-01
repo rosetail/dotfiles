@@ -3,27 +3,27 @@
 
 ;; measure startup time
 (add-hook 'emacs-startup-hook
-	  (lambda ()
-	    (message "Emacs ready in %s with %d garbage collections."
-		     (format "%.2f seconds"
-			     (float-time
-			  (time-subtract after-init-time before-init-time)))
-		     gcs-done)))
+          (lambda ()
+            (message "Emacs ready in %s with %d garbage collections."
+                     (format "%.2f seconds"
+                             (float-time
+                              (time-subtract after-init-time before-init-time)))
+                     gcs-done)))
 
 ;; re-enable garbage collection after everything is done
 (add-hook 'emacs-startup-hook
-	  (lambda ()
-	    (setq gc-cons-threshold 16777216 ; 16mb
-		  gc-cons-percentage 0.1)))
+          (lambda ()
+            (setq gc-cons-threshold 16777216 ; 16mb
+                  gc-cons-percentage 0.1)))
 ;; intialize packages and add repositories
 (require 'package)
 (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/"))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (package-initialize)
 (setq package-archive-priorities
-  '(("melpa-stable" . 2)
-	("gnu" . 1)
-	("melpa" . 0)))
+      '(("melpa-stable" . 2)
+        ("gnu" . 1)
+        ("melpa" . 0)))
 
 ;; set up use-package
 (require 'use-package)
@@ -122,24 +122,33 @@
   (setq evil-collection-setup-minibuffer t
         evil-collection-company-use-tng nil)) ; make company behave like emacs, not vim
 
+;; make sure we have flx so ivy does better fuzzy matching
+(use-package flx)
+
 (use-package ivy
-  :general
-  ("C-x 8 RET" 'counsel-unicode-char)
-  ("M-x"	   'counsel-M-x)
-  ("C-x C-f"   'counsel-find-file)
-  ("C-h f"	   'counsel-describe-function)
-  ("C-h v"	   'counsel-describe-variable)
-  ("M-X"	   'execute-extended-command)
-  ("M-'"	   'swiper)
-  :diminish ivy-mode
   :config
-  (use-package flx
-    :ensure t)
-  (ivy-mode 1)
-  (setq ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
-  (require 'swiper)
-  (define-key swiper-map [escape] 'minibuffer-keyboard-quit)
-  (define-key ivy-minibuffer-map [escape] 'minibuffer-keyboard-quit)
-  (define-key ivy-minibuffer-map (kbd "C-j") #'ivy-immediate-done)
-  (define-key ivy-minibuffer-map (kbd "RET") #'ivy-alt-done)
-  :defer t)
+  ;; use fuzzy search everywhere except swiper
+  (setq ivy-re-builders-alist
+        '((swiper . ivy--regex-plus)
+          (t      . ivy--regex-fuzzy)))
+
+  :general
+  ("C-x C-a"   'counsel-find-file
+   "C-s"	   'swiper)
+  (:keymaps 'ivy-minibuffer-map
+            ;; make escape work properly
+            "ESC" 'minibuffer-keyboard-quit
+            ;; make enter descend into directory instead of opening dired
+            "RET" 'ivy-alt-done
+            ;; make C-j open dired instead
+            "C-j" 'ivy-immediate-done)
+  :diminish ivy-mode
+  :init
+  (ivy-mode 1))
+
+(use-package counsel
+  :general
+  (:keymaps 'swiper-map
+            "ESC" 'minibuffer-keyboard-quit)
+  :config
+  (counsel-mode))
