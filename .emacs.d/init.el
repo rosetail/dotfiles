@@ -133,7 +133,9 @@
           (t      . ivy--regex-fuzzy)))
 
   :general
+  ;; C-x C-a is much more comfortable on colemak than C-x C-f
   ("C-x C-a"   'counsel-find-file
+   ;; replace isearch with swiper
    "C-s"	   'swiper)
   (:keymaps 'ivy-minibuffer-map
             ;; make escape work properly
