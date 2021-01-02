@@ -1,5 +1,5 @@
 #!/bin/bash
-# # feh --bg-fill /home/rose/.background.jpg &
+feh --bg-fill /home/rose/.background.jpg &
 export GDK_SCALE=2
 export GDK_DPI_SCALE=0.5
 xrdb -merge ~/.Xresources
@@ -18,5 +18,4 @@ xcape -e 'Alt_L=Escape' &
 xcape -e 'Control_R=Escape' &
 polybar main &
 # sh -c "feh --no-fehbg --bg-fill '/home/rose/.background.png')"
-~/.fehbg
 # redshift -l47:-122 &
