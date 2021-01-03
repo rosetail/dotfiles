@@ -194,6 +194,14 @@
     :config
     (counsel-mode))
 #+end_src
+* org mode
+#+begin_src emacs-lisp :tangle yes
+  (use-package org
+    :defer t
+    :custom-face
+    (org-block ((t (:foreground "#d3d0c8")))))
+  
+#+end_src
 * stuff to find a place for later
 #+begin_src emacs-lisp :tangle no
   ;; this is a :general binding

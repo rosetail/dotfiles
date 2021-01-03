@@ -43,12 +43,12 @@
 
 ;; setup modeline
 ;; TODO: switch to something that starts up faster
-;; (use-package spaceline
-;;   :config
-;;   (spaceline-toggle-minor-modes-off)
-;;   :init
-;;   (spaceline-spacemacs-theme)
-;;   (setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state))
+(use-package spaceline
+  :config
+  (spaceline-toggle-minor-modes-off)
+  :init
+  (spaceline-spacemacs-theme)
+  (setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state))
 
 ;; show line numbers in fringe, but only in programming modes
 (defun prog-mode-setup ()
@@ -158,3 +158,8 @@
             "ESC" 'minibuffer-keyboard-quit)
   :config
   (counsel-mode))
+
+(use-package org
+  :defer t
+  :custom-face
+  (org-block ((t (:foreground "#d3d0c8")))))
