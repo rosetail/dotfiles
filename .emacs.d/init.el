@@ -27,10 +27,11 @@
 
 ;; set up use-package
 (require 'use-package)
-(setq use-package-always-ensure t)
+(setq use-package-compute-statistics t
+      use-package-always-ensure t)
 
 ;; set default font
-(set-frame-font "Inconsolata-11" nil t)
+(set-frame-font "monospace-11" nil t)
 
 ;; load theme
 (use-package base16-theme
@@ -42,12 +43,12 @@
 
 ;; setup modeline
 ;; TODO: switch to something that starts up faster
-(use-package spaceline
-  :config
-  (spaceline-toggle-minor-modes-off)
-  :init
-  (spaceline-spacemacs-theme)
-  (setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state))
+;; (use-package spaceline
+;;   :config
+;;   (spaceline-toggle-minor-modes-off)
+;;   :init
+;;   (spaceline-spacemacs-theme)
+;;   (setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state))
 
 ;; show line numbers in fringe, but only in programming modes
 (defun prog-mode-setup ()
@@ -123,7 +124,7 @@
         evil-collection-company-use-tng nil)) ; make company behave like emacs, not vim
 
 ;; make sure we have flx so ivy does better fuzzy matching
-(use-package flx)
+(use-package flx :defer t)
 
 (use-package ivy
   :config
@@ -135,6 +136,8 @@
   :general
   ;; C-x C-a is much more comfortable on colemak than C-x C-f
   ("C-x C-a"   'counsel-find-file
+   ;; use counsel to insert unicode characters
+   "C-x 8 RET" 'counsel-unicode-char
    ;; replace isearch with swiper
    "C-s"	   'swiper)
   (:keymaps 'ivy-minibuffer-map
@@ -149,6 +152,7 @@
   (ivy-mode 1))
 
 (use-package counsel
+  :after ivy
   :general
   (:keymaps 'swiper-map
             "ESC" 'minibuffer-keyboard-quit)
