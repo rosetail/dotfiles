@@ -30,6 +30,9 @@
 (setq use-package-compute-statistics t
       use-package-always-ensure t)
 
+;; indent with space, not tab
+(setq-default indent-tabs-mode nil)
+
 ;; set default font
 (set-frame-font "monospace-11" nil t)
 
@@ -61,7 +64,32 @@
 ;; enable word wrapping in modes derivef from text-mode
 (add-hook 'text-mode-hook 'visual-line-mode)
 
-(use-package general)
+;; make scrolling more like vim
+(setq scroll-margin 2
+      scroll-conservatively 10000
+      scroll-preserve-screen-position t)
+
+(use-package general
+  :config
+  ;; create leader key
+  ;; bound to M-SPC in insert mode and SPC in all other modes
+  (general-create-definer leader-def
+    :states '(normal insert emacs motion visual operater)
+    :prefix "SPC"
+    :non-normal-prefix "M-SPC"
+    :prefix-map 'leader-prefix-map)
+
+  ;; global leader keys
+  (leader-def
+    "a" 'avy-goto-subword-1
+    ;; indent whole buffer
+    "TAB" (lambda ()
+            (interactive)
+            (save-excursion
+              (mark-whole-buffer)
+              (indent-for-tab-command))))
+  ;; we have to demand general to global leader keys get bound during init
+  :demand t)
 
 (use-package evil
   :demand t
@@ -77,10 +105,10 @@
   (:keymaps 'global-map
             :states '(motion normal visual operator)
             ;; make evil obey visual-line-mode
-            "n"		'evil-next-visual-line
-            "e"		'evil-previous-visual-line
-            [escape]	'keyboard-quit
-            "TAB"	'indent-for-tab-command)
+            "n"      'evil-next-visual-line
+            "e"      'evil-previous-visual-line
+            [escape] 'keyboard-quit
+            "TAB"    'indent-for-tab-command)
 
   :config
   ;; translate keybindings for colemak
@@ -127,7 +155,7 @@
 (use-package flx :defer t)
 
 (use-package ivy
-  :config
+  :init
   ;; use fuzzy search everywhere except swiper
   (setq ivy-re-builders-alist
         '((swiper . ivy--regex-plus)
@@ -135,11 +163,11 @@
 
   :general
   ;; C-x C-a is much more comfortable on colemak than C-x C-f
-  ("C-x C-a"   'counsel-find-file
+  ("C-x C-a" 'counsel-find-file
    ;; use counsel to insert unicode characters
    "C-x 8 RET" 'counsel-unicode-char
    ;; replace isearch with swiper
-   "C-s"	   'swiper)
+   "C-s" 'swiper)
   (:keymaps 'ivy-minibuffer-map
             ;; make escape work properly
             "ESC" 'minibuffer-keyboard-quit
@@ -148,8 +176,9 @@
             ;; make C-j open dired instead
             "C-j" 'ivy-immediate-done)
   :diminish ivy-mode
-  :init
-  (ivy-mode 1))
+  :config
+  (ivy-mode 1)
+  :demand t)
 
 (use-package counsel
   :after ivy
@@ -161,5 +190,16 @@
 
 (use-package org
   :defer t
+  :init
+  (setq org-ellipsis " ▼")
+
+  ;; make indentation work properly when editing org src
+  (setq org-adapt-indentation nil
+        org-edit-src-content-indentation 0
+        org-src-tab-acts-natively t
+        org-startup-indented t)
+
   :custom-face
   (org-block ((t (:foreground "#d3d0c8")))))
+
+(use-package avy :commands avy-goto-subword-1)
