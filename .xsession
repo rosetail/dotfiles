@@ -2,6 +2,8 @@
 feh --no-fehbg --bg-fill /home/rose/.background.jpg &
 export GDK_SCALE=2
 export GDK_DPI_SCALE=0.5
+export QT_SCALE_FACTOR=2
+
 xrdb -merge ~/.Xresources
 emacs --bg-daemon &
 xsetroot -cursor_name left_ptr
