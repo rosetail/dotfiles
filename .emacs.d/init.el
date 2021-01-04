@@ -149,7 +149,9 @@
   :after evil
   :init
   (setq evil-collection-setup-minibuffer t
-        evil-collection-company-use-tng nil)) ; make company behave like emacs, not vim
+        evil-collection-company-use-tng nil) ; make company behave like emacs, not vim
+  :config
+  (evil-collection-init))
 
 ;; make sure we have flx so ivy does better fuzzy matching
 (use-package flx :defer t)
@@ -203,3 +205,113 @@
   (org-block ((t (:foreground "#d3d0c8")))))
 
 (use-package avy :commands avy-goto-subword-1)
+(use-package hydra)
+(use-package smart-comment
+  :general ("M-;" 'smart-comment))
+
+(use-package aggressive-indent
+  :demand t
+  :config
+  (global-aggressive-indent-mode 1)
+  ;; don't enable in html mode
+  (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
+
+  ;; stop indenting the next line in c-like modes if ; is not entered yet
+  (add-to-list
+   'aggressive-indent-dont-indent-if
+   '(and (derived-mode-p 'c++-mode)
+         (null (string-match "\\([;{}]\\|\\b\\(if\\|for\\|while\\)\\b\\)"
+                             (thing-at-point 'line))))))
+(use-package undo-tree
+  ;; TODO: make vim keybindings work here
+  :demand t
+  ;; make evil use undo tree
+  :custom (evil-undo-system 'undo-tree)
+  :init
+  (leader-def "u" 'undo-tree-visualize)
+  :config (global-undo-tree-mode))
+
+(use-package smartparens
+  :demand t
+  :config
+  (smartparens-global-strict-mode 1)
+  ;; highlight matching delimiter
+  (show-smartparens-global-mode 1)
+
+  ;; enable default smartparens config
+  (require 'smartparens-config)
+
+  ;; bind <leader>-p to smartparens hydra
+  (leader-def "p" 'hydra-smartparens/body)
+  
+  ;; hydra for most smartparens actions
+  (defhydra hydra-smartparens (:hint nil)
+    "
+ Moving^^^^                       Slurp & Barf^^   Wrapping^^            Sexp juggling^^^^               Destructive
+------------------------------------------------------------------------------------------------------------------------
+ [_a_] beginning  [_n_] down      [_h_] bw slurp   [_R_]   rewrap        [_S_] split   [_t_] transpose   [_c_] change inner  [_w_] copy
+ [_e_] end        [_N_] bw down   [_H_] bw barf    [_u_]   unwrap        [_s_] splice  [_A_] absorb      [_C_] change outer
+ [_f_] forward    [_p_] up        [_l_] slurp      [_U_]   bw unwrap     [_r_] raise   [_E_] emit        [_k_] kill          [_g_] quit
+ [_b_] backward   [_P_] bw up     [_L_] barf       [_(__{__[_] wrap (){}[]   [_j_] join    [_o_] convolute   [_K_] bw kill       [_q_] quit"
+    ;; Moving
+    ("a" sp-beginning-of-sexp)
+    ("e" sp-end-of-sexp)
+    ("f" sp-forward-sexp)
+    ("b" sp-backward-sexp)
+    ("n" sp-down-sexp)
+    ("N" sp-backward-down-sexp)
+    ("p" sp-up-sexp)
+    ("P" sp-backward-up-sexp)
+    
+    ;; Slurping & barfing
+    ("h" sp-backward-slurp-sexp)
+    ("H" sp-backward-barf-sexp)
+    ("l" sp-forward-slurp-sexp)
+    ("L" sp-forward-barf-sexp)
+    
+    ;; Wrapping
+    ("R" sp-rewrap-sexp)
+    ("u" sp-unwrap-sexp)
+    ("U" sp-backward-unwrap-sexp)
+    ("(" sp-wrap-round)
+    ("{" sp-wrap-curly)
+    ("[" sp-wrap-square)
+    
+    ;; Sexp juggling
+    ("S" sp-split-sexp)
+    ("s" sp-splice-sexp)
+    ("r" sp-raise-sexp)
+    ("j" sp-join-sexp)
+    ("t" sp-transpose-sexp)
+    ("A" sp-absorb-sexp)
+    ("E" sp-emit-sexp)
+    ("o" sp-convolute-sexp)
+    
+    ;; Destructive editing
+    ("c" sp-change-inner :exit t)
+    ("C" sp-change-enclosing :exit t)
+    ("k" sp-kill-sexp)
+    ("K" sp-backward-kill-sexp)
+    ("w" sp-copy-sexp)
+
+    ("q" nil)
+    ("g" nil)))
+
+
+(use-package evil-smartparens
+  :demand t
+  :after smartparens-config
+  :init (add-hook 'smartparens-enabled-hook #'evil-smartparens-mode))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(yasnippet-snippets yaml-mode whitespace-cleanup-mode which-key visual-regexp-steroids use-package undo-tree telephone-line sublimity spaceline smart-compile smart-comment slime-company skewer-mode scheme-complete region-bindings-mode rainbow-mode rainbow-delimiters popwin polymode pdf-tools paredit page-break-lines ox-twbs origami notmuch nix-sandbox nix-haskell-mode multiple-cursors mips-mode mingus meghanada markdown-preview-eww markdown-mode magit magic-latex-buffer latex-preview-pane key-chord java-imports ivy-prescient ivy-bibtex iedit hydra htmlize highlight-numbers highlight-escape-sequences haskell-snippets hacker-typer groovy-mode gradle-mode general fvwm-mode flyspell-correct-popup flyspell-correct-ivy flymd flx fish-mode fireplace f3 expand-region evil-vimish-fold evil-smartparens evil-org evil-god-state evil-collection evil-colemak-basics ess ebib doom-modeline direnv counsel benchmark-init base16-theme avy auctex aggressive-indent)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(org-block ((t (:foreground "#d3d0c8")))))
