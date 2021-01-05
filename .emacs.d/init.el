@@ -168,6 +168,53 @@
   :config
   (evil-collection-init))
 
+(use-package evil-org
+  :ensure t
+  :after (evil org)
+  :init
+  ;; make keybindings work in insert mode
+  (setq evil-org-use-additional-insert t
+        ;; use colemak movement
+        evil-org-movement-bindings '((up . "e") (down . "n") (left . "h") (right . "i"))
+
+        ;; add keybindings for more thinds
+        evil-org-key-theme '(navigation
+                             insert
+                             return
+                             textobjects
+                             additional
+                             todo
+                             heading
+                             calendar))
+  :hook ((org-mode . evil-org-mode)
+         (evil-org-mode . evil-org-set-key-theme))
+  :general
+  (:keymaps 'evil-org-mode-map
+            :states '(motion normal visual operator)
+            "g i" 'org-down-element
+            "U"   'evil-org-insert-line)
+  (:keymaps 'org-agenda-mode-map
+            :states '(motion normal visual operator)
+            "n"   'org-agenda-next-line
+            "e"   'org-agenda-previous-line
+            "gn"  'org-agenda-next-item
+            "ge"  'org-agenda-previous-item
+            "gI"  'evil-window-bottom
+            "C-n" 'org-agenda-next-item
+            "C-e" 'org-agenda-previous-item
+            "N"   'org-agenda-priority-down
+            "E"   'org-agenda-priority-up
+            "I"   'org-agenda-do-date-later
+            "M-n" 'org-agenda-drag-line-forward
+            "M-e" 'org-agenda-drag-line-backward
+            "C-S-i" 'org-agenda-todo-nextset ; Original binding "C-S-<right>"
+            "l"   'org-agenda-undo
+            "u"   'org-agenda-diary-entry
+            "U"   'org-agenda-clock-in)
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
+
 ;; make sure we have flx so ivy does better fuzzy matching
 (use-package flx :defer t)
 
