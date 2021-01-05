@@ -5,8 +5,6 @@ import Data.Monoid
 import Data.List
 import Data.Tree
 import XMonad.Actions.TreeSelect
-import XMonad.Actions.UpdateFocus
-import XMonad.Actions.UpdatePointer
 import XMonad.Actions.FloatKeys
 import XMonad.Actions.DynamicProjects
 import XMonad.Actions.Navigation2D
@@ -37,7 +35,6 @@ main =
     ("M-C-", windowSwap)
     ] False $
     def {
-    startupHook        = adjustEventInput,
     terminal           = "kitty",
     manageHook         = myManageHook,
     modMask            = mod4Mask,
@@ -45,11 +42,10 @@ main =
     focusedBorderColor = "#d3d0c8",
     normalBorderColor  = "#2d2d2d",
     XMonad.workspaces  = toWorkspaces myWorkspaces,
-    handleEventHook    = XMonad.Layout.Fullscreen.fullscreenEventHook <+> focusOnMouseMove,
+    handleEventHook    = XMonad.Layout.Fullscreen.fullscreenEventHook,
     mouseBindings      = myMouseBindings,
     logHook            = ewmhDesktopsLogHookCustom
-                         namedScratchpadFilterOutWorkspace
-                         <+> updatePointer (0.5, 0.5) (0, 0),
+                         namedScratchpadFilterOutWorkspace,
     layoutHook         =
         configurableNavigation noNavigateBorders $
         fullscreenFull $
