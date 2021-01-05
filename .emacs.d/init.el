@@ -46,12 +46,18 @@
 
 ;; setup modeline
 ;; TODO: switch to something that starts up faster
-(use-package spaceline
-  :config
-  (spaceline-toggle-minor-modes-off)
-  :init
-  (spaceline-spacemacs-theme)
-  (setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state))
+(use-package doom-modeline
+  :custom-face
+  ;; (doom-modeline-bar ((t (:background "#f99157"))))
+  (doom-modeline-evil-normal-state   ((t (:foreground "#99cc99"))))
+  (doom-modeline-evil-insert-state   ((t (:foreground "#6699cc"))))
+  (doom-modeline-evil-visual-state   ((t (:foreground "#f99157"))))
+  (doom-modeline-evil-operator-state ((t (:foreground "#cc99cc"))))
+  (doom-modeline-evil-motion-state   ((t (:foreground "#ffcc66"))))
+  (doom-modeline-evil-replace-state  ((t (:foreground "#66cccc"))))
+  (doom-modeline-evil-emacs-state    ((t (:foreground "#f2777a"))))
+  ;; use window-setup-hook so modeline indicator face displays correctly
+  :hook (window-setup . doom-modeline-mode))
 
 ;; show line numbers in fringe, but only in programming modes
 (defun prog-mode-setup ()
@@ -61,7 +67,7 @@
 (add-hook 'prog-mode-hook 'prog-mode-setup)
 (add-hook 'conf-mode-hook 'prog-mode-setup)
 
-;; enable word wrapping in modes derivef from text-mode
+;; enable word wrapping in modes deriving from text-mode
 (add-hook 'text-mode-hook 'visual-line-mode)
 
 ;; make scrolling more like vim
@@ -99,8 +105,8 @@
   :general
   ;; alias C-e and M-e to C-p and M-p so scrolling with vim navigation keys works
   ;; this leaves us unable to access anything bound to C-e or M-e, but I don't really use thse keys
-  ("C-e" (general-key "C-p"))
-  ("M-e" (general-key "M-p"))
+  ("C-e" (general-key "C-p")
+   "M-e" (general-key "M-p"))
   ;; modify basic evil keybindings
   (:keymaps 'global-map
             :states '(motion normal visual operator)
@@ -148,7 +154,7 @@
 (use-package evil-collection
   :after evil
   :init
-  (setq evil-collection-setup-minibuffer t
+  (setq evil-collection-setup-minibuffer nil
         evil-collection-company-use-tng nil) ; make company behave like emacs, not vim
   :config
   (evil-collection-init))
@@ -171,6 +177,9 @@
    ;; replace isearch with swiper
    "C-s" 'swiper)
   (:keymaps 'ivy-minibuffer-map
+            ;; scroll through history with M-p
+            ;; TODO: see why this binding isn't doing anything
+            "M-p" 'ivy-previous-history-element
             ;; make escape work properly
             "ESC" 'minibuffer-keyboard-quit
             ;; make enter descend into directory instead of opening dired
@@ -204,6 +213,12 @@
   :custom-face
   (org-block ((t (:foreground "#d3d0c8")))))
 
+(use-package company
+  :demand t
+  :config (global-company-mode)
+  :general
+  ("C-<return>" 'company-complete))
+
 (use-package avy :commands avy-goto-subword-1)
 (use-package hydra)
 (use-package smart-comment
@@ -230,6 +245,9 @@
   :init
   (leader-def "u" 'undo-tree-visualize)
   :config (global-undo-tree-mode))
+(use-package which-key
+  :demand t
+  :config (which-key-mode 1))
 
 (use-package smartparens
   :demand t
@@ -301,17 +319,4 @@
 (use-package evil-smartparens
   :demand t
   :after smartparens-config
-  :init (add-hook 'smartparens-enabled-hook #'evil-smartparens-mode))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(yasnippet-snippets yaml-mode whitespace-cleanup-mode which-key visual-regexp-steroids use-package undo-tree telephone-line sublimity spaceline smart-compile smart-comment slime-company skewer-mode scheme-complete region-bindings-mode rainbow-mode rainbow-delimiters popwin polymode pdf-tools paredit page-break-lines ox-twbs origami notmuch nix-sandbox nix-haskell-mode multiple-cursors mips-mode mingus meghanada markdown-preview-eww markdown-mode magit magic-latex-buffer latex-preview-pane key-chord java-imports ivy-prescient ivy-bibtex iedit hydra htmlize highlight-numbers highlight-escape-sequences haskell-snippets hacker-typer groovy-mode gradle-mode general fvwm-mode flyspell-correct-popup flyspell-correct-ivy flymd flx fish-mode fireplace f3 expand-region evil-vimish-fold evil-smartparens evil-org evil-god-state evil-collection evil-colemak-basics ess ebib doom-modeline direnv counsel benchmark-init base16-theme avy auctex aggressive-indent)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(org-block ((t (:foreground "#d3d0c8")))))
+  :hook (smartparens-enabled . evil-smartparens-mode))

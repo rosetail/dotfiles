@@ -38,7 +38,7 @@ x11-misc/polybar mpd network
 # required by firefox (argument)
 >=media-libs/libvpx-1.9.0 postproc
 x11-misc/rofi windowmode
-app-editors/emacs xft gsettings
+app-editors/emacs gsettings harfbuzz json mailutils toolkit-scroll-bars xft
 # required by net-im/telegram-desktop-2.4.7-r1::gentoo
 # required by telegram-desktop (argument)
 >=dev-qt/qtgui-5.15.1-r1 wayland
