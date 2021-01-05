@@ -33,6 +33,15 @@
 ;; indent with space, not tab
 (setq-default indent-tabs-mode nil)
 
+;; stop putting backup files everyphere
+(setq version-control t       ;; Use version numbers for backups.
+      kept-new-versions 10    ;; Number of newest versions to keep.
+      kept-old-versions 0     ;; Number of oldest versions to keep.
+      delete-old-versions t   ;; Don't ask to delete excess backup versions.
+      backup-by-copying t     ;; Copy all files, don't rename them.
+      vc-make-backup-files t  ;; also backup files under version control
+      backup-directory-alist '(("" . "~/.emacs.d/backup/per-save")))
+
 ;; set default font
 (set-frame-font "monospace-11" nil t)
 
