@@ -51,7 +51,6 @@ main =
         fullscreenFull $
         smartBorders $
         mkToggle (single NBFULL) $
-        trackFloating $
         avoidStruts $
 
 
@@ -67,7 +66,7 @@ main =
         -- combineTwo (Tall 1 (3/100) (1/2)) (simpleTabbed) (tabbed shrinkText myTabConfig) |||
         -- tallTabs def |||
 
-        (mySpacing $ simpleDrawer 0.01 0.3 (ClassName "Emacs" `Or` ClassName "kitty")  `onRight` (Tall 1 0.03 0.5)) ) |||
+        (trackFloating $ mySpacing $ simpleDrawer 0.01 0.3 (ClassName "Emacs" `Or` ClassName "kitty")  `onRight` (Tall 1 0.03 0.5)) ) |||
 
         -- (mySpacing $ mastered (1/100) (1/2) $ tabbed shrinkText myTabConfig) |||
   
@@ -118,7 +117,8 @@ myManageHook =
   className =? "TelegramDesktop" -?> doFloat,
   className =? "net-minecraft-bootstrap-Bootstrap" -?> doFloat,
   title =?     "CS 240 Project"  -?> doFloat,
-  title =?     "VinConnect Lead Management - Mozilla Firefox" -?> doFloat,
+    -- zoom's temporary windows just have zoom title
+  title =?     "zoom" -?> doFloat,
   pure True -?> insertPosition End Newer
   ]
 

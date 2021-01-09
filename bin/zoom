@@ -1,2 +1,2 @@
 #!/bin/sh
-QT_SCALE_FACTOR=2 /usr/bin/zoom
+QT_SCALE_FACTOR=2 /usr/bin/zoom $@
