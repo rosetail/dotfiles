@@ -1,4 +1,4 @@
-games-misc/ponysay PYTHON_SINGLE_TARGET: python3_7
+# games-misc/ponysay PYTHON_SINGLE_TARGET: python3_7
 net-p2p/transmission appindicator -qt5
 x11-terms/rxvt-unicode 256-color blink xft unicode3
 x11-wm/xpra webp pillow sound vpx
@@ -38,7 +38,7 @@ x11-misc/polybar mpd network
 # required by firefox (argument)
 >=media-libs/libvpx-1.9.0 postproc
 x11-misc/rofi windowmode
-app-editors/emacs gsettings harfbuzz json mailutils toolkit-scroll-bars xft
+app-editors/emacs gsettings harfbuzz json imagemagick mailutils toolkit-scroll-bars xft xwidgets
 # required by net-im/telegram-desktop-2.4.7-r1::gentoo
 # required by telegram-desktop (argument)
 >=dev-qt/qtgui-5.15.1-r1 wayland

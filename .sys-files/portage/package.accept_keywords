@@ -218,3 +218,10 @@ sys-power/linux-x86-power-tools ~amd64
 =x11-misc/aerial-sddm-theme-0_pre20191018 ~amd64
 # required by ponysay (argument)
 =games-misc/ponysay-3.0.3 ~amd64
+# required by media-gfx/maim-5.6.3::gentoo
+# required by maim (argument)
+=x11-misc/slop-7.5 ~amd64
+# required by maim (argument)
+=media-gfx/maim-5.6.3 ~amd64
+# required by monoid (argument)
+=media-fonts/monoid-0.61 ~amd64

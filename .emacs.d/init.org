@@ -63,7 +63,7 @@
 (global-eldoc-mode 1)
 
 ;; enable recentf-mode
-(recentf-mode 1)
+;; (recentf-mode 1)
 
 ;; stop putting backup files everywhere
 (setq version-control t       ;; Use version numbers for backups.
@@ -74,21 +74,35 @@
       vc-make-backup-files t  ;; also backup files under version control
       backup-directory-alist '(("" . "~/.emacs.d/backup/per-save"))) 
 
-;; TODO: remove this
-;; some dirs in home are symlinks pointing to /data, and this sometimes causes problems
-;; this is a terrible hack to make emacs think that these are real dirs and not symlinks
-(defun my/ignore-some-symlinks (dir)
-  (replace-regexp-in-string "\\(/data/\\)\\(org\\|code\\|Documents\\)"
-                            "~/" dir nil nil 1))
-;; (advice-add #'file-truename :filter-return #'my/ignore-some-symlinks)
-;; (advice-add #'buffer-file-name :filter-return #'my/ignore-some-symlinks)
-(setq find-file-visit-truename t)
+;; set up indentation
+(setq-default c-basic-offset 4
+              cperl-indent-level 4)
+(setq tab-width 4
+      c-default-style '((java-mode . "java")
+                        (awk-mode . "awk")
+                        (other . "k&r")))
+
+
+;; don't ask to save files when compiling
+(setq compilation-ask-about-save nil
+      compilation-save-buffers-predicate '(lambda () nil))
+
+;; Make the compilation window automatically disappear - from enberg on #emacs
+(setq compilation-finish-functions
+      (lambda (buf str)
+        (if (null (string-match ".*exited abnormally.*" str))
+            ;; no errors, make the compilation window go away in a few seconds
+            (progn
+	      (run-at-time
+	       "1 sec" nil 'delete-windows-on
+	       (get-buffer-create "*compilation*"))
+	      (message "No Compilation Errors!")))))
 #+end_src
 
 * visual customization
 #+begin_src emacs-lisp :tangle yes
 ;; set default font
-(set-frame-font "monospace-11" nil t)
+(set-frame-font "monospace-10" nil t)
 
 ;; load theme
 (use-package base16-theme
@@ -127,11 +141,9 @@
       scroll-conservatively 10000
       scroll-preserve-screen-position t)
 
-;; set up indentation
-(setq-default c-basic-offset 4
-              cperl-indent-level 4)
-(setq tab-width 4
-      c-default-style "linux")
+;; emacs renders Mononoki 2 pixels to short
+(setq-default line-spacing 2)
+
 #+end_src
 
 * general
@@ -323,13 +335,16 @@
 (use-package org
   :defer t
   :init
-  (setq org-ellipsis " ▼")
+  (setq org-ellipsis " ▼"
+        ;; make all images 600px wide
+        org-image-actual-width 600)
 
   ;; make indentation work properly when editing org src
   (setq org-adapt-indentation nil
         org-edit-src-content-indentation 0
         org-src-tab-acts-natively t
-        org-startup-indented t)
+        org-startup-indented t
+        org-hide-emphasis-markers t)
   ;; add agenda file
   (setq org-agenda-files '("~/org/"))
 
@@ -432,7 +447,7 @@
 * projectile
 #+begin_src emacs-lisp :tangle yes
 (use-package projectile
-  :demand t
+  :defer 2
   :after (hydra counsel)
   :init
   (defun my/counsel-projectile-find-org-file ()
@@ -547,6 +562,17 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 (use-package yasnippet-snippets
   :after yasnippet)
 #+end_src
+* lsp
+#+begin_src emacs-lisp :tangle yes
+(use-package lsp-mode
+  :defer t
+  ;; :custom
+  ;; (lsp-enable-on-type-formatting nil)
+  ;; (lsp-enable-indentation nil)
+  
+  :init
+  (add-hook 'c++-mode-hook #'lsp))
+#+end_src
 * other packages
 #+begin_src emacs-lisp :tangle yes
 (use-package avy :commands avy-goto-subword-1)
@@ -557,8 +583,9 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (hydra-face-amaranth ((t (:foreground "#f99157"))))
   (hydra-face-teal     ((t (:foreground "#66cccc"))))
   (hydra-face-pink     ((t (:foreground "#cc99cc")))))
-(use-package smart-comment
-  :general ("M-;" 'smart-comment))
+
+(use-package comment-dwim-2
+  :general ("M-;" 'comment-dwim-2))
 
 (use-package aggressive-indent
   :demand t
@@ -577,11 +604,17 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :demand t
   :config (which-key-mode 1))
 
+;; TODO: make this use :hook instead of add-hook
 (use-package highlight-numbers
   :init
   ;; enable in programming modes
   (add-hook 'prog-mode-hook 'highlight-numbers-mode)
   (add-hook 'conf-mode-hook 'highlight-numbers-mode))
+
+(use-package smart-compile
+  :defer t
+  :init
+  (leader-def "m" 'smart-compile))
 #+end_src
 * unused things
 #+begin_src emacs-lisp :tangle no
