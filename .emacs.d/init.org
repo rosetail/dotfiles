@@ -102,7 +102,7 @@
 * visual customization
 #+begin_src emacs-lisp :tangle yes
 ;; set default font
-(set-frame-font "monospace-10" nil t)
+(set-frame-font "Input Mono Narrow Light-10" nil t)
 
 ;; load theme
 (use-package base16-theme
@@ -115,6 +115,9 @@
 ;; setup modeline
 ;; TODO: switch to something that starts up faster
 (use-package doom-modeline
+  :init
+  ;; show word count of region
+  (setq doom-modeline-enable-word-count t)
   :custom-face
   ;; (doom-modeline-bar ((t (:background "#f99157"))))
   (doom-modeline-evil-normal-state   ((t (:foreground "#99cc99"))))
@@ -142,7 +145,7 @@
       scroll-preserve-screen-position t)
 
 ;; emacs renders Mononoki 2 pixels to short
-(setq-default line-spacing 2)
+;; (setq-default line-spacing 0)
 
 #+end_src
 
@@ -283,9 +286,12 @@
             "C-S-i" 'org-agenda-todo-nextset ; Original binding "C-S-<right>"
             "l"   'org-agenda-undo
             "u"   'org-agenda-diary-entry
-            "U"   'org-agenda-clock-in)
+            "U"   'org-agenda-clock-in))
+(use-package evil-org-agenda
+  :demand t
+  :ensure nil ; don't ensure because it is built in to evil-org
+  :after evil-org
   :config
-  (require 'evil-org-agenda)
   (evil-org-agenda-set-keys))
 #+end_src
 * ivy
@@ -364,9 +370,6 @@
   ;; highlight matching delimiter
   (show-smartparens-global-mode 1)
 
-  ;; enable default smartparens config
-  (require 'smartparens-config)
-  
   ;; hydra for most smartparens actions
   (defhydra hydra-smartparens (:hint nil)
     "
@@ -419,6 +422,14 @@
 
     ("q" nil)
     ("g" nil)))
+
+;; enable default smartparens config
+(use-package smartparens-config
+  ;; don't ensure because this is built in to smartparent
+  :ensure nil
+  :demand t
+  :after smartparens)
+
 
 
 (use-package evil-smartparens
@@ -573,6 +584,28 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :init
   (add-hook 'c++-mode-hook #'lsp))
 #+end_src
+* latex
+#+begin_src emacs-lisp :tangle yes
+(use-package auctex
+  :after tex
+  :no-require t
+  :init
+  ;; compile with latexmk
+  (setq-default TeX-command-default "Latexmk")
+
+  ;; parse on save
+  (setq TeX-auto-save t
+        ;; parse on load
+        TeX-parse-self t
+        TeX-master nil)
+  (add-hook 'LaTeX-mode-hook
+	    '(lambda () (setq TeX-command-default "Latexmk")))
+  :config
+  (push 
+   '("Latexmk" "latexmk -pvc -interaction=nonstopmode %t" TeX-run-TeX nil t
+     :help "Make pdf output using latexmk.")
+   TeX-command-list))
+#+end_src
 * other packages
 #+begin_src emacs-lisp :tangle yes
 (use-package avy :commands avy-goto-subword-1)
@@ -615,24 +648,4 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :defer t
   :init
   (leader-def "m" 'smart-compile))
-#+end_src
-* unused things
-#+begin_src emacs-lisp :tangle no
-;; switched to doom-modeline
-(use-package spaceline
-  :config
-  (spaceline-toggle-minor-modes-off)
-  :init
-  (spaceline-spacemacs-theme)
-  (setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state))
-
-;; undo tree was causing problems with redoo
-(use-package undo-tree
-  ;; TODO: make vim keybindings work here
-  :demand t
-  ;; make evil use undo tree
-  :custom (evil-undo-system 'undo-tree)
-  :init
-  (leader-def "u" 'undo-tree-visualize)
-  :config (global-undo-tree-mode))
 #+end_src

@@ -73,7 +73,7 @@
 	      (message "No Compilation Errors!")))))
 
 ;; set default font
-(set-frame-font "monospace-10" nil t)
+(set-frame-font "Input Mono Narrow Light-10" nil t)
 
 ;; load theme
 (use-package base16-theme
@@ -86,6 +86,9 @@
 ;; setup modeline
 ;; TODO: switch to something that starts up faster
 (use-package doom-modeline
+  :init
+  ;; show word count of region
+  (setq doom-modeline-enable-word-count t)
   :custom-face
   ;; (doom-modeline-bar ((t (:background "#f99157"))))
   (doom-modeline-evil-normal-state   ((t (:foreground "#99cc99"))))
@@ -111,6 +114,9 @@
 (setq scroll-margin 2
       scroll-conservatively 10000
       scroll-preserve-screen-position t)
+
+;; emacs renders Mononoki 2 pixels to short
+;; (setq-default line-spacing 0)
 
 (use-package general
   :config
@@ -241,9 +247,12 @@
             "C-S-i" 'org-agenda-todo-nextset ; Original binding "C-S-<right>"
             "l"   'org-agenda-undo
             "u"   'org-agenda-diary-entry
-            "U"   'org-agenda-clock-in)
+            "U"   'org-agenda-clock-in))
+(use-package evil-org-agenda
+  :demand t
+  :ensure nil ; don't ensure because it is built in to evil-org
+  :after evil-org
   :config
-  (require 'evil-org-agenda)
   (evil-org-agenda-set-keys))
 
 ;; make sure we have flx so ivy does better fuzzy matching
@@ -437,6 +446,26 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :init
   (add-hook 'c++-mode-hook #'lsp))
 
+(use-package auctex
+  :after tex
+  :no-require t
+  :init
+  ;; compile with latexmk
+  (setq-default TeX-command-default "Latexmk")
+
+  ;; parse on save
+  (setq TeX-auto-save t
+        ;; parse on load
+        TeX-parse-self t
+        TeX-master nil)
+  (add-hook 'LaTeX-mode-hook
+	    '(lambda () (setq TeX-command-default "Latexmk")))
+  :config
+  (push 
+   '("Latexmk" "latexmk -pvc -interaction=nonstopmode %t" TeX-run-TeX nil t
+     :help "Make pdf output using latexmk.")
+   TeX-command-list))
+
 (use-package avy :commands avy-goto-subword-1)
 (use-package hydra
   :custom-face 
@@ -489,9 +518,6 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   ;; highlight matching delimiter
   (show-smartparens-global-mode 1)
 
-  ;; enable default smartparens config
-  (require 'smartparens-config)
-  
   ;; hydra for most smartparens actions
   (defhydra hydra-smartparens (:hint nil)
     "
@@ -544,6 +570,14 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 
     ("q" nil)
     ("g" nil)))
+
+;; enable default smartparens config
+(use-package smartparens-config
+  ;; don't ensure because this is built in to smartparent
+  :ensure nil
+  :demand t
+  :after smartparens)
+
 
 
 (use-package evil-smartparens

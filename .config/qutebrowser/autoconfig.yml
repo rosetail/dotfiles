@@ -232,6 +232,7 @@ settings:
     '*://*.cas.pugetsound.edu/*': true
     '*://*.connect.secure.wellsfargo.com/*': true
     '*://*.csprd.ctclink.us/*': true
+    '*://*.deanza.instructure.com/*': true
     '*://*.directaccess.nordstrom.com/*': true
     '*://*.discordapp.com/*': true
     '*://*.duckduckgo.com/*': true
@@ -248,6 +249,7 @@ settings:
     '*://*.haveibeenpwned.com/*': true
     '*://*.idp.pugetsound.edu/*': true
     '*://*.ikneedata.com/*': true
+    '*://*.input.fontbureau.com/*': true
     '*://*.jdrenning.github.io/*': true
     '*://*.jobs-brookdale.icims.com/*': true
     '*://*.libgen.io/*': true
@@ -316,6 +318,7 @@ settings:
     '*://*.www.youtube.com/*': true
     '*://*.xkcd.com/*': true
     '*://*.yts.lt/*': true
+    '*://input.fontbureau.com/*': true
     '*://pugetsound.digication.com/*': true
     '*://pugetsound.edu/*': true
     '*://pugetsound.instructure.com/*': true
@@ -341,22 +344,22 @@ settings:
     - emacs-autoclient
     - '{file}'
   fonts.completion.category:
-    global: 11pt Inconsolata
+    global: 10pt Monospace
   fonts.completion.entry:
-    global: 11pt Inconsolata
+    global: 10pt Monospace
   fonts.debug_console:
-    global: 11pt Inconsolata
+    global: 10pt Monospace
   fonts.default_family:
     global:
-    - Inconsolata
+    - Monospace
   fonts.default_size:
-    global: 11pt
+    global: 10pt
   fonts.hints:
-    global: 11pt Inconsolata
+    global: 10pt monsopace
   fonts.prompts:
-    global: 11pt Inconsolata
+    global: 10pt Monospace
   fonts.statusbar:
-    global: 11pt Inconsolata
+    global: 10pt Monospace
   fonts.tabs.selected:
     global: 10pt sans
   fonts.tabs.unselected:

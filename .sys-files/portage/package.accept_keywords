@@ -1,3 +1,7 @@
+x11-wm/stumpwm ~amd64
+x11-wm/stumpwm-contrib ~amd64
+=dev-lisp/alexandria-20171029 ~amd64
+=dev-lisp/clx-0.7.5 ~amd64
 net-im/zoom ~amd64
 x11-terms/alacritty ~amd64
 x11-terms/kitty ~amd64
@@ -225,3 +229,5 @@ sys-power/linux-x86-power-tools ~amd64
 =media-gfx/maim-5.6.3 ~amd64
 # required by monoid (argument)
 =media-fonts/monoid-0.61 ~amd64
+# required by tabbed (argument)
+=x11-misc/tabbed-0.6 ~amd64

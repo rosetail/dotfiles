@@ -1,6 +1,6 @@
 rofi.width: 25
 rofi.lines: 10
-rofi.font: Inconsolata Regular 11
+rofi.font: monospace 10
 
 
 

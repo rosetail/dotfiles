@@ -7,3 +7,4 @@ sudo ln -s ~/.sys-files/sddm.conf /etc/
 sudo ln -sf ~/.background.jpg /usr/share/sddm/themes/Elegant/background.jpg
 sudo ln -s ~/.sys-files/redshift.conf /etc/
 sudo ln -s ~/.sys-files/redshift.init /etc/init.d/redshift
+sudo ln -s ~/.sys-files/eixrc /etc/eixrc/

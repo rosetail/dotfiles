@@ -1,3 +1,5 @@
+app-text/texlive cjk context epspdf extra games graphics humanities music pdfannotextractor pstricks publishers science tex4ht texi2html luatex metapost xetex l10n_en
+x11-wm/stumpwm -emacs contrib
 # games-misc/ponysay PYTHON_SINGLE_TARGET: python3_7
 net-p2p/transmission appindicator -qt5
 x11-terms/rxvt-unicode 256-color blink xft unicode3
@@ -38,7 +40,7 @@ x11-misc/polybar mpd network
 # required by firefox (argument)
 >=media-libs/libvpx-1.9.0 postproc
 x11-misc/rofi windowmode
-app-editors/emacs gsettings harfbuzz json imagemagick mailutils toolkit-scroll-bars xft xwidgets
+app-editors/emacs gsettings harfbuzz json imagemagick mailutils sound toolkit-scroll-bars xft xwidgets
 # required by net-im/telegram-desktop-2.4.7-r1::gentoo
 # required by telegram-desktop (argument)
 >=dev-qt/qtgui-5.15.1-r1 wayland
@@ -64,3 +66,8 @@ x11-misc/dunst dunstify
 # required by net-p2p/transmission-3.00-r1::gentoo[appindicator,gtk]
 # required by transmission (argument)
 >=dev-libs/libdbusmenu-16.04.0-r1 gtk3
+# required by dev-texlive/texlive-xetex-2020::gentoo
+# required by dev-texlive/texlive-formatsextra-2020-r2::gentoo
+# required by app-text/texlive-2020-r9::gentoo[xml,extra]
+# required by texlive (argument)
+>=app-text/texlive-core-2020-r12 cjk xetex

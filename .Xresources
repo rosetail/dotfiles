@@ -1,10 +1,12 @@
 Xft.dpi: 192
 Xft.autohint: 0
 Xft.lcdfilter:  lcddefault
-Xft.hintstyle:  hintslight
+Xft.hintstyle:  hintfull
 Xft.hinting: 1
 Xft.antialias: 1
 Xft.rgba: rgb
 
 Xcursor.size: 48
 Xcursor.theme: Adwaita
+
+Emacs.font: Mononoki-10:antialias=true:hinting=true:autohint=false:hintstyle=3
