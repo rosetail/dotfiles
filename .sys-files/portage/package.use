@@ -1,3 +1,4 @@
+x11-misc/tabbed savedconfig
 app-text/texlive cjk context epspdf extra games graphics humanities music pdfannotextractor pstricks publishers science tex4ht texi2html luatex metapost xetex l10n_en
 x11-wm/stumpwm -emacs contrib
 # games-misc/ponysay PYTHON_SINGLE_TARGET: python3_7

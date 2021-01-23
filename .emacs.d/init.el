@@ -84,7 +84,6 @@
   (inhibit-startup-screen t))
 
 ;; setup modeline
-;; TODO: switch to something that starts up faster
 (use-package doom-modeline
   :init
   ;; show word count of region
@@ -300,7 +299,9 @@
   :init
   (setq org-ellipsis " ▼"
         ;; make all images 600px wide
-        org-image-actual-width 600)
+        org-image-actual-width 600
+        ;; use smart quotes when exporting
+        org-export-with-smart-quotes t)
 
   ;; make indentation work properly when editing org src
   (setq org-adapt-indentation nil
@@ -311,6 +312,38 @@
   ;; add agenda file
   (setq org-agenda-files '("~/org/"))
 
+  ;; align tags to the right regardless of window size
+  (defun org-keep-tags-to-right ()
+    (interactive)
+    (let ((buffer-modified (buffer-modified-p))
+	  (inhibit-message t)) ;; don't say the new column with every time
+      (when (and (equal major-mode 'org-mode)
+		 (org-get-buffer-tags))
+	(setq org-tags-column (- 2 (window-body-width)))
+	(org-align-tags t)
+	(when (not buffer-modified)
+	  (set-buffer-modified-p nil)))))
+  
+  (add-hook 'window-configuration-change-hook 'org-keep-tags-to-right)
+  (add-hook 'focus-in-hook 'org-keep-tags-to-right)
+  (add-hook 'focus-out-hook 'org-keep-tags-to-right)
+
+  :config
+  (use-package ox ; needed for org-export-filter-headline-function
+    :ensure nil
+    :demand t
+    :config
+    ;; add ignore tag that will make org-export ignore the headline but keep the body
+    (defun org-ignore-headline (contents backend info)
+      "Ignore headlines with tag `ignore'."
+      (when (and (org-export-derived-backend-p backend 'latex 'html 'ascii)
+	         (string-match "\\`.*ignore.*\n"
+                               (downcase contents)))
+        (replace-match "" nil nil contents)))
+
+    (add-to-list 'org-export-filter-headline-functions 'org-ignore-headline)
+
+    )
   :custom-face
   (org-block ((t (:foreground "#d3d0c8")))))
 
@@ -339,9 +372,8 @@
   (defun my/projectile-popwin-eshell ()
     (interactive)
     (popwin:display-buffer-1
-     (or (get-buffer "*eshell*")
-         (save-window-excursion
-           (call-interactively 'projectile-run-eshell)))))
+     (save-window-excursion
+       (call-interactively 'projectile-run-eshell))))
 
   (defhydra hydra-projectile (:color blue :hint nil)
     "
@@ -439,12 +471,12 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 
 (use-package lsp-mode
   :defer t
-  ;; :custom
-  ;; (lsp-enable-on-type-formatting nil)
-  ;; (lsp-enable-indentation nil)
-  
-  :init
-  (add-hook 'c++-mode-hook #'lsp))
+  :custom
+  (lsp-enable-on-type-formatting nil)
+  (lsp-enable-indentation nil)
+  :hook
+  ((before-save . (call-interactively lsp-format-buffer))
+   (c++-mode . lsp)))
 
 (use-package auctex
   :after tex
@@ -458,8 +490,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
         ;; parse on load
         TeX-parse-self t
         TeX-master nil)
-  (add-hook 'LaTeX-mode-hook
-	    '(lambda () (setq TeX-command-default "Latexmk")))
+  :hook (LaTeX-mode . (lambda () (setq TeX-command-default "Latexmk")))
   :config
   (push 
    '("Latexmk" "latexmk -pvc -interaction=nonstopmode %t" TeX-run-TeX nil t
@@ -495,17 +526,29 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :demand t
   :config (which-key-mode 1))
 
-;; TODO: make this use :hook instead of add-hook
 (use-package highlight-numbers
-  :init
   ;; enable in programming modes
-  (add-hook 'prog-mode-hook 'highlight-numbers-mode)
-  (add-hook 'conf-mode-hook 'highlight-numbers-mode))
+  :hook ((prog-mode . highlight-numbers-mode)
+         (conf-mode . highlight-numbers-mode)))
 
-(use-package smart-compile
+;; (use-package smart-compile
+;;   :defer t
+;;   :init
+;;   (leader-def "m" 'smart-compile))
+
+(use-package quickrun
+  :after hydra
   :defer t
   :init
-  (leader-def "m" 'smart-compile))
+  (defhydra hydra-quickrun (:color blue :hint nil)
+    "
+_c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
+    ("c" quickrun-compile-only)
+    ("r" quickrun)
+    ("s" quickrun-shell)
+    ("a" quickrun-with-arg)
+    ("R" quickrun-region))
+  (leader-def "r" 'hydra-quickrun/body))
 
 (use-package smartparens
   :demand t
@@ -584,3 +627,28 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :demand t
   :after smartparens-config
   :hook (smartparens-enabled . evil-smartparens-mode))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(smex yasnippet-snippets yaml-mode whitespace-cleanup-mode which-key visual-regexp-steroids use-package undo-tree telephone-line sublimity spaceline smart-compile smart-comment slime-company skewer-mode scheme-complete region-bindings-mode rainbow-mode quickrun propfont-mixed popwin polymode pdf-tools paredit page-break-lines ox-twbs origami notmuch nord-theme nix-sandbox nix-haskell-mode multiple-cursors mips-mode minimap mingus meghanada markdown-preview-eww magit magic-latex-buffer lsp-mode leuven-theme latex-preview-pane key-chord java-imports ivy-prescient ivy-bibtex iedit hydra htmlize highlight-numbers highlight-escape-sequences haskell-snippets hacker-typer gruvbox-theme groovy-mode gradle-mode general fvwm-mode flyspell-correct-popup flyspell-correct-ivy flymd flx fish-mode fireplace f3 expand-region evil-vimish-fold evil-smartparens evil-org evil-lion evil-god-state evil-collection evil-colemak-basics ess ebib doom-modeline direnv counsel-projectile comment-dwim-2 clang-format benchmark-init base16-theme avy auctex ample-theme aggressive-indent)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(doom-modeline-evil-emacs-state ((t (:foreground "#f2777a"))))
+ '(doom-modeline-evil-insert-state ((t (:foreground "#6699cc"))))
+ '(doom-modeline-evil-motion-state ((t (:foreground "#ffcc66"))))
+ '(doom-modeline-evil-normal-state ((t (:foreground "#99cc99"))))
+ '(doom-modeline-evil-operator-state ((t (:foreground "#cc99cc"))))
+ '(doom-modeline-evil-replace-state ((t (:foreground "#f99157"))))
+ '(doom-modeline-evil-visual-state ((t (:foreground "#66cccc"))))
+ '(hydra-face-amaranth ((t (:foreground "#f99157"))))
+ '(hydra-face-blue ((t (:foreground "#6699cc"))))
+ '(hydra-face-pink ((t (:foreground "#cc99cc"))))
+ '(hydra-face-red ((t (:foreground "#f2777a"))))
+ '(hydra-face-teal ((t (:foreground "#66cccc"))))
+ '(org-block ((t (:foreground "#d3d0c8")))))

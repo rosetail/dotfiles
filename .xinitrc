@@ -19,4 +19,4 @@ xcape -e 'Control_R=Escape' &
 polybar main &
 sxhkd &
 kitty &
-exec dbus-launch --exit-with-session stumpwm
+exec dbus-launch --exit-with-session bspwm
