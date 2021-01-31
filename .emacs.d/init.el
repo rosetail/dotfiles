@@ -72,6 +72,9 @@
 	       (get-buffer-create "*compilation*"))
 	      (message "No Compilation Errors!")))))
 
+;; make yes or no prompts faster
+(defalias 'yes-or-no-p 'y-or-n-p)
+
 ;; set default font
 (set-frame-font "Input Mono Narrow Light-10" nil t)
 
@@ -125,7 +128,7 @@
     :states '(normal insert emacs motion visual operater)
     :keymaps 'override
     :prefix "SPC"
-    :non-normal-prefix "M-SPC"
+    :non-normal-prefix "C-SPC"
     :prefix-map 'leader-prefix-map)
 
   ;; global leader keys
@@ -158,7 +161,11 @@
             "e"      'evil-previous-visual-line
             [escape] 'keyboard-quit
             "TAB"    'indent-for-tab-command)
-
+  ;; make text ojects work properly in colemak
+  (:keymaps 'override
+            :states '(visual operator)
+            "u"      evil-inner-text-objects-map
+            "i"      'evil-forward-char)
   :config
   ;; translate keybindings for colemak
   (general-translate-key nil '(motion normal visual operator)
@@ -225,10 +232,16 @@
   :hook ((org-mode . evil-org-mode)
          (evil-org-mode . evil-org-set-key-theme))
   :general
-  (:keymaps 'evil-org-mode-map
+  (:keymaps 'evil-org-mode-map 
             :states '(motion normal visual operator)
             "g i" 'org-down-element
             "U"   'evil-org-insert-line)
+  ;; evil-org doesn't bind textobjects properly so we have manually redefine them
+  (:keymaps 'evil-inner-text-objects-map
+            "e" 'evil-org-inner-object
+            "E" 'evil-org-inner-element
+            "r" 'evil-org-inner-greater-element
+            "R" 'evil-org-inner-subtree)
   (:keymaps 'org-agenda-mode-map
             :states '(motion normal visual operator)
             "n"   'org-agenda-next-line
@@ -256,6 +269,8 @@
 
 ;; make sure we have flx so ivy does better fuzzy matching
 (use-package flx :defer t)
+;; not having ivy-hydra breaks some things
+(use-package ivy-hydra :defer t)
 
 (use-package ivy
   :init
@@ -291,8 +306,33 @@
 
 ;; improve projectile integration
 (use-package counsel-projectile
-  :demand t
+  :after (counsel projectile)
   :config (counsel-projectile-mode 1))
+
+(use-package org-agenda
+  :ensure nil
+  :defer t
+  :init
+  (setq org-directory    "~/org"
+        org-agenda-files (list "~/org/inbox.org"
+                               "~/org/agenda.org")
+        org-agenda-hide-tags-regexp "inbox"
+        org-agenda-prefix-format
+        '((agenda . " %i %-12:c%?-12t% s")
+          (todo   . " ")
+          (tags   . " %i %-12:c")
+          (search . " %i %-12:c"))
+        org-capture-templates
+        `(("i" "Inbox" entry  (file "inbox.org")
+           ,(concat "* TODO %?\n"
+                    "/Entered on/ %U"))))
+  (defhydra hydra-org (:color blue :hint nil)
+    "
+_a_: Agenda, _c_: Capture"
+    ("a" org-agenda)
+    ("c" org-capture))
+
+  (leader-def "o" 'hydra-org/body))
 
 (use-package org
   :defer t
@@ -308,9 +348,9 @@
         org-edit-src-content-indentation 0
         org-src-tab-acts-natively t
         org-startup-indented t
-        org-hide-emphasis-markers t)
-  ;; add agenda file
-  (setq org-agenda-files '("~/org/"))
+        org-hide-emphasis-markers t
+        org-catch-invisible-edits 'smart
+        org-ctrl-k-protect-subtree t)
 
   ;; align tags to the right regardless of window size
   (defun org-keep-tags-to-right ()
@@ -341,28 +381,31 @@
                                (downcase contents)))
         (replace-match "" nil nil contents)))
 
-    (add-to-list 'org-export-filter-headline-functions 'org-ignore-headline)
-
-    )
+    (add-to-list 'org-export-filter-headline-functions 'org-ignore-headline))
   :custom-face
   (org-block ((t (:foreground "#d3d0c8")))))
 
 (use-package company
-  :demand t
+  :defer 0.75
   :config (global-company-mode)
   :general
   ("C-<return>" 'company-complete))
 
 (use-package flycheck
+  :defer 1
   :init
   (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
   :config
   (global-flycheck-mode))
 
 (use-package projectile
-  :defer 2
-  :after (hydra counsel)
+  :defer 0.5
+  :after (hydra)
   :init
+  (setq projectile-project-search-path '("~/" "~/code")
+        projectile-indexing-method 'hybrid ;; needed to make sorting work
+        projectile-sort-order 'default)
+  
   (defun my/counsel-projectile-find-org-file ()
     "call counsel-projectile-find-file-dwim but pretend the current dir is ~/org"
     (interactive)
@@ -377,7 +420,7 @@
 
   (defhydra hydra-projectile (:color blue :hint nil)
     "
-^Projectile: %(projectile-project-name)
+^Projectile
 ^Find File^            ^Navigate Files^       ^^Buffers^              ^Search/Tags^          ^^^Exec^
 ^^---------------------^^---------------------^^^---------------------^^---------------------^^^^----------------
 _f_: find file         _p_: switch project    ^_b_: list buffers      _r_: ripgrep           ^^_x_: run
@@ -416,13 +459,11 @@ _D_: edit dir-locals   ^^                     ^^^                     ^^        
     ("&" projectile-run-async-shell-command-in-root))
 
   (leader-def "p" 'hydra-projectile/body)
+  :config
+  (projectile-mode 1)
 
-  (setq projectile-project-search-path '("~/" "~/code")
-        projectile-indexing-method 'hybrid ;; needed to make sorting work
-        projectile-sort-order 'default) ;; disable sortng for now
   :general (:keymaps 'projectile-mode-map
-                     "C-c p"  'projectile-command-map)
-  :config (projectile-mode 1))
+                     "C-c p"  'projectile-command-map))
 
 (use-package popwin
   :after (general hydra)
@@ -441,7 +482,7 @@ _D_: edit dir-locals   ^^                     ^^^                     ^^        
   ^Buffers^             ^Window Placement^      ^Misc^
 --^^--------------------^^----------------------^^-------------------
   _b_: show buffer      _c_: close popup        _m_: display messages
-  _l_: show last buffer _1_: maximize popup     _f_: show file
+  _l_: show last buffer _f_: maximize popup     _o_: open file
 _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 
 "
@@ -450,11 +491,11 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
     ("SPC" popwin:select-popup-window)
 
     ("c"   popwin:close-popup-window)
-    ("1"   popwin:one-window)
+    ("f"   popwin:one-window)
     ("S"   popwin:stick-popup-window)
 
     ("m"   popwin:messages)
-    ("f"   popwin:find-file)
+    ("o"   popwin:find-file)
     ("s"   my/popwin-eshell))
 
   (leader-def "t" 'hydra-popwin/body)
@@ -475,8 +516,8 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (lsp-enable-on-type-formatting nil)
   (lsp-enable-indentation nil)
   :hook
-  ((before-save . (call-interactively lsp-format-buffer))
-   (c++-mode . lsp)))
+  ((before-save . lsp-format-buffer))
+  (c++-mode . lsp))
 
 (use-package auctex
   :after tex
@@ -531,24 +572,27 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :hook ((prog-mode . highlight-numbers-mode)
          (conf-mode . highlight-numbers-mode)))
 
-;; (use-package smart-compile
-;;   :defer t
-;;   :init
-;;   (leader-def "m" 'smart-compile))
-
-(use-package quickrun
-  :after hydra
+(use-package smart-compile
   :defer t
   :init
-  (defhydra hydra-quickrun (:color blue :hint nil)
-    "
-_c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
-    ("c" quickrun-compile-only)
-    ("r" quickrun)
-    ("s" quickrun-shell)
-    ("a" quickrun-with-arg)
-    ("R" quickrun-region))
-  (leader-def "r" 'hydra-quickrun/body))
+  (leader-def "m" 'smart-compile))
+
+;; (use-package quickrun
+;;   :after hydra
+;;   :defer t
+;;   :init
+;;   (defhydra hydra-quickrun (:color blue :hint nil)
+;;     "
+;; _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
+;;     ("c" quickrun-compile-only)
+;;     ("r" quickrun)
+;;     ("s" quickrun-shell)
+;;     ("a" quickrun-with-arg)
+;;     ("R" quickrun-region))
+;;   (leader-def "r" 'hydra-quickrun/body))
+
+;; reset file-name-handler-alist
+(setq file-name-handler-alist my/file-name-handler-alist)
 
 (use-package smartparens
   :demand t
@@ -627,28 +671,3 @@ _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
   :demand t
   :after smartparens-config
   :hook (smartparens-enabled . evil-smartparens-mode))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(smex yasnippet-snippets yaml-mode whitespace-cleanup-mode which-key visual-regexp-steroids use-package undo-tree telephone-line sublimity spaceline smart-compile smart-comment slime-company skewer-mode scheme-complete region-bindings-mode rainbow-mode quickrun propfont-mixed popwin polymode pdf-tools paredit page-break-lines ox-twbs origami notmuch nord-theme nix-sandbox nix-haskell-mode multiple-cursors mips-mode minimap mingus meghanada markdown-preview-eww magit magic-latex-buffer lsp-mode leuven-theme latex-preview-pane key-chord java-imports ivy-prescient ivy-bibtex iedit hydra htmlize highlight-numbers highlight-escape-sequences haskell-snippets hacker-typer gruvbox-theme groovy-mode gradle-mode general fvwm-mode flyspell-correct-popup flyspell-correct-ivy flymd flx fish-mode fireplace f3 expand-region evil-vimish-fold evil-smartparens evil-org evil-lion evil-god-state evil-collection evil-colemak-basics ess ebib doom-modeline direnv counsel-projectile comment-dwim-2 clang-format benchmark-init base16-theme avy auctex ample-theme aggressive-indent)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(doom-modeline-evil-emacs-state ((t (:foreground "#f2777a"))))
- '(doom-modeline-evil-insert-state ((t (:foreground "#6699cc"))))
- '(doom-modeline-evil-motion-state ((t (:foreground "#ffcc66"))))
- '(doom-modeline-evil-normal-state ((t (:foreground "#99cc99"))))
- '(doom-modeline-evil-operator-state ((t (:foreground "#cc99cc"))))
- '(doom-modeline-evil-replace-state ((t (:foreground "#f99157"))))
- '(doom-modeline-evil-visual-state ((t (:foreground "#66cccc"))))
- '(hydra-face-amaranth ((t (:foreground "#f99157"))))
- '(hydra-face-blue ((t (:foreground "#6699cc"))))
- '(hydra-face-pink ((t (:foreground "#cc99cc"))))
- '(hydra-face-red ((t (:foreground "#f2777a"))))
- '(hydra-face-teal ((t (:foreground "#66cccc"))))
- '(org-block ((t (:foreground "#d3d0c8")))))

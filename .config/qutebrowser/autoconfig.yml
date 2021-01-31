@@ -229,6 +229,7 @@ settings:
     '*://*.app3.checksconnect.com/*': true
     '*://*.archive.org/*': true
     '*://*.auto-buy.geico.com/*': true
+    '*://*.caccl-deanza.primo.exlibrisgroup.com/*': true
     '*://*.cas.pugetsound.edu/*': true
     '*://*.connect.secure.wellsfargo.com/*': true
     '*://*.csprd.ctclink.us/*': true
@@ -279,6 +280,7 @@ settings:
     '*://*.pugetsound.instructure.com/*': true
     '*://*.riot.im/*': true
     '*://*.rutracker.org/*': true
+    '*://*.search-proquest-com.deanza.idm.oclc.org/*': true
     '*://*.seattle.craigslist.org/*': true
     '*://*.secure1.fadv.com/*': true
     '*://*.shale.peopleanswers.com/*': true
@@ -289,6 +291,7 @@ settings:
     '*://*.twitter.com/*': true
     '*://*.vanillatweaks.net/*': true
     '*://*.wd5.myworkday.com/*': true
+    '*://*.web.a.ebscohost.com.deanza.idm.oclc.org/*': true
     '*://*.web.archive.org/*': true
     '*://*.webmail.pugetsound.edu/*': true
     '*://*.webwork.pugetsound.edu/*': true
