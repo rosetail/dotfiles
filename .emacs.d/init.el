@@ -21,8 +21,8 @@
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (package-initialize)
 (setq package-archive-priorities
-      '(("melpa-stable" . 2)
-        ("melpa" . 1)
+      '(("melpa" . 2)
+        ("melpa-stable" . 1)
         ("gnu" . 0)))
 
 ;; set up use-package
@@ -147,12 +147,16 @@
   :demand t
   :init
   (setq-default cursor-in-non-selected-windows nil)
-  (setq evil-want-keybinding nil)
+  (setq evil-want-keybinding nil
+        ;; make ctrlf integration work
+        evil-search-module 'evil-search)
   :general
   ;; alias C-e and M-e to C-p and M-p so scrolling with vim navigation keys works
   ;; this leaves us unable to access anything bound to C-e or M-e, but I don't really use thse keys
   ("C-e" (general-key "C-p")
-   "M-e" (general-key "M-p"))
+   "M-e" (general-key "M-p")
+   ;; use M-/ to unhighlight search
+   "M-/" 'evil-ex-nohighlight)
   ;; modify basic evil keybindings
   (:keymaps 'global-map
             :states '(motion normal visual operator)
@@ -166,6 +170,9 @@
             :states '(visual operator)
             "u"      evil-inner-text-objects-map
             "i"      'evil-forward-char)
+  :custom
+  (evil-ex-search-persistent-highlight nil)
+  (evil-ex-search-highlight-all t)
   :config
   ;; translate keybindings for colemak
   (general-translate-key nil '(motion normal visual operator)
@@ -267,47 +274,60 @@
   :config
   (evil-org-agenda-set-keys))
 
-;; make sure we have flx so ivy does better fuzzy matching
-(use-package flx :defer t)
-;; not having ivy-hydra breaks some things
-(use-package ivy-hydra :defer t)
+(use-package ctrlf
+  :demand t
+  :general
+  (:states
+   '(motion normal visual operator)
+   "/" 'ctrlf-forward-regexp
+   "?" 'ctrlf-backward-regexp)
+  :config
+  (ctrlf-mode))
 
-(use-package ivy
+(use-package selectrum
+  :demand t
+  :general ("C-x C-a" 'find-file)
+  :config (selectrum-mode))
+
+(use-package orderless
+  :demand t
   :init
-  ;; use fuzzy search everywhere except swiper
-  (setq ivy-re-builders-alist
-        '((swiper . ivy--regex-plus)
-          (t      . ivy--regex-fuzzy)))
+  (setq orderless-matching-styles '(orderless-initialism orderless-prefixes))
+  :custom (completion-styles '(orderless)))
 
-  :general
-  ;; C-x C-a is much more comfortable on colemak than C-x C-f
-  ("C-x C-a" 'counsel-find-file
-   ;; use counsel to insert unicode characters
-   "C-x 8 RET" 'counsel-unicode-char
-   ;; replace isearch with swiper
-   "C-s" 'swiper)
-  (:keymaps 'ivy-minibuffer-map
-            ;; make enter descend into directory instead of opening dired
-            "RET" 'ivy-alt-done
-            ;; make C-j open dired instead
-            "C-j" 'ivy-immediate-done)
-  :diminish ivy-mode
+(use-package marginalia
+  :demand t
+  :init
+  (setq marginalia-annotators
+        '(marginalia-annotators-heavy
+          marginalia-annotators-light))
   :config
-  (ivy-mode 1)
-  :demand t)
+  (marginalia-mode))
 
-(use-package counsel
-  :after ivy
+(use-package embark
+  :demand t
+  :after which-key
+  :init
+  (setq embark-action-indicator
+        (lambda (map)
+          (which-key--show-keymap "Embark" map nil nil 'no-paging)
+          #'which-key--hide-popup-ignore-command)
+        embark-become-indicator embark-action-indicator)
   :general
-  (:keymaps 'swiper-map
-            "ESC" 'minibuffer-keyboard-quit)
-  :config
-  (counsel-mode))
+  ("M-o" 'embark-act))
 
-;; improve projectile integration
-(use-package counsel-projectile
-  :after (counsel projectile)
-  :config (counsel-projectile-mode 1))
+
+(use-package consult
+  :defer t
+  :general
+  ("M-'" 'consult-line)
+  ("C-x b" 'consult-buffer))
+
+(use-package embark-consult
+  :demand t
+  :after (embark consult)
+  :hook
+  (embark-collect-mode . embark-consult-preview-minor-mode))
 
 (use-package org-agenda
   :ensure nil
@@ -406,11 +426,11 @@ _a_: Agenda, _c_: Capture"
         projectile-indexing-method 'hybrid ;; needed to make sorting work
         projectile-sort-order 'default)
   
-  (defun my/counsel-projectile-find-org-file ()
-    "call counsel-projectile-find-file-dwim but pretend the current dir is ~/org"
+  (defun my/projectile-find-org-file ()
+    "call projectile-find-file-dwim but pretend the current dir is ~/org"
     (interactive)
     (let ((default-directory "~/org/"))
-      (call-interactively 'counsel-projectile-find-file-dwim)))
+      (call-interactively 'projectile-find-file-dwim)))
 
   (defun my/projectile-popwin-eshell ()
     (interactive)
@@ -429,22 +449,22 @@ _d_: find dir          _T_: switch to test    ^_S_: save buffers      _g_: find 
 _o_: file in ~/org     _s_: eshell            ^_k_: kill buffers      _G_: regenerate tags   ^^_t_: test
 _D_: edit dir-locals   ^^                     ^^^                     ^^                   _!_/_&_: shell command
 "
-    ("f" counsel-projectile-find-file-dwim)
+    ("f" projectile-find-file-dwim)
     ("a" projectile-find-file-in-known-projects)
-    ("d" counsel-projectile-find-dir)
-    ("o" my/counsel-projectile-find-org-file)
+    ("d" projectile-find-dir)
+    ("o" my/projectile-find-org-file)
 
-    ("p" counsel-projectile-switch-project)
+    ("p" projectile-switch-project)
     ("e" projectile-find-other-file)
     ("T" projectile-toggle-between-implementation-and-test)
     ("s" my/projectile-popwin-eshell)
 
-    ("b" counsel-projectile-switch-to-buffer)
+    ("b" projectile-switch-to-buffer)
     ("%" projectile-replace)
     ("S" projectile-save-project-buffers)
     ("k" projectile-kill-buffers)
 
-    ("r" counsel-projectile-rg)
+    ("r" projectile-rg)
     ("O" projectile-multi-occur)
     ("g" projectile-find-tag)
     ("G" projectile-regenerate-tags)
