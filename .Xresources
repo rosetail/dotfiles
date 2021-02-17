@@ -9,4 +9,4 @@ Xft.rgba: rgb
 Xcursor.size: 48
 Xcursor.theme: Adwaita
 
-Emacs.font: Mononoki-10:antialias=true:hinting=true:autohint=false:hintstyle=3
+Emacs.font: IBM Plex Mono-10:antialias=true:hinting=true:autohint=false:hintstyle=3

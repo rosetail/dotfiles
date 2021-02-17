@@ -237,6 +237,7 @@ settings:
     '*://*.directaccess.nordstrom.com/*': true
     '*://*.discordapp.com/*': true
     '*://*.duckduckgo.com/*': true
+    '*://*.dw-prod.ec.fhda.edu/*': true
     '*://*.egvv.fa.us6.oraclecloud.com/*': true
     '*://*.foothill.edu/*': true
     '*://*.foothillcollege.instructure.com/*': true
@@ -306,6 +307,7 @@ settings:
     '*://*.www.dmv.ca.gov/*': true
     '*://*.www.fastmail.com/*': true
     '*://*.www.gentoo.org/*': true
+    '*://*.www.linuxfoundation.org/*': true
     '*://*.www.meleeitonme.com/*': true
     '*://*.www.namecheap.com/*': true
     '*://*.www.omorashi.org/*': true

@@ -245,17 +245,17 @@ projects = [
       },
   Project {
       projectName      = "Term.2",
-      projectDirectory = "/data/nix/home-manager",
+      projectDirectory = "~/",
       projectStartHook = Nothing
       },
   Project {
       projectName      = "Term.3",
-      projectDirectory = "/data/nix/home-manager",
+      projectDirectory = "~/",
       projectStartHook = Nothing
       },
   Project {
       projectName      = "Term.4",
-      projectDirectory = "/data/nix/home-manager",
+      projectDirectory = "~/",
       projectStartHook = Nothing
       },
 
@@ -274,34 +274,34 @@ projects = [
 
   Project {
       projectName      = "Study",
-      projectDirectory = "~/Documents",
+      projectDirectory = "~/",
       projectStartHook = Nothing
       },
   Project {
       projectName      = "Study.2",
-      projectDirectory = "~/Documents",
+      projectDirectory = "~/",
       projectStartHook = Nothing
       },
   Project {
       projectName      = "Study.3",
-      projectDirectory = "~/Documents",
+      projectDirectory = "~/",
       projectStartHook = Nothing
       },
   Project {
       projectName      = "Study.4",
-      projectDirectory = "~/Documents",
+      projectDirectory = "~/",
       projectStartHook = Nothing
       },
 
   Project {
       projectName      = "Prog",
-      projectDirectory = "~/code",
+      projectDirectory = "~/",
       projectStartHook = Just $ do spawn "emacs-autoclient"
       },
 
   Project {
       projectName      = "Music",
-      projectDirectory = "~/Music",
+      projectDirectory = "~/",
       projectStartHook = Just $ do spawn "soulseek"
       },
 

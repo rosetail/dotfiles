@@ -25,6 +25,9 @@
         ("melpa-stable" . 1)
         ("gnu" . 0)))
 
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
 ;; set up use-package
 (require 'use-package)
 (setq use-package-compute-statistics t
@@ -76,15 +79,12 @@
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 ;; set default font
-(set-frame-font "Input Mono Narrow Light-10" nil t)
-
-;; load theme
-(use-package base16-theme
-  :init (load-theme 'base16-eighties t)
-  :custom
-  ;; skip startup screen and go to scratch buffer
-  ;; TODO: see about using general-custom
-  (inhibit-startup-screen t))
+(set-frame-font "monospace-10" nil t)
+;; don't confirm when running load-theme interactively
+(advice-add 'load-theme
+            :around (lambda
+                      (fn theme &optional no-confirm no-enable)
+                      (funcall fn theme t)))
 
 ;; setup modeline
 (use-package doom-modeline
@@ -93,13 +93,13 @@
   (setq doom-modeline-enable-word-count t)
   :custom-face
   ;; (doom-modeline-bar ((t (:background "#f99157"))))
-  (doom-modeline-evil-normal-state   ((t (:foreground "#99cc99"))))
-  (doom-modeline-evil-insert-state   ((t (:foreground "#6699cc"))))
-  (doom-modeline-evil-visual-state   ((t (:foreground "#66cccc"))))
-  (doom-modeline-evil-operator-state ((t (:foreground "#cc99cc"))))
-  (doom-modeline-evil-motion-state   ((t (:foreground "#ffcc66"))))
-  (doom-modeline-evil-replace-state  ((t (:foreground "#f99157"))))
-  (doom-modeline-evil-emacs-state    ((t (:foreground "#f2777a"))))
+  ;; (doom-modeline-evil-normal-state   ((t (:foreground "#99cc99"))))
+  ;; (doom-modeline-evil-insert-state   ((t (:foreground "#6699cc"))))
+  ;; (doom-modeline-evil-visual-state   ((t (:foreground "#66cccc"))))
+  ;; (doom-modeline-evil-operator-state ((t (:foreground "#cc99cc"))))
+  ;; (doom-modeline-evil-motion-state   ((t (:foreground "#ffcc66"))))
+  ;; (doom-modeline-evil-replace-state  ((t (:foreground "#f99157"))))
+  ;; (doom-modeline-evil-emacs-state    ((t (:foreground "#f2777a"))))
   :hook (after-init . doom-modeline-mode))
 
 ;; show line numbers in fringe, but only in programming modes
@@ -120,6 +120,16 @@
 ;; emacs renders Mononoki 2 pixels to short
 ;; (setq-default line-spacing 0)
 
+(use-package color-theme-sanityinc-solarized
+  :init (load-theme 'sanityinc-solarized-dark t)
+  :custom
+  ;; skip startup screen and go to scratch buffer
+  ;; TODO: see about using general-custom
+  (inhibit-startup-screen t)
+  :custom-face
+  (font-lock-comment-face ((t (:slant italic))))
+  (font-lock-comment-delimiter-face ((t (:slant italic)))))
+
 (use-package general
   :config
   ;; create leader key
@@ -133,7 +143,6 @@
 
   ;; global leader keys
   (leader-def
-    "a" 'avy-goto-subword-1
     ;; indent whole buffer
     "TAB" (lambda ()
             (interactive)
@@ -361,7 +370,9 @@ _a_: Agenda, _c_: Capture"
         ;; make all images 600px wide
         org-image-actual-width 600
         ;; use smart quotes when exporting
-        org-export-with-smart-quotes t)
+        org-export-with-smart-quotes t
+        ;; make checkbox counters recursive
+        org-checkbox-hierarchical-statistics nil)
 
   ;; make indentation work properly when editing org src
   (setq org-adapt-indentation nil
@@ -379,15 +390,32 @@ _a_: Agenda, _c_: Capture"
 	  (inhibit-message t)) ;; don't say the new column with every time
       (when (and (equal major-mode 'org-mode)
 		 (org-get-buffer-tags))
-	(setq org-tags-column (- 2 (window-body-width)))
+	(setq org-tags-column (- 3 (window-body-width)))
 	(org-align-tags t)
 	(when (not buffer-modified)
 	  (set-buffer-modified-p nil)))))
+  
   
   (add-hook 'window-configuration-change-hook 'org-keep-tags-to-right)
   (add-hook 'focus-in-hook 'org-keep-tags-to-right)
   (add-hook 'focus-out-hook 'org-keep-tags-to-right)
 
+  ;; make org html export use readthedocs theme at https://github.com/fniessen/org-html-themes
+  (use-package htmlize
+    :init
+
+    ;; use readthedocs stylesheet for html export
+    ;; from fniessen.github.org/org-html-themes
+    (setq org-html-head
+          (concat "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css\"/>\n"
+                  "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css\"/>\n"
+                  "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js\"></script>\n"
+                  "<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js\"></script>\n"
+                  "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js\"></script>\n"
+                  "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js\"></script>\n"
+                  "<style>pre.src{background:#1c1e26;color:#cbced0;} </style>\n"
+                  "<style>#postamble .date{color:#6f6f70;} </style>"))
+    :defer t)
   :config
   (use-package ox ; needed for org-export-filter-headline-function
     :ensure nil
@@ -402,8 +430,21 @@ _a_: Agenda, _c_: Capture"
         (replace-match "" nil nil contents)))
 
     (add-to-list 'org-export-filter-headline-functions 'org-ignore-headline))
+  ;; TODO: switch this to custom-face
+  (set-face-attribute 'org-block-begin-line nil :background 'unspecified)
+  (set-face-attribute 'org-block-end-line nil :background 'unspecified)
+  (set-face-attribute 'org-block nil :extend t)
   :custom-face
-  (org-block ((t (:foreground "#d3d0c8")))))
+  ;; make default face in org src block look right
+  ;; (org-block ((t (:foreground "#cbced0" :background "#232530" :extend t))))
+  ;; (org-block ((t (:foreground "#cbced0"))))
+  ;; highlight beginning and end of block
+  ;; (org-block-begin-line ((t (:background "#2e303e" :extend t))))
+  ;; (org-block-end-line ((t (:background "#2e303e" :extend t))))
+  ;; switch outline-4 and outline-4 so I don't see comment face as much
+  ;; (outline-4 ((t (:foreground "#efaf8e"))))
+  ;; (outline-8 ((t (:foreground "#6f6f70"))))
+  )
 
 (use-package company
   :defer 0.75
@@ -536,8 +577,8 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (lsp-enable-on-type-formatting nil)
   (lsp-enable-indentation nil)
   :hook
-  ((before-save . lsp-format-buffer))
-  (c++-mode . lsp))
+  ;; ((before-save . (lambda () (when lsp-mode (lsp-format-buffer))))
+  ((c++-mode . lsp)))
 
 (use-package auctex
   :after tex
@@ -558,17 +599,26 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
      :help "Make pdf output using latexmk.")
    TeX-command-list))
 
-(use-package avy :commands avy-goto-subword-1)
+(use-package rainbow-mode
+  :hook (prog-mode . rainbow-mode))
+(use-package avy
+  :init 
+  (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o))
+  (leader-def "a" 'avy-goto-subword-1)
+  :commands avy-goto-subword-1)
 (use-package hydra
   :custom-face 
-  (hydra-face-red      ((t (:foreground "#f2777a"))))
-  (hydra-face-blue     ((t (:foreground "#6699cc"))))
-  (hydra-face-amaranth ((t (:foreground "#f99157"))))
-  (hydra-face-teal     ((t (:foreground "#66cccc"))))
-  (hydra-face-pink     ((t (:foreground "#cc99cc")))))
+  ;; (hydra-face-red      ((t (:foreground "#f2777a"))))
+  ;; (hydra-face-blue     ((t (:foreground "#6699cc"))))
+  ;; (hydra-face-amaranth ((t (:foreground "#f99157"))))
+  ;; (hydra-face-teal     ((t (:foreground "#66cccc"))))
+  ;; (hydra-face-pink     ((t (:foreground "#cc99cc"))))
+  )
 
 (use-package comment-dwim-2
-  :general ("M-;" 'comment-dwim-2))
+  :general
+  ("M-;" 'comment-dwim-2)
+  (:keymaps 'org-mode-map "M-;" 'org-comment-dwim-2))
 
 (use-package aggressive-indent
   :demand t
