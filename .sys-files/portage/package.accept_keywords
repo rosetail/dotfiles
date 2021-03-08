@@ -10,7 +10,7 @@ x11-wm/xmonad ~amd64
 x11-wm/xmonad-contrib ~amd64
 net-misc/youtube-dl ~amd64
 media-fonts/inconsolata-lgc ~amd64
-www-client/qutebrowser1 ~amd64
+www-client/qutebrowser ~amd64
 x11-misc/i3lock-color ~amd64
 games-action/multimc ~amd64
 games-action/minecraft-launcher ~amd64
@@ -231,3 +231,5 @@ sys-power/linux-x86-power-tools ~amd64
 =media-fonts/monoid-0.61 ~amd64
 # required by tabbed (argument)
 =x11-misc/tabbed-0.6 ~amd64
+# required by dev-libs/tree-sitter (argument)
+=dev-libs/tree-sitter-0.18.1 ~amd64

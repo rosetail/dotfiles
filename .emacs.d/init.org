@@ -84,6 +84,14 @@
 ;; set up indentation
 (setq-default c-basic-offset 4
               cperl-indent-level 4)
+
+;; https://stackoverflow.com/questions/14668744/emacs-indent-for-c-class-method
+(add-hook 'c++-mode-hook
+          (lambda ()
+            (c-set-offset 'access-label -2)
+            (c-set-offset 'inline-open 0)))
+
+
 (setq tab-width 4
       c-default-style '((java-mode . "java")
                         (awk-mode . "awk")
@@ -107,6 +115,49 @@
 
 ;; make yes or no prompts faster
 (defalias 'yes-or-no-p 'y-or-n-p)
+
+;; make middle click paste not move the cursor
+(setq mouse-yank-at-point t)
+#+end_src
+
+* functions
+** global hydra
+#+begin_src emacs-lisp :tangle yes
+(defvar my/global-hydra-heads-list '()
+  "List of hydra heads to be used by global-hydra. Use
+my/add-to-global-hydra to add entries")
+
+(defun my/add-to-global-hydra (head)
+  "add HEAD to my/global-hydra-heads-list"
+  ;; don't ever add SPC or ESC to GLOBAL-HYDRA
+  (catch 'invalid-head
+    (when (or (string= (car head) "ESC") (string= (car head) "SPC"))
+      (throw 'invalid-head "Can't add ESC or SPC to GLOBAL-HYDRA"))
+    ;; if there is already a head with the same keybinding, remove it
+    (let ((current-head nil))
+      (dolist (current-head my/global-hydra-heads-list)
+        (when (string= (car head) (car current-head))
+          (setq my/global-hydra-heads-list ; for some reason this doesn't work unless we use setq
+                (delete current-head my/global-hydra-heads-list)))))
+    ;; add the new head to the hydra
+    (add-to-list 'my/global-hydra-heads-list head)))
+
+(defun my/global-hydra ()
+  "Global hydra that functions like a leader key. Add heads with `my/add-to-global-hydra`"
+  (interactive)
+  (call-interactively
+   (eval `(defhydra sb/hydra-select-themes (:hint nil :color blue)
+            ,@my/global-hydra-heads-list))))
+
+;; start by adding TAB
+(my/add-to-global-hydra '("TAB"
+                          (lambda ()
+                            (interactive)
+                            (save-excursion
+                              (mark-whole-buffer)
+                              (indent-for-tab-command)))
+                          "Indent Buffer" :column "Editing"))
+
 #+end_src
 
 * visual customization
@@ -163,7 +214,8 @@
         kaolin-themes-org-scale-headings nil
         kaolin-themes-distinct-company-scrollbar t
         kaolin-ocean-alt-bg t)
-  (load-theme 'kaolin-shiva t)
+  (load-theme 'kaolin-temple t)
+  (set-face-attribute 'default nil :foreground "#D4D4D6")
   (set-face-attribute 'region nil :foreground 'unspecified) ;; make region face respect foreground
 
   :custom
@@ -187,8 +239,21 @@
   (font-lock-comment-delimiter-face ((t (:slant italic)))))
 #+end_src
 
-*** sanityinc solarized
+*** sanityinc tomorrow
 #+begin_src emacs-lisp :tangle yes
+(use-package color-theme-sanityinc-tomorrow
+  :init (load-theme 'sanityinc-tomorrow-eighties t)
+  :custom
+  ;; skip startup screen and go to scratch buffer
+  ;; TODO: see about using general-custom
+  (inhibit-startup-screen t)
+  :custom-face
+  (font-lock-comment-face ((t (:slant italic))))
+  (font-lock-comment-delimiter-face ((t (:slant italic)))))
+#+end_src
+
+*** sanityinc solarized
+#+begin_src emacs-lisp :tangle no
 (use-package color-theme-sanityinc-solarized
   :init (load-theme 'sanityinc-solarized-dark t)
   :custom
@@ -268,22 +333,31 @@
   :config
   ;; create leader key
   ;; bound to M-SPC in insert mode and SPC in all other modes
-  (general-create-definer leader-def
-    :states '(normal insert emacs motion visual operater)
-    :keymaps 'override
-    :prefix "SPC"
-    :non-normal-prefix "C-SPC"
-    :prefix-map 'leader-prefix-map)
+  ;; this has now been replaced with my/global-hydra
+  ;; (general-create-definer leader-def
+  ;;   :states '(normal insert emacs motion visual operater)
+  ;;   :keymaps 'override
+  ;;   :prefix "SPC"
+  ;;   :non-normal-prefix "C-SPC"
+  ;;   :prefix-map 'leader-prefix-map)
 
-  ;; global leader keys
-  (leader-def
-    ;; indent whole buffer
-    "TAB" (lambda ()
-            (interactive)
-            (save-excursion
-              (mark-whole-buffer)
-              (indent-for-tab-command))))
+  ;; ;; global leader keys
+  ;; (leader-def
+  ;;   ;; indent whole buffer
+  ;;   "TAB" (lambda ()
+  ;;           (interactive)
+  ;;           (save-excursion
+  ;;             (mark-whole-buffer)
+  ;;             (indent-for-tab-command))))
   ;; we have to demand general to global leader keys get bound during init
+  (general-define-key
+   :states '(normal motion visual operater)
+   :keymaps 'override
+   "SPC" 'my/global-hydra)
+  (general-define-key
+   :states '(normal insert emacs motion visual operater)
+   :keymaps 'override
+   "C-SPC" 'my/global-hydra)
   :demand t)
 #+end_src
 
@@ -358,9 +432,28 @@
   :after evil
   :init
   (setq evil-collection-setup-minibuffer nil)
+  (defun my-hjkl-rotation (_mode mode-keymaps &rest _rest)
+    (evil-collection-translate-key 'normal mode-keymaps
+      "n" "j"
+      "e" "k"
+      "i" "l"
+      "j" "e"
+      "k" "n"
+      "l" "i"))
+
+  ;; called after evil-collection makes its keybindings
+  ;; TODO: switch this to :hook
+  (add-hook 'evil-collection-setup-hook #'my-hjkl-rotation)
+
+  (evil-collection-init)
   :custom (evil-collection-company-use-tng nil) ; make company behave like emacs, not vim
   :config
   (evil-collection-init))
+
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
 #+end_src
 
 ** evil org
@@ -556,14 +649,17 @@ _a_: Agenda, _c_: Capture"
     ("a" org-agenda)
     ("c" org-capture))
 
-  (leader-def "o" 'hydra-org/body))
+  (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc")))
 #+end_src
 
 * org mode
 #+begin_src emacs-lisp :tangle yes
+;; TODO: refactor this whole section
 (use-package org
   :defer t
   :init
+  (add-hook 'org-mode-hook #'flyspell-mode)
+  ;; (add-hook 'org-mode-hook #'flyspell-buffer)
   (setq org-ellipsis " ▼"
         ;; make all images 600px wide
         org-image-actual-width 600
@@ -598,39 +694,10 @@ _a_: Agenda, _c_: Capture"
   (add-hook 'focus-in-hook 'org-keep-tags-to-right)
   (add-hook 'focus-out-hook 'org-keep-tags-to-right)
 
-  ;; make org html export use readthedocs theme at https://github.com/fniessen/org-html-themes
-  (use-package htmlize
-    :init
-
-    ;; use readthedocs stylesheet for html export
-    ;; from fniessen.github.org/org-html-themes
-    (setq org-html-head
-          (concat "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css\"/>\n"
-                  "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css\"/>\n"
-                  "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js\"></script>\n"
-                  "<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js\"></script>\n"
-                  "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js\"></script>\n"
-                  "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js\"></script>\n"
-                  "<style>pre.src{background:#1c1e26;color:#cbced0;} </style>\n"
-                  "<style>#postamble .date{color:#6f6f70;} </style>"))
-    :defer t)
   :config
-  (use-package ox ; needed for org-export-filter-headline-function
-    :ensure nil
-    :demand t
-    :config
-    ;; add ignore tag that will make org-export ignore the headline but keep the body
-    (defun org-ignore-headline (contents backend info)
-      "Ignore headlines with tag `ignore'."
-      (when (and (org-export-derived-backend-p backend 'latex 'html 'ascii)
-	         (string-match "\\`.*ignore.*\n"
-                               (downcase contents)))
-        (replace-match "" nil nil contents)))
-
-    (add-to-list 'org-export-filter-headline-functions 'org-ignore-headline))
   ;; TODO: switch this to custom-face
-  (set-face-attribute 'org-block-begin-line nil :background 'unspecified)
-  (set-face-attribute 'org-block-end-line nil :background 'unspecified)
+  ;; (set-face-attribute 'org-block-begin-line nil :background 'unspecified)
+  ;; (set-face-attribute 'org-block-end-line nil :background 'unspecified)
   (set-face-attribute 'org-block nil :extend t)
   :custom-face
   ;; make default face in org src block look right
@@ -645,13 +712,140 @@ _a_: Agenda, _c_: Capture"
   )
 #+end_src
 
+** org export
+*** Latex
+#+begin_src emacs-lisp :tangle yes
+(use-package ox ; needed for org-export-filter-headline-function
+  :ensure nil
+  :after org
+  :config
+  ;; use the soul package
+  (add-to-list 'org-latex-packages-alist '("" "soul"))
+  ;; define a general purpose assignment class and make it the default
+  (add-to-list 'org-latex-classes
+               '("assignment"
+                 "\\documentclass[11pt]{article}
+\\usepackage[margin=1in]{geometry}
+\\usepackage[doublespacing]{setspace}
+\\setlength{\\parskip}{1em}
+[DEFAULT-PACKAGES]
+[PACKAGES]
+\\usepackage{titlesec}
+\\titleformat*{\\section}{\\Large\\bfseries}
+\\titleformat*{\\subsection}{\\large\\bfseries}
+\\titleformat*{\\subsubsection}{\\bfseries}
+\\titleformat*{\\paragraph}{\\bfseries}
+\\titleformat*{\\subparagraph}{\\bfseries}
+\\titlespacing\\section{0pt}{-10pt}{-10pt}
+\\titlespacing\\subsection{0pt}{-10pt}{-10pt}
+\\titlespacing\\subsubsection{0pt}{-10pt}{-10pt}
+\\setlength{\\parindent}{4em}
+
+\\setcounter{secnumdepth}{0}
+[EXTRA]
+
+\\makeatletter
+\\renewcommand\\maketitle{
+\\begin{flushright}
+  \\@author\\\\
+  \\@date
+\\end{flushright}
+\\begin{center}
+  \\Large{\\@title}
+\\end{center}
+}
+\\makeatother
+"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")))
+  (setq org-latex-default-class "assignment")
+
+  ;; don't ever switch to enumerate for headlines
+  (setq org-export-headline-levels -1
+        ;; org-latex-pdf-process '("latexmk -pvc -cd -interaction=nonstopmode %f")
+        TeX-auto-local ".build"
+        org-export-with-toc nil
+        org-export-with-tags nil)
+  ;; dont add \label when exporting
+  ;; from https://stackoverflow.com/questions/18076328/org-mode-export-to-latex-suppress-generation-of-labels
+  (defun rm-org-latex-labels (text backend _info)
+    "Remove labels auto-generated by `org-mode' export to LaTeX."
+    (when (eq backend 'latex)
+      (replace-regexp-in-string "\\\\label{sec:org[a-f0-9]+}\n" "" text)))
+
+  (add-to-list #'org-export-filter-headline-functions
+               #'rm-org-latex-labels)
+  ;; add ignore tag that will make org-export ignore the headline but keep the body
+  ;; (defun org-ignore-headline (contents backend info)
+  ;;   "Ignore headlines with tag `ignore'."
+  ;;   (when (and (org-export-derived-backend-p backend 'latex 'html 'ascii)
+  ;;              (string-match "\\`.*ignore.*\n"
+  ;;                            (downcase contents)))
+  ;;     (replace-match "" nil nil contents)))
+
+  ;; (add-to-list 'org-export-filter-headline-functions 'org-ignore-headline)
+
+
+  ;; ignore tags without the noignore headline in latex export
+  (defun org-noignore-headline (contents backend info)
+    "Ignore headlines without tag `noignore'."
+    (unless (string-match "\\`.*noignore.*\n" (downcase contents))
+      (when (and (org-export-derived-backend-p backend 'latex)
+                 (string-match "\\`.*\n"
+                               (downcase contents)))
+        (replace-match "\n" nil nil contents))))
+
+  (add-to-list 'org-export-filter-headline-functions 'org-noignore-headline)
+  
+  
+(defun my/toggle-org-latex-export-on-save ()
+  "Toggle auto export to latex when saving an org buffer"
+  (interactive)
+  (if (memq 'org-latex-export-to-latex after-save-hook)
+      (progn
+        (org-latex-export-to-latex t)
+        (remove-hook 'after-save-hook 'org-latex-export-to-latex t)
+        (message "Disabled org latex export on save for current buffer..."))
+    (add-hook 'after-save-hook 'org-latex-export-to-latex nil t)
+    (message "Enabled org latex export on save for current buffer..."))))
+#+end_src
+
+*** HTML
+#+begin_src emacs-lisp :tangle yes
+(use-package htmlize
+  :init
+  ;; use readthedocs stylesheet for html export
+  ;; from fniessen.github.org/org-html-themes
+  (setq org-html-head
+        (concat "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css\"/>\n"
+                "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css\"/>\n"
+                "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js\"></script>\n"
+                "<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js\"></script>\n"
+                "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js\"></script>\n"
+                "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js\"></script>\n"
+                "<style>pre.src{background:#1c1e26;color:#cbced0;} </style>\n"
+                "<style>#postamble .date{color:#6f6f70;} </style>"))
+  :defer t)
+#+end_src
 * smartparens
 #+begin_src elisp :tangle yes
 (use-package smartparens
   :demand t
   :init
   ;; bind <leader>-s to smartparens hydra
-  (leader-def "s" 'hydra-smartparens/body)
+  (my/add-to-global-hydra '("s" hydra-smartparens/body "Smartparens" :column "Editing"))
   
   :config
   (smartparens-global-strict-mode 1)
@@ -809,7 +1003,7 @@ _D_: edit dir-locals   ^^                     ^^^                     ^^        
     ("!" projectile-run-shell-command-in-root)
     ("&" projectile-run-async-shell-command-in-root))
 
-  (leader-def "p" 'hydra-projectile/body)
+  (my/add-to-global-hydra '("p" hydra-projectile/body "Projectile" :column "Tools"))
   :config
   (projectile-mode 1)
 
@@ -853,7 +1047,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
     ("o"   popwin:find-file)
     ("s"   my/popwin-eshell))
 
-  (leader-def "t" 'hydra-popwin/body)
+  (my/add-to-global-hydra '("t" hydra-popwin/body "Popwin" :column "Misc"))
   :config
   (popwin-mode 1))
 #+end_src
@@ -877,8 +1071,8 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (lsp-enable-on-type-formatting nil)
   (lsp-enable-indentation nil)
   :hook
-  ;; ((before-save . (lambda () (when lsp-mode (lsp-format-buffer))))
-  ((c++-mode . lsp)))
+  ((before-save . (lambda () (when lsp-mode (lsp-format-buffer))))
+   (c++-mode . lsp)))
 
 #+end_src
 
@@ -911,7 +1105,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 (use-package avy
   :init 
   (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o))
-  (leader-def "a" 'avy-goto-subword-1)
+  (my/add-to-global-hydra '("a" avy-goto-subword-1 "Avy" :column "Editing"))
   :commands avy-goto-subword-1)
 (use-package hydra
   :custom-face 
@@ -952,7 +1146,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 (use-package smart-compile
   :defer t
   :init
-  (leader-def "m" 'smart-compile))
+  (my/add-to-global-hydra '("m" smart-compile "Smart Compile" :column "Tools")))
 
 ;; (use-package quickrun
 ;;   :after hydra
@@ -966,7 +1160,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 ;;     ("s" quickrun-shell)
 ;;     ("a" quickrun-with-arg)
 ;;     ("R" quickrun-region))
-;;   (leader-def "r" 'hydra-quickrun/body))
+;;   (my/add-to-global-hydra '("r" hydra-quickrun/body "Quickrun" :column "Tools"))
 
 ;; reset file-name-handler-alist
 (setq file-name-handler-alist my/file-name-handler-alist)
