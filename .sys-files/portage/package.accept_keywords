@@ -1,3 +1,4 @@
+lxde-base/lxappearance ~amd64
 x11-wm/stumpwm ~amd64
 x11-wm/stumpwm-contrib ~amd64
 =dev-lisp/alexandria-20171029 ~amd64

@@ -146,7 +146,7 @@ my/add-to-global-hydra to add entries")
   "Global hydra that functions like a leader key. Add heads with `my/add-to-global-hydra`"
   (interactive)
   (call-interactively
-   (eval `(defhydra sb/hydra-select-themes (:hint nil :color blue)
+   (eval `(defhydra my-hydra (:hint nil :color blue)
             ,@my/global-hydra-heads-list))))
 
 ;; start by adding TAB
@@ -164,6 +164,7 @@ my/add-to-global-hydra to add entries")
 #+begin_src emacs-lisp :tangle yes
 ;; set default font
 (set-frame-font "monospace-10" nil t)
+
 ;; don't confirm when running load-theme interactively
 (advice-add 'load-theme
             :around (lambda
@@ -201,21 +202,20 @@ my/add-to-global-hydra to add entries")
       scroll-conservatively 10000
       scroll-preserve-screen-position t)
 
-;; emacs renders Mononoki 2 pixels to short
+;; emacs renders Mononoki 2 pixels too short
 ;; (setq-default line-spacing 0)
-
 #+end_src
+
 ** theme
-*** kaolin
-#+begin_src emacs-lisp :tangle no
+*** COMMENT kaolin
+#+begin_src emacs-lisp :tangle yes
 (use-package kaolin-themes
   :init
   (setq kaolin-themes-italic-comments t
         kaolin-themes-org-scale-headings nil
         kaolin-themes-distinct-company-scrollbar t
         kaolin-ocean-alt-bg t)
-  (load-theme 'kaolin-temple t)
-  (set-face-attribute 'default nil :foreground "#D4D4D6")
+  (load-theme 'kaolin-shiva t)
   (set-face-attribute 'region nil :foreground 'unspecified) ;; make region face respect foreground
 
   :custom
@@ -226,20 +226,21 @@ my/add-to-global-hydra to add entries")
   (font-lock-comment-delimiter-face ((t (:slant italic)))))
 #+end_src
 
-*** doom
-#+begin_src emacs-lisp :tangle no
+*** COMMENT doom
+#+begin_src emacs-lisp :tangle yes
 (use-package doom-themes
-  :init (load-theme 'doom-solarized-dark t)
+  :init (load-theme 'doom-dracula t)
   :custom
   ;; skip startup screen and go to scratch buffer
   ;; TODO: see about using general-custom
   (inhibit-startup-screen t)
   :custom-face
+  (org-block ((t (:foreground "#f8f8f2"))))
   (font-lock-comment-face ((t (:slant italic))))
   (font-lock-comment-delimiter-face ((t (:slant italic)))))
 #+end_src
 
-*** sanityinc tomorrow
+*** COMMENT sanityinc tomorrow
 #+begin_src emacs-lisp :tangle yes
 (use-package color-theme-sanityinc-tomorrow
   :init (load-theme 'sanityinc-tomorrow-eighties t)
@@ -252,8 +253,8 @@ my/add-to-global-hydra to add entries")
   (font-lock-comment-delimiter-face ((t (:slant italic)))))
 #+end_src
 
-*** sanityinc solarized
-#+begin_src emacs-lisp :tangle no
+*** COMMENT sanityinc solarized
+#+begin_src emacs-lisp :tangle yes
 (use-package color-theme-sanityinc-solarized
   :init (load-theme 'sanityinc-solarized-dark t)
   :custom
@@ -265,8 +266,8 @@ my/add-to-global-hydra to add entries")
   (font-lock-comment-delimiter-face ((t (:slant italic)))))
 #+end_src
 
-*** base16
-#+begin_src emacs-lisp :tangle no
+*** COMMENT base16
+#+begin_src emacs-lisp :tangle yes
 (use-package base16-theme
   :init (load-theme 'base16-lesbo t)
   :custom
@@ -278,8 +279,8 @@ my/add-to-global-hydra to add entries")
   (font-lock-comment-delimiter-face ((t (:slant italic)))))
 #+end_src
 
-*** dracula
-#+begin_src emacs-lisp :tangle no
+*** COMMENT dracula
+#+begin_src emacs-lisp :tangle yes
 (use-package dracula-theme
   :init
   (setq dracula-enlarge-headings nil)
@@ -291,11 +292,12 @@ my/add-to-global-hydra to add entries")
   :custom-face
   (font-lock-comment-face ((t (:slant italic))))
   (font-lock-comment-delimiter-face ((t (:slant italic))))
-  (match ((t (:foreground nil :distant-foreground "#f8f8f2" :background "#373844")))))
+  ;; (match ((t (:foreground nil :distant-foreground "#f8f8f2" :background "#373844"))))
+  )
 #+end_src
 
-*** nord
-#+begin_src emacs-lisp :tangle no
+*** COMMENT nord
+#+begin_src emacs-lisp :tangle yes
 (use-package nord-theme
   :init
   (load-theme 'nord t)
@@ -309,14 +311,17 @@ my/add-to-global-hydra to add entries")
 #+end_src
 
 *** modus
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle yes
 (use-package modus-themes
   :ensure
   :init
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-slanted-constructs t
+        modus-themes-region 'bg-only
         modus-themes-completions 'opinionated
         modus-themes-org-blocks 'grayscale
+        ;; modus-themes-org-blocks 'rainbow
+        modus-themes-headings '((t . rainbow))
         modus-themes-bold-constructs nil)
 
   ;; Load the theme files before enabling a theme
@@ -324,6 +329,10 @@ my/add-to-global-hydra to add entries")
   :config
   ;; Load the theme of your choice:
   (modus-themes-load-vivendi) ;; OR (modus-themes-load-vivendi)
+  :custom
+  ;; skip startup screen and go to scratch buffer
+  ;; TODO: see about using general-custom
+  (inhibit-startup-screen t)
   :bind ("<f5>" . modus-themes-toggle))
 #+end_src
 
@@ -432,14 +441,19 @@ my/add-to-global-hydra to add entries")
   :after evil
   :init
   (setq evil-collection-setup-minibuffer nil)
+  ;; (defun my-hjkl-rotation (_mode mode-keymaps &rest _rest)
+  ;;   (evil-collection-translate-key 'normal mode-keymaps
+  ;;     "n" "j"
+  ;;     "e" "k"
+  ;;     "i" "l"
+  ;;     "j" "e"
+  ;;     "k" "n"
+  ;;     "l" "i"))
+
   (defun my-hjkl-rotation (_mode mode-keymaps &rest _rest)
     (evil-collection-translate-key 'normal mode-keymaps
-      "n" "j"
-      "e" "k"
-      "i" "l"
-      "j" "e"
-      "k" "n"
-      "l" "i"))
+      (kbd "C-n") (kbd "C-j")
+      (kbd "C-e") (kbd "C-k")))
 
   ;; called after evil-collection makes its keybindings
   ;; TODO: switch this to :hook
@@ -624,41 +638,22 @@ my/add-to-global-hydra to add entries")
   :config (counsel-projectile-mode 1))
 #+end_src
 
-* org GTD
-#+begin_src emacs-lisp :tangle yes
-(use-package org-agenda
-  :ensure nil
-  :defer t
-  :init
-  (setq org-directory    "~/org"
-        org-agenda-files (list "~/org/inbox.org"
-                               "~/org/agenda.org")
-        org-agenda-hide-tags-regexp "inbox"
-        org-agenda-prefix-format
-        '((agenda . " %i %-12:c%?-12t% s")
-          (todo   . " ")
-          (tags   . " %i %-12:c")
-          (search . " %i %-12:c"))
-        org-capture-templates
-        `(("i" "Inbox" entry  (file "inbox.org")
-           ,(concat "* TODO %?\n"
-                    "/Entered on/ %U"))))
-  (defhydra hydra-org (:color blue :hint nil)
-    "
-_a_: Agenda, _c_: Capture"
-    ("a" org-agenda)
-    ("c" org-capture))
-
-  (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc")))
-#+end_src
-
 * org mode
+** overall settings
 #+begin_src emacs-lisp :tangle yes
 ;; TODO: refactor this whole section
 (use-package org
   :defer t
   :init
   (add-hook 'org-mode-hook #'flyspell-mode)
+  ;; override C-RET
+  ;; (add-hook 'org-mode-hook
+  ;;           (lambda ()
+  ;;             (general-define-key
+  ;;              :keymaps 'local
+  ;;              :states '(motion normal visual operator insert)
+  ;;              "C-return" 'company-complete)))
+
   ;; (add-hook 'org-mode-hook #'flyspell-buffer)
   (setq org-ellipsis " ▼"
         ;; make all images 600px wide
@@ -673,6 +668,7 @@ _a_: Agenda, _c_: Capture"
         org-edit-src-content-indentation 0
         org-src-tab-acts-natively t
         org-startup-indented t
+        org-startup-folded t
         org-hide-emphasis-markers t
         org-catch-invisible-edits 'smart
         org-ctrl-k-protect-subtree t)
@@ -690,6 +686,7 @@ _a_: Agenda, _c_: Capture"
 	  (set-buffer-modified-p nil)))))
   
   
+  ;; TODO: switch to :hook
   (add-hook 'window-configuration-change-hook 'org-keep-tags-to-right)
   (add-hook 'focus-in-hook 'org-keep-tags-to-right)
   (add-hook 'focus-out-hook 'org-keep-tags-to-right)
@@ -699,6 +696,10 @@ _a_: Agenda, _c_: Capture"
   ;; (set-face-attribute 'org-block-begin-line nil :background 'unspecified)
   ;; (set-face-attribute 'org-block-end-line nil :background 'unspecified)
   (set-face-attribute 'org-block nil :extend t)
+  :general
+  (:keymaps 'org-mode-map
+            :states 'insert
+            "C-<return>" 'company-complete)
   :custom-face
   ;; make default face in org src block look right
   ;; (org-block ((t (:foreground "#cbced0" :background "#232530" :extend t))))
@@ -719,8 +720,10 @@ _a_: Agenda, _c_: Capture"
   :ensure nil
   :after org
   :config
-  ;; use the soul package
+  ;; use the soul and csquotes packages
+  ;; TODO: see if this can be done with 1 call to add-to-list
   (add-to-list 'org-latex-packages-alist '("" "soul"))
+  (add-to-list 'org-latex-packages-alist '("" "csquotes"))
   ;; define a general purpose assignment class and make it the default
   (add-to-list 'org-latex-classes
                '("assignment"
@@ -805,7 +808,7 @@ _a_: Agenda, _c_: Capture"
       (when (and (org-export-derived-backend-p backend 'latex)
                  (string-match "\\`.*\n"
                                (downcase contents)))
-        (replace-match "\n" nil nil contents))))
+        (replace-match "" nil nil contents))))
 
   (add-to-list 'org-export-filter-headline-functions 'org-noignore-headline)
   
@@ -822,6 +825,16 @@ _a_: Agenda, _c_: Capture"
     (message "Enabled org latex export on save for current buffer..."))))
 #+end_src
 
+**** org ref
+#+begin_src emacs-lisp :tangle no
+(use-package org-ref
+  :after org
+  :init
+  (setq org-ref-default-citation-link "autocite"
+        bibtex-dialect 'biblatex
+        org-ref-completion-library 'org-ref-reftex))
+#+end_src
+
 *** HTML
 #+begin_src emacs-lisp :tangle yes
 (use-package htmlize
@@ -835,12 +848,56 @@ _a_: Agenda, _c_: Capture"
                 "<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js\"></script>\n"
                 "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js\"></script>\n"
                 "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js\"></script>\n"
-                "<style>pre.src{background:#1c1e26;color:#cbced0;} </style>\n"
+                "<style>pre.src{background:#ffffff;color:#000000;} </style>\n"
                 "<style>#postamble .date{color:#6f6f70;} </style>"))
   :defer t)
 #+end_src
+
+** org GTD
+#+begin_src emacs-lisp :tangle yes
+(use-package org-agenda
+  :ensure nil
+  :defer t
+  :init
+  (setq org-directory    "~/org"
+        org-agenda-files (list "~/org/inbox.org"
+                               "~/org/agenda.org")
+        org-agenda-hide-tags-regexp "inbox"
+        org-agenda-prefix-format
+        '((agenda . " %i %-12:c%?-12t% s")
+          (todo   . " ")
+          (tags   . " %i %-12:c")
+          (search . " %i %-12:c"))
+        org-capture-templates
+        `(("i" "Inbox" entry  (file "inbox.org")
+           ,(concat "* TODO %?\n"
+                    "/Entered on/ %U"))))
+  (defhydra hydra-org (:color blue :hint nil)
+    "
+_a_: Agenda, _c_: Capture"
+    ("a" org-agenda)
+    ("c" org-capture))
+
+  (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc")))
+#+end_src
+
+* company
+#+begin_src emacs-lisp :tangle yes
+(use-package company
+  :defer 0.75
+  :config (global-company-mode)
+  :general
+  ("C-<return>" 'company-complete))
+(use-package company-posframe
+  :after company
+  :init
+  (setq company-posframe-show-indicator nil
+        company-posframe-show-metadata nil)
+  :config (company-posframe-mode t))
+#+end_src
+
 * smartparens
-#+begin_src elisp :tangle yes
+#+begin_src emacs-lisp :tangle yes
 (use-package smartparens
   :demand t
   :init
@@ -920,15 +977,6 @@ _a_: Agenda, _c_: Capture"
   :hook (smartparens-enabled . evil-smartparens-mode))
 
 
-#+end_src
-
-* company
-#+begin_src emacs-lisp :tangle yes
-(use-package company
-  :defer 0.75
-  :config (global-company-mode)
-  :general
-  ("C-<return>" 'company-complete))
 #+end_src
 
 * flycheck
@@ -1076,6 +1124,25 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 
 #+end_src
 
+* magit
+#+begin_src emacs-lisp :tangle yes
+(use-package magit
+  :defer t
+  :init
+  ;; "n" binding gets overridden, so we have to rebind it every time we open magit
+  (add-hook 'magit-mode-hook
+            (lambda ()
+              (general-define-key
+               :keymaps 'local
+               :states '(motion normal visual operator)
+               "n" 'magit-section-forward))) 
+  :general
+  (:keymaps 'magit-mode-map
+            :states '(motion normal visual operator)
+            "TAB" 'magit-section-cycle
+            "e" 'magit-section-backward))
+#+end_src
+
 * latex
 #+begin_src emacs-lisp :tangle yes
 (use-package auctex
@@ -1162,7 +1229,18 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 ;;     ("R" quickrun-region))
 ;;   (my/add-to-global-hydra '("r" hydra-quickrun/body "Quickrun" :column "Tools"))
 
+(use-package undo-tree
+  :demand t
+  :config
+  (global-undo-tree-mode)
+  :custom
+  (evil-undo-system 'undo-tree))
+#+end_src
+
+* final cleanup
+#+begin_src emacs-lisp :tangle yes
 ;; reset file-name-handler-alist
-(setq file-name-handler-alist my/file-name-handler-alist)
+(when (boundp 'my/file-name-handler-alist)
+      (setq file-name-handler-alist my/file-name-handler-alist))
 #+end_src
 

@@ -112,7 +112,7 @@ my/add-to-global-hydra to add entries")
   "Global hydra that functions like a leader key. Add heads with `my/add-to-global-hydra`"
   (interactive)
   (call-interactively
-   (eval `(defhydra sb/hydra-select-themes (:hint nil :color blue)
+   (eval `(defhydra my-hydra (:hint nil :color blue)
             ,@my/global-hydra-heads-list))))
 
 ;; start by adding TAB
@@ -126,6 +126,7 @@ my/add-to-global-hydra to add entries")
 
 ;; set default font
 (set-frame-font "monospace-10" nil t)
+
 ;; don't confirm when running load-theme interactively
 (advice-add 'load-theme
             :around (lambda
@@ -163,18 +164,31 @@ my/add-to-global-hydra to add entries")
       scroll-conservatively 10000
       scroll-preserve-screen-position t)
 
-;; emacs renders Mononoki 2 pixels to short
+;; emacs renders Mononoki 2 pixels too short
 ;; (setq-default line-spacing 0)
 
-(use-package color-theme-sanityinc-tomorrow
-  :init (load-theme 'sanityinc-tomorrow-eighties t)
+(use-package modus-themes
+  :ensure
+  :init
+  ;; Add all your customizations prior to loading the themes
+  (setq modus-themes-slanted-constructs t
+        modus-themes-region 'bg-only
+        modus-themes-completions 'opinionated
+        modus-themes-org-blocks 'grayscale
+        ;; modus-themes-org-blocks 'rainbow
+        modus-themes-headings '((t . rainbow))
+        modus-themes-bold-constructs nil)
+
+  ;; Load the theme files before enabling a theme
+  (modus-themes-load-themes)
+  :config
+  ;; Load the theme of your choice:
+  (modus-themes-load-vivendi) ;; OR (modus-themes-load-vivendi)
   :custom
   ;; skip startup screen and go to scratch buffer
   ;; TODO: see about using general-custom
   (inhibit-startup-screen t)
-  :custom-face
-  (font-lock-comment-face ((t (:slant italic))))
-  (font-lock-comment-delimiter-face ((t (:slant italic)))))
+  :bind ("<f5>" . modus-themes-toggle))
 
 (use-package general
   :config
@@ -276,14 +290,19 @@ my/add-to-global-hydra to add entries")
   :after evil
   :init
   (setq evil-collection-setup-minibuffer nil)
+  ;; (defun my-hjkl-rotation (_mode mode-keymaps &rest _rest)
+  ;;   (evil-collection-translate-key 'normal mode-keymaps
+  ;;     "n" "j"
+  ;;     "e" "k"
+  ;;     "i" "l"
+  ;;     "j" "e"
+  ;;     "k" "n"
+  ;;     "l" "i"))
+
   (defun my-hjkl-rotation (_mode mode-keymaps &rest _rest)
     (evil-collection-translate-key 'normal mode-keymaps
-      "n" "j"
-      "e" "k"
-      "i" "l"
-      "j" "e"
-      "k" "n"
-      "l" "i"))
+      (kbd "C-n") (kbd "C-j")
+      (kbd "C-e") (kbd "C-k")))
 
   ;; called after evil-collection makes its keybindings
   ;; TODO: switch this to :hook
@@ -412,36 +431,19 @@ my/add-to-global-hydra to add entries")
   :hook
   (embark-collect-mode . embark-consult-preview-minor-mode))
 
-(use-package org-agenda
-  :ensure nil
-  :defer t
-  :init
-  (setq org-directory    "~/org"
-        org-agenda-files (list "~/org/inbox.org"
-                               "~/org/agenda.org")
-        org-agenda-hide-tags-regexp "inbox"
-        org-agenda-prefix-format
-        '((agenda . " %i %-12:c%?-12t% s")
-          (todo   . " ")
-          (tags   . " %i %-12:c")
-          (search . " %i %-12:c"))
-        org-capture-templates
-        `(("i" "Inbox" entry  (file "inbox.org")
-           ,(concat "* TODO %?\n"
-                    "/Entered on/ %U"))))
-  (defhydra hydra-org (:color blue :hint nil)
-    "
-_a_: Agenda, _c_: Capture"
-    ("a" org-agenda)
-    ("c" org-capture))
-
-  (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc")))
-
 ;; TODO: refactor this whole section
 (use-package org
   :defer t
   :init
   (add-hook 'org-mode-hook #'flyspell-mode)
+  ;; override C-RET
+  ;; (add-hook 'org-mode-hook
+  ;;           (lambda ()
+  ;;             (general-define-key
+  ;;              :keymaps 'local
+  ;;              :states '(motion normal visual operator insert)
+  ;;              "C-return" 'company-complete)))
+
   ;; (add-hook 'org-mode-hook #'flyspell-buffer)
   (setq org-ellipsis " ▼"
         ;; make all images 600px wide
@@ -456,6 +458,7 @@ _a_: Agenda, _c_: Capture"
         org-edit-src-content-indentation 0
         org-src-tab-acts-natively t
         org-startup-indented t
+        org-startup-folded t
         org-hide-emphasis-markers t
         org-catch-invisible-edits 'smart
         org-ctrl-k-protect-subtree t)
@@ -473,6 +476,7 @@ _a_: Agenda, _c_: Capture"
 	  (set-buffer-modified-p nil)))))
   
   
+  ;; TODO: switch to :hook
   (add-hook 'window-configuration-change-hook 'org-keep-tags-to-right)
   (add-hook 'focus-in-hook 'org-keep-tags-to-right)
   (add-hook 'focus-out-hook 'org-keep-tags-to-right)
@@ -482,6 +486,10 @@ _a_: Agenda, _c_: Capture"
   ;; (set-face-attribute 'org-block-begin-line nil :background 'unspecified)
   ;; (set-face-attribute 'org-block-end-line nil :background 'unspecified)
   (set-face-attribute 'org-block nil :extend t)
+  :general
+  (:keymaps 'org-mode-map
+            :states 'insert
+            "C-<return>" 'company-complete)
   :custom-face
   ;; make default face in org src block look right
   ;; (org-block ((t (:foreground "#cbced0" :background "#232530" :extend t))))
@@ -498,8 +506,10 @@ _a_: Agenda, _c_: Capture"
   :ensure nil
   :after org
   :config
-  ;; use the soul package
+  ;; use the soul and csquotes packages
+  ;; TODO: see if this can be done with 1 call to add-to-list
   (add-to-list 'org-latex-packages-alist '("" "soul"))
+  (add-to-list 'org-latex-packages-alist '("" "csquotes"))
   ;; define a general purpose assignment class and make it the default
   (add-to-list 'org-latex-classes
                '("assignment"
@@ -584,7 +594,7 @@ _a_: Agenda, _c_: Capture"
       (when (and (org-export-derived-backend-p backend 'latex)
                  (string-match "\\`.*\n"
                                (downcase contents)))
-        (replace-match "\n" nil nil contents))))
+        (replace-match "" nil nil contents))))
 
   (add-to-list 'org-export-filter-headline-functions 'org-noignore-headline)
   
@@ -611,15 +621,124 @@ _a_: Agenda, _c_: Capture"
                 "<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js\"></script>\n"
                 "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js\"></script>\n"
                 "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js\"></script>\n"
-                "<style>pre.src{background:#1c1e26;color:#cbced0;} </style>\n"
+                "<style>pre.src{background:#ffffff;color:#000000;} </style>\n"
                 "<style>#postamble .date{color:#6f6f70;} </style>"))
   :defer t)
+
+(use-package org-agenda
+  :ensure nil
+  :defer t
+  :init
+  (setq org-directory    "~/org"
+        org-agenda-files (list "~/org/inbox.org"
+                               "~/org/agenda.org")
+        org-agenda-hide-tags-regexp "inbox"
+        org-agenda-prefix-format
+        '((agenda . " %i %-12:c%?-12t% s")
+          (todo   . " ")
+          (tags   . " %i %-12:c")
+          (search . " %i %-12:c"))
+        org-capture-templates
+        `(("i" "Inbox" entry  (file "inbox.org")
+           ,(concat "* TODO %?\n"
+                    "/Entered on/ %U"))))
+  (defhydra hydra-org (:color blue :hint nil)
+    "
+_a_: Agenda, _c_: Capture"
+    ("a" org-agenda)
+    ("c" org-capture))
+
+  (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc")))
 
 (use-package company
   :defer 0.75
   :config (global-company-mode)
   :general
   ("C-<return>" 'company-complete))
+(use-package company-posframe
+  :after company
+  :init
+  (setq company-posframe-show-indicator nil
+        company-posframe-show-metadata nil)
+  :config (company-posframe-mode t))
+
+(use-package smartparens
+  :demand t
+  :init
+  ;; bind <leader>-s to smartparens hydra
+  (my/add-to-global-hydra '("s" hydra-smartparens/body "Smartparens" :column "Editing"))
+  
+  :config
+  (smartparens-global-strict-mode 1)
+  ;; highlight matching delimiter
+  (show-smartparens-global-mode 1)
+
+  ;; hydra for most smartparens actions
+  (defhydra hydra-smartparens (:hint nil)
+    "
+ Moving^^^^                       Slurp & Barf^^   Wrapping^^            Sexp juggling^^^^               Destructive
+------------------------------------------------------------------------------------------------------------------------
+ [_a_] beginning  [_n_] down      [_h_] bw slurp   [_R_]   rewrap        [_S_] split   [_t_] transpose   [_c_] change inner  [_w_] copy
+ [_e_] end        [_N_] bw down   [_H_] bw barf    [_u_]   unwrap        [_s_] splice  [_A_] absorb      [_C_] change outer
+ [_f_] forward    [_p_] up        [_l_] slurp      [_U_]   bw unwrap     [_r_] raise   [_E_] emit        [_k_] kill          [_g_] quit
+ [_b_] backward   [_P_] bw up     [_L_] barf       [_(__{__[_] wrap (){}[]   [_j_] join    [_o_] convolute   [_K_] bw kill       [_q_] quit"
+    ;; Moving
+    ("a" sp-beginning-of-sexp)
+    ("e" sp-end-of-sexp)
+    ("f" sp-forward-sexp)
+    ("b" sp-backward-sexp)
+    ("n" sp-down-sexp)
+    ("N" sp-backward-down-sexp)
+    ("p" sp-up-sexp)
+    ("P" sp-backward-up-sexp)
+    
+    ;; Slurping & barfing
+    ("h" sp-backward-slurp-sexp)
+    ("H" sp-backward-barf-sexp)
+    ("l" sp-forward-slurp-sexp)
+    ("L" sp-forward-barf-sexp)
+    
+    ;; Wrapping
+    ("R" sp-rewrap-sexp)
+    ("u" sp-unwrap-sexp)
+    ("U" sp-backward-unwrap-sexp)
+    ("(" sp-wrap-round)
+    ("{" sp-wrap-curly)
+    ("[" sp-wrap-square)
+    
+    ;; Sexp juggling
+    ("S" sp-split-sexp)
+    ("s" sp-splice-sexp)
+    ("r" sp-raise-sexp)
+    ("j" sp-join-sexp)
+    ("t" sp-transpose-sexp)
+    ("A" sp-absorb-sexp)
+    ("E" sp-emit-sexp)
+    ("o" sp-convolute-sexp)
+    
+    ;; Destructive editing
+    ("c" sp-change-inner :exit t)
+    ("C" sp-change-enclosing :exit t)
+    ("k" sp-kill-sexp)
+    ("K" sp-backward-kill-sexp)
+    ("w" sp-copy-sexp)
+
+    ("q" nil)
+    ("g" nil)))
+
+;; enable default smartparens config
+(use-package smartparens-config
+  ;; don't ensure because this is built in to smartparent
+  :ensure nil
+  :demand t
+  :after smartparens)
+
+
+
+(use-package evil-smartparens
+  :demand t
+  :after smartparens-config
+  :hook (smartparens-enabled . evil-smartparens-mode))
 
 (use-package flycheck
   :defer 1
@@ -749,6 +868,22 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   ((before-save . (lambda () (when lsp-mode (lsp-format-buffer))))
    (c++-mode . lsp)))
 
+(use-package magit
+  :defer t
+  :init
+  ;; "n" binding gets overridden, so we have to rebind it every time we open magit
+  (add-hook 'magit-mode-hook
+            (lambda ()
+              (general-define-key
+               :keymaps 'local
+               :states '(motion normal visual operator)
+               "n" 'magit-section-forward))) 
+  :general
+  (:keymaps 'magit-mode-map
+            :states '(motion normal visual operator)
+            "TAB" 'magit-section-cycle
+            "e" 'magit-section-backward))
+
 (use-package auctex
   :after tex
   :no-require t
@@ -830,83 +965,13 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 ;;     ("R" quickrun-region))
 ;;   (my/add-to-global-hydra '("r" hydra-quickrun/body "Quickrun" :column "Tools"))
 
-;; reset file-name-handler-alist
-(setq file-name-handler-alist my/file-name-handler-alist)
-
-(use-package smartparens
+(use-package undo-tree
   :demand t
-  :init
-  ;; bind <leader>-s to smartparens hydra
-  (my/add-to-global-hydra '("s" hydra-smartparens/body "Smartparens" :column "Editing"))
-  
   :config
-  (smartparens-global-strict-mode 1)
-  ;; highlight matching delimiter
-  (show-smartparens-global-mode 1)
+  (global-undo-tree-mode)
+  :custom
+  (evil-undo-system 'undo-tree))
 
-  ;; hydra for most smartparens actions
-  (defhydra hydra-smartparens (:hint nil)
-    "
- Moving^^^^                       Slurp & Barf^^   Wrapping^^            Sexp juggling^^^^               Destructive
-------------------------------------------------------------------------------------------------------------------------
- [_a_] beginning  [_n_] down      [_h_] bw slurp   [_R_]   rewrap        [_S_] split   [_t_] transpose   [_c_] change inner  [_w_] copy
- [_e_] end        [_N_] bw down   [_H_] bw barf    [_u_]   unwrap        [_s_] splice  [_A_] absorb      [_C_] change outer
- [_f_] forward    [_p_] up        [_l_] slurp      [_U_]   bw unwrap     [_r_] raise   [_E_] emit        [_k_] kill          [_g_] quit
- [_b_] backward   [_P_] bw up     [_L_] barf       [_(__{__[_] wrap (){}[]   [_j_] join    [_o_] convolute   [_K_] bw kill       [_q_] quit"
-    ;; Moving
-    ("a" sp-beginning-of-sexp)
-    ("e" sp-end-of-sexp)
-    ("f" sp-forward-sexp)
-    ("b" sp-backward-sexp)
-    ("n" sp-down-sexp)
-    ("N" sp-backward-down-sexp)
-    ("p" sp-up-sexp)
-    ("P" sp-backward-up-sexp)
-    
-    ;; Slurping & barfing
-    ("h" sp-backward-slurp-sexp)
-    ("H" sp-backward-barf-sexp)
-    ("l" sp-forward-slurp-sexp)
-    ("L" sp-forward-barf-sexp)
-    
-    ;; Wrapping
-    ("R" sp-rewrap-sexp)
-    ("u" sp-unwrap-sexp)
-    ("U" sp-backward-unwrap-sexp)
-    ("(" sp-wrap-round)
-    ("{" sp-wrap-curly)
-    ("[" sp-wrap-square)
-    
-    ;; Sexp juggling
-    ("S" sp-split-sexp)
-    ("s" sp-splice-sexp)
-    ("r" sp-raise-sexp)
-    ("j" sp-join-sexp)
-    ("t" sp-transpose-sexp)
-    ("A" sp-absorb-sexp)
-    ("E" sp-emit-sexp)
-    ("o" sp-convolute-sexp)
-    
-    ;; Destructive editing
-    ("c" sp-change-inner :exit t)
-    ("C" sp-change-enclosing :exit t)
-    ("k" sp-kill-sexp)
-    ("K" sp-backward-kill-sexp)
-    ("w" sp-copy-sexp)
-
-    ("q" nil)
-    ("g" nil)))
-
-;; enable default smartparens config
-(use-package smartparens-config
-  ;; don't ensure because this is built in to smartparent
-  :ensure nil
-  :demand t
-  :after smartparens)
-
-
-
-(use-package evil-smartparens
-  :demand t
-  :after smartparens-config
-  :hook (smartparens-enabled . evil-smartparens-mode))
+;; reset file-name-handler-alist
+(when (boundp 'my/file-name-handler-alist)
+      (setq file-name-handler-alist my/file-name-handler-alist))
