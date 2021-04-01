@@ -861,17 +861,24 @@ my/add-to-global-hydra to add entries")
   :init
   (setq org-directory    "~/org"
         org-agenda-files (list "~/org/inbox.org"
-                               "~/org/agenda.org")
-        org-agenda-hide-tags-regexp "inbox"
-        org-agenda-prefix-format
-        '((agenda . " %i %-12:c%?-12t% s")
-          (todo   . " ")
-          (tags   . " %i %-12:c")
-          (search . " %i %-12:c"))
+                               "~/org/agenda.org"
+                               "~/org/projects.org")
+        ;; org-agenda-hide-tags-regexp "inbox"
+
+        ;; org-agenda-prefix-format
+        ;; '((agenda . " %i %-12:c%?-12t% s")
+        ;;   (todo   . " ")
+        ;;   (tags   . " %i %-12:c")
+        ;;   (search . " %i %-12:c"))
+        
+        org-refile-targets '((org-agenda-files :maxlevel . 9))
+        org-refile-use-outline-path 'file
+        org-outline-path-complete-in-steps nil
+
         org-capture-templates
         `(("i" "Inbox" entry  (file "inbox.org")
-           ,(concat "* TODO %?\n"
-                    "/Entered on/ %U"))))
+           "* TODO %?\n/Entered on/ %U")))
+ 
   (defhydra hydra-org (:color blue :hint nil)
     "
 _a_: Agenda, _c_: Capture"
@@ -1168,6 +1175,10 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 * other packages
 #+begin_src emacs-lisp :tangle yes
 (use-package rainbow-mode
+  :init
+  (setq rainbow-html-colors nil
+        rainbow-r-colors nil
+        rainbow-x-colors nil)
   :hook (prog-mode . rainbow-mode))
 (use-package avy
   :init 

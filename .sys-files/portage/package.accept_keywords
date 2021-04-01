@@ -214,7 +214,7 @@ sys-power/linux-x86-power-tools ~amd64
 # required by xcape (argument)
 =x11-misc/xcape-1.2 ~amd64
 # required by discord-bin (argument)
-=net-im/discord-bin-0.0.13 ~amd64
+net-im/discord-bin ~amd64
 # required by yadm (argument)
 =app-admin/yadm-2.4.0 ~amd64
 # required by xkcdpass (argument)
