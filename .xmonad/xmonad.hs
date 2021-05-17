@@ -35,7 +35,7 @@ main =
     ("M-C-", windowSwap)
     ] False $
     def {
-    terminal           = "kitty",
+    terminal           = "alacritty",
     manageHook         = myManageHook,
     modMask            = mod4Mask,
     borderWidth        = 2,
@@ -66,7 +66,7 @@ main =
         -- combineTwo (Tall 1 (3/100) (1/2)) (simpleTabbed) (tabbed shrinkText myTabConfig) |||
         -- tallTabs def |||
 
-        (trackFloating $ mySpacing $ simpleDrawer 0.01 0.3 (ClassName "Emacs" `Or` ClassName "kitty")  `onRight` (Tall 1 0.03 0.5)) ) |||
+        (trackFloating $ mySpacing $ simpleDrawer 0.01 0.3 (ClassName "Emacs" `Or` ClassName "alacritty")  `onRight` (Tall 1 0.03 0.5)) ) |||
 
         -- (mySpacing $ mastered (1/100) (1/2) $ tabbed shrinkText myTabConfig) |||
   
@@ -127,11 +127,11 @@ scratchpads = [
   NS "telegram" "telegram-desktop" (className =? "TelegramDesktop")
     (customFloating $ W.RationalRect (1/4) (1/6) (1/2) (2/3)),
 
-  NS "ncmpcpp" "kitty --class ncmpcpp -e sh -c 'gruvbox-term-colors; ncmpcpp'"
+  NS "ncmpcpp" "alacritty --class ncmpcpp,ncmpcpp -e ncmpcpp'"
     (className =? "ncmpcpp")
     (customFloating $ W.RationalRect (1/4) (1/3) (1/2) (1/3)),
 
-  NS "term" "kitty --class scratchpad" (className =? "scratchpad")
+  NS "term" "alacritty --class scratchpad,scratchpad" (className =? "scratchpad")
     (customFloating $ W.RationalRect (1/4) (1/3) (1/2) (1/3))
 
   -- NS "riot" "riot-web" (className =? "Riot") nonFloating
@@ -479,7 +479,7 @@ myKeys = [
   ("M-S-,",         shiftToPreviousChild),
   ("M-.",           switchToNextChild),
   ("M-S-.",         shiftToNextChild),
-  ("M-<Return>",    spawn "kitty"),
+  ("M-<Return>",    spawn "alacritty"),
   ("M-S-<Return>",  spawnQutebrowserSession),
   ("M-f",           toggleFloat),
   ("M-o",           namedScratchpadAction scratchpads "term"),

@@ -234,3 +234,7 @@ net-im/discord-bin ~amd64
 =x11-misc/tabbed-0.6 ~amd64
 # required by dev-libs/tree-sitter (argument)
 =dev-libs/tree-sitter-0.18.1 ~amd64
+# required by pdfjs (argument)
+=www-plugins/pdfjs-2.5.207 ~amd64
+# required by browsh (argument)
+=www-client/browsh-1.6.4_p1 ~amd64

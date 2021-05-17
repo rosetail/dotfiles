@@ -234,8 +234,10 @@ settings:
     '*://*.connect.secure.wellsfargo.com/*': true
     '*://*.csprd.ctclink.us/*': true
     '*://*.deanza.instructure.com/*': true
+    '*://*.deanza.kanopy.com/*': true
     '*://*.directaccess.nordstrom.com/*': true
     '*://*.discordapp.com/*': true
+    '*://*.doratasia.aliexpress.com/*': true
     '*://*.duckduckgo.com/*': true
     '*://*.dw-prod.ec.fhda.edu/*': true
     '*://*.egvv.fa.us6.oraclecloud.com/*': true
@@ -254,6 +256,8 @@ settings:
     '*://*.input.fontbureau.com/*': true
     '*://*.jdrenning.github.io/*': true
     '*://*.jobs-brookdale.icims.com/*': true
+    '*://*.joncorbett.ca/*': true
+    '*://*.keisan.casio.com/*': true
     '*://*.libgen.io/*': true
     '*://*.localhost/*': true
     '*://*.mega.nz/*': true
@@ -271,26 +275,32 @@ settings:
     '*://*.novaskin.me/*': true
     '*://*.packages.gentoo.org/*': true
     '*://*.partners.subaru.com/*': true
+    '*://*.patient.labcorp.com/*': true
     '*://*.phabricator.kde.org/*': true
     '*://*.pirateproxy.ch/*': true
     '*://*.pirateproxy.llc/*': true
     '*://*.play.typeracer.com/*': true
     '*://*.please.hackmii.com/*': true
+    '*://*.pridepalace.lgbt/*': true
     '*://*.pugetsound-csm.symplicity.com/*': true
     '*://*.pugetsound.digication.com/*': false
     '*://*.pugetsound.instructure.com/*': true
+    '*://*.reddit-user-analyser.netlify.app/*': true
     '*://*.riot.im/*': true
     '*://*.rutracker.org/*': true
     '*://*.search-proquest-com.deanza.idm.oclc.org/*': true
     '*://*.seattle.craigslist.org/*': true
     '*://*.secure1.fadv.com/*': true
     '*://*.shale.peopleanswers.com/*': true
+    '*://*.ssb-prod.ec.fhda.edu/*': true
     '*://*.ssocas.fhda.edu/*': true
     '*://*.streamable.com/*': true
     '*://*.supertuxkart.net/*': true
+    '*://*.trade.aliexpress.com/*': true
     '*://*.triplebyte.com/*': true
     '*://*.twitter.com/*': true
     '*://*.vanillatweaks.net/*': true
+    '*://*.video.fc2.com/*': false
     '*://*.wd5.myworkday.com/*': true
     '*://*.web.a.ebscohost.com.deanza.idm.oclc.org/*': true
     '*://*.web.archive.org/*': true
@@ -299,14 +309,17 @@ settings:
     '*://*.wii.marcan.st/*': true
     '*://*.www.1337x.to/*': true
     '*://*.www.aldoshoes.com/*': true
+    '*://*.www.aliexpress.com/*': true
     '*://*.www.amazon.com/*': true
     '*://*.www.annualcreditreport.com/*': true
     '*://*.www.apartments.com/*': true
     '*://*.www.carfax.com/*': true
     '*://*.www.choicehotels.com/*': true
     '*://*.www.dmv.ca.gov/*': true
+    '*://*.www.emathhelp.net/*': true
     '*://*.www.fastmail.com/*': true
     '*://*.www.gentoo.org/*': true
+    '*://*.www.labcorp.com/*': true
     '*://*.www.linuxfoundation.org/*': true
     '*://*.www.meleeitonme.com/*': true
     '*://*.www.namecheap.com/*': true
@@ -319,7 +332,9 @@ settings:
     '*://*.www.southwest.com/*': true
     '*://*.www.speedtest.net/*': true
     '*://*.www.subarunet.com/*': true
+    '*://*.www.symbolab.com/*': true
     '*://*.www.twitch.tv/*': true
+    '*://*.www.webassign.net/*': true
     '*://*.www.youtube.com/*': true
     '*://*.xkcd.com/*': true
     '*://*.yts.lt/*': true
@@ -337,7 +352,8 @@ settings:
     https://fhda-edu.zoom.us: true
   content.media.video_capture:
     https://fhda-edu.zoom.us: true
-  content.notifications:
+  content.notifications.enabled:
+    https://www.aliexpress.com: false
     https://www.reddit.com: false
     https://www.torlock.com: false
     https://www.torrentfunk.com: false

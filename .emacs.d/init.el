@@ -124,6 +124,40 @@ my/add-to-global-hydra to add entries")
                               (indent-for-tab-command)))
                           "Indent Buffer" :column "Editing"))
 
+;; from https://gist.github.com/tttuuu888/267a8a56c207d725ea999e353646eec9
+(defvar sk-pacakge-loading-notice-list '(org yasnippet))
+
+(defun sk-package-loading-notice (old &rest r)
+  (let* ((elt (car r))
+         (mode
+          (when (stringp elt)
+            (let ((ret (assoc-default elt auto-mode-alist 'string-match)))
+              (and (symbolp ret) (symbol-name ret)))))
+         (pkg
+          (cond ((symbolp elt) elt)
+                ((stringp mode) (intern (string-remove-suffix "-mode" mode)))
+                (t nil))))
+    (if (not (member pkg sk-pacakge-loading-notice-list))
+        (apply old r)
+      (let ((msg (capitalize (format " %s loading ..." pkg)))
+            (ovr (make-overlay (point) (point))))
+        (when (fboundp 'company-cancel) (company-cancel))
+        (setq sk-pacakge-loading-notice-list
+              (delq pkg sk-pacakge-loading-notice-list))
+        (unless sk-pacakge-loading-notice-list
+          (advice-remove 'require #'sk-package-loading-notice)
+          (advice-remove 'find-file #'sk-package-loading-notice))
+        (message msg)
+        (overlay-put ovr 'after-string
+                     (propertize msg 'face '(:inverse-video t :weight bold)))
+        (redisplay)
+        (let ((ret (apply old r)))
+          (delete-overlay ovr)
+          ret)))))
+
+(advice-add 'require :around #'sk-package-loading-notice)
+(advice-add 'find-file-noselect :around #'sk-package-loading-notice)
+
 ;; set default font
 (set-frame-font "monospace-10" nil t)
 
@@ -174,6 +208,7 @@ my/add-to-global-hydra to add entries")
   (setq modus-themes-slanted-constructs t
         modus-themes-region 'bg-only
         modus-themes-completions 'opinionated
+        modus-themes-fringes 'intense
         modus-themes-org-blocks 'grayscale
         ;; modus-themes-org-blocks 'rainbow
         modus-themes-headings '((t . rainbow))
@@ -321,7 +356,8 @@ my/add-to-global-hydra to add entries")
 ;; TODO: actually learn these keybindings
 (use-package evil-org
   :ensure t
-  :after (evil org)
+  :after (:any (:all evil org) (:all evil org-agenda))
+  :commands org-agenda
   :init
   ;; make keybindings work in insert mode
   (setq evil-org-use-additional-insert t
@@ -370,9 +406,8 @@ my/add-to-global-hydra to add entries")
             "u"   'org-agenda-diary-entry
             "U"   'org-agenda-clock-in))
 (use-package evil-org-agenda
-  :demand t
   :ensure nil ; don't ensure because it is built in to evil-org
-  :after evil-org
+  :after (:or evil-org org-agenda)
   :config
   (evil-org-agenda-set-keys))
 
@@ -455,6 +490,7 @@ my/add-to-global-hydra to add entries")
 
   ;; make indentation work properly when editing org src
   (setq org-adapt-indentation nil
+        org-tags-column 0
         org-edit-src-content-indentation 0
         org-src-tab-acts-natively t
         org-startup-indented t
@@ -477,9 +513,9 @@ my/add-to-global-hydra to add entries")
   
   
   ;; TODO: switch to :hook
-  (add-hook 'window-configuration-change-hook 'org-keep-tags-to-right)
-  (add-hook 'focus-in-hook 'org-keep-tags-to-right)
-  (add-hook 'focus-out-hook 'org-keep-tags-to-right)
+  ;; (add-hook 'window-configuration-change-hook 'org-keep-tags-to-right)
+  ;; (add-hook 'focus-in-hook 'org-keep-tags-to-right)
+  ;; (add-hook 'focus-out-hook 'org-keep-tags-to-right)
 
   :config
   ;; TODO: switch this to custom-face
@@ -632,15 +668,16 @@ my/add-to-global-hydra to add entries")
   (setq org-directory    "~/org"
         org-agenda-files (list "~/org/inbox.org"
                                "~/org/agenda.org"
-                               "~/org/projects.org")
-        ;; org-agenda-hide-tags-regexp "inbox"
+                               ;; "~/org/projects.org"
+                               )
+        org-agenda-hide-tags-regexp "\\(inbox\\|project\\)"
+        org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "HOLD(h)" "|" "DONE(d)" "CANCELLED(c)"))
 
         ;; org-agenda-prefix-format
         ;; '((agenda . " %i %-12:c%?-12t% s")
         ;;   (todo   . " ")
         ;;   (tags   . " %i %-12:c")
         ;;   (search . " %i %-12:c"))
-        
         org-refile-targets '((org-agenda-files :maxlevel . 9))
         org-refile-use-outline-path 'file
         org-outline-path-complete-in-steps nil
@@ -648,7 +685,39 @@ my/add-to-global-hydra to add entries")
         org-capture-templates
         `(("i" "Inbox" entry  (file "inbox.org")
            "* TODO %?\n/Entered on/ %U")))
- 
+  
+  (setq org-agenda-custom-commands
+        '((" " "Agenda"
+           ((agenda "" ((org-agenda-span 7)
+                        (org-deadline-warning-days 0))) ;; week agenda
+            
+            (tags "inbox"
+                  ((org-agenda-overriding-header "\nInbox")))
+
+            (todo "NEXT"
+                  ((org-agenda-overriding-header "\nNext Tasks")))
+            
+            (todo 'todo
+                  ((org-agenda-skip-function
+                    '(org-agenda-skip-entry-if 'notdeadline))
+                   (org-agenda-sorting-strategy '(deadline-up))
+                   (org-agenda-overriding-header "\nDeadlines")))
+
+            (tags "CLOSED>=\"<today>\""
+                  ((org-agenda-overriding-header "\nCompleted today"))))
+
+           ((org-agenda-compact-blocks t)
+            ;; (org-agenda-skip-function
+            ;; '(org-agenda-skip-entry-if 'todo '("HOLD")))
+            ))))
+
+
+
+  (setq org-log-done 'time)
+
+  
+  
+  
   (defhydra hydra-org (:color blue :hint nil)
     "
 _a_: Agenda, _c_: Capture"
@@ -859,7 +928,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (popwin-mode 1))
 
 (use-package yasnippet
-  :defer 1
+  :defer 5
   :general ("TAB" 'yas-expand)
   :config
   (yas-global-mode))
@@ -872,7 +941,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (lsp-enable-on-type-formatting nil)
   (lsp-enable-indentation nil)
   :hook
-  ((before-save . (lambda () (when lsp-mode (lsp-format-buffer))))
+  ((before-save . (lambda () (when (bound-and-true-p lsp-mode) (lsp-format-buffer))))
    (c++-mode . lsp)))
 
 (use-package magit
@@ -982,6 +1051,10 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (global-undo-tree-mode)
   :custom
   (evil-undo-system 'undo-tree))
+
+(use-package minimap
+  :defer t
+  :init (setq minimap-window-location 'right))
 
 ;; reset file-name-handler-alist
 (when (boundp 'my/file-name-handler-alist)
