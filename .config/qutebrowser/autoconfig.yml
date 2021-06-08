@@ -326,6 +326,7 @@ settings:
     '*://*.www.omorashi.org/*': true
     '*://*.www.oneplus.com/*': true
     '*://*.www.pawsitivityservicedogs.com/*': true
+    '*://*.www.principledtechnologies.com/*': true
     '*://*.www.pugetsound.edu/*': true
     '*://*.www.reddit.com/*': true
     '*://*.www.smashladder.com/*': true

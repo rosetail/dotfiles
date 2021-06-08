@@ -979,6 +979,18 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
      :help "Make pdf output using latexmk.")
    TeX-command-list))
 
+(use-package esh-help
+  :after esh-mode
+  :config
+  (setup-esh-help-eldoc))
+
+(use-package eshell-syntax-highlighting
+  :after esh-mode
+  :demand t ;; Install if not already installed.
+  :config
+  ;; Enable in all Eshell buffers.
+  (eshell-syntax-highlighting-global-mode +1))
+
 (use-package rainbow-mode
   :init
   (setq rainbow-html-colors nil
@@ -1059,3 +1071,16 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 ;; reset file-name-handler-alist
 (when (boundp 'my/file-name-handler-alist)
       (setq file-name-handler-alist my/file-name-handler-alist))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(zerodark-theme zenburn-theme yasnippet-snippets yaml-mode whitespace-cleanup-mode which-key-posframe visual-regexp-steroids use-package undo-tree ujelly-theme twilight-theme twilight-bright-theme tree-sitter-langs transient-posframe telephone-line tao-theme sublimity srcery-theme spacemacs-theme spaceline spacegray-theme solarized-theme snow smart-compile smart-comment slime-company skewer-mode selectrum scheme-complete region-bindings-mode rainbow-mode rainbow-delimiters projectile pretty-hydra popwin polymode poet-theme phoenix-dark-pink-theme phoenix-dark-mono-theme parrot paredit page-break-lines ox-twbs outline-minor-faces origami org-ref orderless nyx-theme notmuch nord-theme nix-sandbox nix-haskell-mode naquadah-theme multiple-cursors moe-theme modus-themes mips-mode minimap mingus metalheart-theme meghanada markdown-preview-eww marginalia magit magic-latex-buffer lsp-mode lispyville latex-preview-pane kaolin-themes java-imports ivy-prescient ivy-bibtex horizon-theme hl-todo highlight-numbers highlight-escape-sequences haskell-snippets hacker-typer groovy-mode gradle-mode general fvwm-mode flyspell-correct-popup flyspell-correct-ivy flymd flx flatland-theme fish-mode fireplace f3 expand-region evil-vimish-fold evil-surround evil-smartparens evil-org evil-goggles evil-god-state evil-collection evil-colemak-basics ess eshell-syntax-highlighting eshell-outline esh-help embark-consult ebib dracula-theme doom-themes doom-modeline direnv darktooth-theme cyberpunk-theme ctrlf consult-flycheck company-posframe comment-dwim-2 color-theme-sanityinc-tomorrow color-theme-sanityinc-solarized chocolate-theme bubbleberry-theme benchmark-init base16-theme badwolf-theme ayu-theme auctex apropospriate-theme ample-theme alect-themes aggressive-indent 0blayout)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

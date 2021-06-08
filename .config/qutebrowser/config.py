@@ -52,6 +52,6 @@ config.bind('TsH', 'config-cycle -p -t -u *://*.{url:host}/* content.javascript.
 config.bind('Tsh', 'config-cycle -p -t -u *://{url:host}/* content.javascript.enabled ;; reload')
 config.bind('Tsu', 'config-cycle -p -t -u {url} content.javascript.enabled ;; reload')
 # config.bind('<Ctrl-g>', 'enter-mode', mode='passthrough')
-config.bind('<Shift-Esc>', 'enter-mode passthrough')
+config.bind('<Shift-Esc>', 'mode-enter passthrough')
 # config.bind('<Ctrl-Alt-v>', 'leave-mode', mode='passthrough')
 # config.bind('<Ctrl-Alt-g>', 'enter-mode passthrough')

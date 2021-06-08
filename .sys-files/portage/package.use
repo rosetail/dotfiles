@@ -73,3 +73,27 @@ x11-misc/dunst dunstify
 # required by app-text/texlive-2020-r9::gentoo[xml,extra]
 # required by texlive (argument)
 >=app-text/texlive-core-2020-r12 cjk xetex
+# required by app-admin/xkcdpass-1.17.3-r1::gentoo
+# required by @selected
+# required by @world (argument)
+=dev-python/setuptools-56.0.0 python_targets_python3_9
+# required by dev-python/setuptools-56.0.0::gentoo
+# required by dev-python/mako-1.1.4::gentoo
+# required by media-libs/mesa-21.0.3::gentoo
+# required by media-video/mpv-0.33.1-r1::gentoo[egl]
+# required by @selected
+# required by @world (argument)
+=dev-python/certifi-10001-r1 python_targets_python3_9
+# required by dev-python/setuptools-56.0.0::gentoo
+# required by dev-python/mako-1.1.4::gentoo
+# required by media-libs/mesa-21.0.3::gentoo
+# required by media-video/mpv-0.33.1-r1::gentoo[egl]
+# required by @selected
+# required by @world (argument)
+=dev-python/setuptools_scm-6.0.1-r1 python_targets_python3_9 -python_targets_python3_8
+# required by dev-python/setuptools_scm-6.0.1-r1::gentoo
+# required by dev-python/pylast-4.2.0::gentoo
+# required by media-sound/lollypop-1.2.35::gentoo[python_single_target_python3_9]
+# required by @selected
+# required by @world (argument)
+=dev-python/toml-0.10.2 python_targets_python3_9

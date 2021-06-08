@@ -238,3 +238,5 @@ net-im/discord-bin ~amd64
 =www-plugins/pdfjs-2.5.207 ~amd64
 # required by browsh (argument)
 =www-client/browsh-1.6.4_p1 ~amd64
+# required by xkcdpass (argument)
+=app-admin/xkcdpass-1.19.2 ~amd64
