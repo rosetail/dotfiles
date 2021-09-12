@@ -1,29 +1,32 @@
 * early-init.el
 #+begin_src emacs-lisp :tangle early-init.el
-;;; -*- lexical-binding: t; -*-
-;; taken from doom emacs
+  ;;; -*- lexical-binding: t; -*-
+  ;; taken from doom emacs
 
-;; file-name-handler-alist is consulted a lot so disable it during startup
-(defvar my/file-name-handler-alist file-name-handler-alist)
-(setq file-name-handler-alist nil)
-;; Defer garbage collection further back in the startup process
-(setq gc-cons-threshold most-positive-fixnum)
+  ;; file-name-handler-alist is consulted a lot so disable it during startup
+  (defvar my/file-name-handler-alist file-name-handler-alist)
+  (setq file-name-handler-alist nil)
+  ;; Defer garbage collection further back in the startup process
+  (setq gc-cons-threshold most-positive-fixnum)
 
 
-;; Prevent the glimpse of un-styled Emacs by disabling these UI elements early.
-(push '(menu-bar-lines . 0) default-frame-alist)
-(push '(tool-bar-lines . 0) default-frame-alist)
-(push '(vertical-scroll-bars) default-frame-alist)
+  ;; Prevent the glimpse of un-styled Emacs by disabling these UI elements early.
+  (push '(menu-bar-lines . 0) default-frame-alist)
+  (push '(tool-bar-lines . 0) default-frame-alist)
+  (push '(vertical-scroll-bars) default-frame-alist)
 
-;; Resizing the Emacs frame can be a terribly expensive part of changing the
-;; font. By inhibiting this, we easily halve startup times with fonts that are
-;; larger than the system default.
-(setq frame-inhibit-implied-resize t)
+  ;; Resizing the Emacs frame can be a terribly expensive part of changing the
+  ;; font. By inhibiting this, we easily halve startup times with fonts that are
+  ;; larger than the system default.
+  (setq frame-inhibit-implied-resize t)
 
-;; Prevent unwanted runtime builds in gccemacs (native-comp); packages are
-;; compiled ahead-of-time when they are installed and site files are compiled
-;; when gccemacs is installed.
-(setq comp-deferred-compilation t)
+  ;; Prevent unwanted runtime builds in gccemacs (native-comp); packages are
+  ;; compiled ahead-of-time when they are installed and site files are compiled
+  ;; when gccemacs is installed.
+  ;; (setq comp-deferred-compilation t)
+
+  ;; don't enable package.el so we can use straight
+  (setq package-enable-at-startup nil)
 #+end_src
 
 * initial setup
@@ -45,23 +48,43 @@
           (lambda ()
             (setq gc-cons-threshold 16777216 ; 16mb
                   gc-cons-percentage 0.1)))
-;; intialize packages and add repositories
-(require 'package)
-(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/"))
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(package-initialize)
-(setq package-archive-priorities
-      '(("melpa" . 2)
-        ("melpa-stable" . 1)
-        ("gnu" . 0)))
 
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+;; intialize packages and add repositories
+;; (require 'package)
+;; (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/"))
+;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;; (package-initialize)
+;; (setq package-archive-priorities
+;;       '(("melpa" . 2)
+;;         ("melpa-stable" . 1)
+;;         ("gnu" . 0)))
+
+;; (unless (package-installed-p 'use-package)
+;;   (package-refresh-contents)
+;;   (package-install 'use-package))
 ;; set up use-package
-(require 'use-package)
+;; (require 'use-package)
+;; (setq use-package-compute-statistics t
+;;       use-package-always-ensure t)
+
+;; set up straight
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;; set up use package
+(straight-use-package 'use-package)
 (setq use-package-compute-statistics t
-      use-package-always-ensure t)
+      straight-use-package-by-default t)
 
 ;; indent with space, not tab
 (setq-default indent-tabs-mode nil)
@@ -116,8 +139,21 @@
 ;; make yes or no prompts faster
 (defalias 'yes-or-no-p 'y-or-n-p)
 
+;; don't show nativecomp warnings
+(setq warning-suppress-log-types '((comp)))
+
 ;; make middle click paste not move the cursor
 (setq mouse-yank-at-point t)
+
+;; install hydra first so it's available to other packages
+(use-package hydra
+  :custom-face 
+  ;; (hydra-face-red      ((t (:foreground "#f2777a"))))
+  ;; (hydra-face-blue     ((t (:foreground "#6699cc"))))
+  ;; (hydra-face-amaranth ((t (:foreground "#f99157"))))
+  ;; (hydra-face-teal     ((t (:foreground "#66cccc"))))
+  ;; (hydra-face-pink     ((t (:foreground "#cc99cc"))))
+  )
 #+end_src
 
 * functions
@@ -350,7 +386,6 @@ my/add-to-global-hydra to add entries")
 *** modus
 #+begin_src emacs-lisp :tangle yes
 (use-package modus-themes
-  :ensure
   :init
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-slanted-constructs t
@@ -503,7 +538,6 @@ my/add-to-global-hydra to add entries")
   (evil-collection-init))
 
 (use-package evil-surround
-  :ensure t
   :config
   (global-evil-surround-mode 1))
 #+end_src
@@ -512,7 +546,6 @@ my/add-to-global-hydra to add entries")
 #+begin_src emacs-lisp :tangle yes
 ;; TODO: actually learn these keybindings
 (use-package evil-org
-  :ensure t
   :after (:any (:all evil org) (:all evil org-agenda))
   :commands org-agenda
   :init
@@ -563,7 +596,7 @@ my/add-to-global-hydra to add entries")
             "u"   'org-agenda-diary-entry
             "U"   'org-agenda-clock-in))
 (use-package evil-org-agenda
-  :ensure nil ; don't ensure because it is built in to evil-org
+  :straight nil ; don't ensure because it is built in to evil-org
   :after (:or evil-org org-agenda)
   :config
   (evil-org-agenda-set-keys))
@@ -756,7 +789,7 @@ my/add-to-global-hydra to add entries")
 *** Latex
 #+begin_src emacs-lisp :tangle yes
 (use-package ox ; needed for org-export-filter-headline-function
-  :ensure nil
+  :straight nil
   :after org
   :config
   ;; use the soul and csquotes packages
@@ -895,7 +928,7 @@ my/add-to-global-hydra to add entries")
 ** org agenda
 #+begin_src emacs-lisp :tangle yes
 (use-package org-agenda
-  :ensure nil
+  :straight nil
   :defer t
   :init
   (setq org-directory    "~/org"
@@ -1044,7 +1077,7 @@ _a_: Agenda, _c_: Capture"
 ;; enable default smartparens config
 (use-package smartparens-config
   ;; don't ensure because this is built in to smartparent
-  :ensure nil
+  :straight nil
   :demand t
   :after smartparens)
 
@@ -1269,15 +1302,6 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o))
   (my/add-to-global-hydra '("a" avy-goto-subword-1 "Avy" :column "Editing"))
   :commands avy-goto-subword-1)
-(use-package hydra
-  :custom-face 
-  ;; (hydra-face-red      ((t (:foreground "#f2777a"))))
-  ;; (hydra-face-blue     ((t (:foreground "#6699cc"))))
-  ;; (hydra-face-amaranth ((t (:foreground "#f99157"))))
-  ;; (hydra-face-teal     ((t (:foreground "#66cccc"))))
-  ;; (hydra-face-pink     ((t (:foreground "#cc99cc"))))
-  )
-
 (use-package comment-dwim-2
   :general
   ("M-;" 'comment-dwim-2)

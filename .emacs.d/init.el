@@ -15,23 +15,43 @@
           (lambda ()
             (setq gc-cons-threshold 16777216 ; 16mb
                   gc-cons-percentage 0.1)))
-;; intialize packages and add repositories
-(require 'package)
-(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/"))
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(package-initialize)
-(setq package-archive-priorities
-      '(("melpa" . 2)
-        ("melpa-stable" . 1)
-        ("gnu" . 0)))
 
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+;; intialize packages and add repositories
+;; (require 'package)
+;; (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/"))
+;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;; (package-initialize)
+;; (setq package-archive-priorities
+;;       '(("melpa" . 2)
+;;         ("melpa-stable" . 1)
+;;         ("gnu" . 0)))
+
+;; (unless (package-installed-p 'use-package)
+;;   (package-refresh-contents)
+;;   (package-install 'use-package))
 ;; set up use-package
-(require 'use-package)
+;; (require 'use-package)
+;; (setq use-package-compute-statistics t
+;;       use-package-always-ensure t)
+
+;; set up straight
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;; set up use package
+(straight-use-package 'use-package)
 (setq use-package-compute-statistics t
-      use-package-always-ensure t)
+      straight-use-package-by-default t)
 
 ;; indent with space, not tab
 (setq-default indent-tabs-mode nil)
@@ -86,8 +106,21 @@
 ;; make yes or no prompts faster
 (defalias 'yes-or-no-p 'y-or-n-p)
 
+;; don't show nativecomp warnings
+(setq warning-suppress-log-types '((comp)))
+
 ;; make middle click paste not move the cursor
 (setq mouse-yank-at-point t)
+
+;; install hydra first so it's available to other packages
+(use-package hydra
+  :custom-face 
+  ;; (hydra-face-red      ((t (:foreground "#f2777a"))))
+  ;; (hydra-face-blue     ((t (:foreground "#6699cc"))))
+  ;; (hydra-face-amaranth ((t (:foreground "#f99157"))))
+  ;; (hydra-face-teal     ((t (:foreground "#66cccc"))))
+  ;; (hydra-face-pink     ((t (:foreground "#cc99cc"))))
+  )
 
 (defvar my/global-hydra-heads-list '()
   "List of hydra heads to be used by global-hydra. Use
@@ -202,7 +235,6 @@ my/add-to-global-hydra to add entries")
 ;; (setq-default line-spacing 0)
 
 (use-package modus-themes
-  :ensure
   :init
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-slanted-constructs t
@@ -349,13 +381,11 @@ my/add-to-global-hydra to add entries")
   (evil-collection-init))
 
 (use-package evil-surround
-  :ensure t
   :config
   (global-evil-surround-mode 1))
 
 ;; TODO: actually learn these keybindings
 (use-package evil-org
-  :ensure t
   :after (:any (:all evil org) (:all evil org-agenda))
   :commands org-agenda
   :init
@@ -406,7 +436,7 @@ my/add-to-global-hydra to add entries")
             "u"   'org-agenda-diary-entry
             "U"   'org-agenda-clock-in))
 (use-package evil-org-agenda
-  :ensure nil ; don't ensure because it is built in to evil-org
+  :straight nil ; don't ensure because it is built in to evil-org
   :after (:or evil-org org-agenda)
   :config
   (evil-org-agenda-set-keys))
@@ -539,7 +569,7 @@ my/add-to-global-hydra to add entries")
   )
 
 (use-package ox ; needed for org-export-filter-headline-function
-  :ensure nil
+  :straight nil
   :after org
   :config
   ;; use the soul and csquotes packages
@@ -662,7 +692,7 @@ my/add-to-global-hydra to add entries")
   :defer t)
 
 (use-package org-agenda
-  :ensure nil
+  :straight nil
   :defer t
   :init
   (setq org-directory    "~/org"
@@ -805,7 +835,7 @@ _a_: Agenda, _c_: Capture"
 ;; enable default smartparens config
 (use-package smartparens-config
   ;; don't ensure because this is built in to smartparent
-  :ensure nil
+  :straight nil
   :demand t
   :after smartparens)
 
@@ -1002,15 +1032,6 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o))
   (my/add-to-global-hydra '("a" avy-goto-subword-1 "Avy" :column "Editing"))
   :commands avy-goto-subword-1)
-(use-package hydra
-  :custom-face 
-  ;; (hydra-face-red      ((t (:foreground "#f2777a"))))
-  ;; (hydra-face-blue     ((t (:foreground "#6699cc"))))
-  ;; (hydra-face-amaranth ((t (:foreground "#f99157"))))
-  ;; (hydra-face-teal     ((t (:foreground "#66cccc"))))
-  ;; (hydra-face-pink     ((t (:foreground "#cc99cc"))))
-  )
-
 (use-package comment-dwim-2
   :general
   ("M-;" 'comment-dwim-2)
@@ -1071,16 +1092,3 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 ;; reset file-name-handler-alist
 (when (boundp 'my/file-name-handler-alist)
       (setq file-name-handler-alist my/file-name-handler-alist))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(zerodark-theme zenburn-theme yasnippet-snippets yaml-mode whitespace-cleanup-mode which-key-posframe visual-regexp-steroids use-package undo-tree ujelly-theme twilight-theme twilight-bright-theme tree-sitter-langs transient-posframe telephone-line tao-theme sublimity srcery-theme spacemacs-theme spaceline spacegray-theme solarized-theme snow smart-compile smart-comment slime-company skewer-mode selectrum scheme-complete region-bindings-mode rainbow-mode rainbow-delimiters projectile pretty-hydra popwin polymode poet-theme phoenix-dark-pink-theme phoenix-dark-mono-theme parrot paredit page-break-lines ox-twbs outline-minor-faces origami org-ref orderless nyx-theme notmuch nord-theme nix-sandbox nix-haskell-mode naquadah-theme multiple-cursors moe-theme modus-themes mips-mode minimap mingus metalheart-theme meghanada markdown-preview-eww marginalia magit magic-latex-buffer lsp-mode lispyville latex-preview-pane kaolin-themes java-imports ivy-prescient ivy-bibtex horizon-theme hl-todo highlight-numbers highlight-escape-sequences haskell-snippets hacker-typer groovy-mode gradle-mode general fvwm-mode flyspell-correct-popup flyspell-correct-ivy flymd flx flatland-theme fish-mode fireplace f3 expand-region evil-vimish-fold evil-surround evil-smartparens evil-org evil-goggles evil-god-state evil-collection evil-colemak-basics ess eshell-syntax-highlighting eshell-outline esh-help embark-consult ebib dracula-theme doom-themes doom-modeline direnv darktooth-theme cyberpunk-theme ctrlf consult-flycheck company-posframe comment-dwim-2 color-theme-sanityinc-tomorrow color-theme-sanityinc-solarized chocolate-theme bubbleberry-theme benchmark-init base16-theme badwolf-theme ayu-theme auctex apropospriate-theme ample-theme alect-themes aggressive-indent 0blayout)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
