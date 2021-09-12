@@ -1107,7 +1107,8 @@ _a_: Agenda, _c_: Capture"
   :defer 0.5
   :after (hydra)
   :init
-  (setq projectile-project-search-path '("~/" "~/code")
+  (setq projectile-project-search-path '("~/")
+        ;; projectile-project-search-path '("~/" "~/code")
         projectile-indexing-method 'hybrid ;; needed to make sorting work
         projectile-sort-order 'default)
   
