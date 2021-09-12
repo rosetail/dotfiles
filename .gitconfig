@@ -1,3 +1,5 @@
 [user]
 	email = dev@roeli.org
 	name = Rose Osterheld
+[init]
+	defaultBranch = main

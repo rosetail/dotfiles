@@ -1,3 +1,4 @@
+<=app-emulation/wine-vanilla-6.16 ~amd64
 lxde-base/lxappearance ~amd64
 x11-wm/stumpwm ~amd64
 x11-wm/stumpwm-contrib ~amd64
@@ -240,3 +241,49 @@ net-im/discord-bin ~amd64
 =www-client/browsh-1.6.4_p1 ~amd64
 # required by xkcdpass (argument)
 =app-admin/xkcdpass-1.19.2 ~amd64
+# required by emacs:28-vcs (argument)
+=app-editors/emacs-28.0.9999 **
+# required by bat (argument)
+=sys-apps/bat-0.18.3 ~amd64
+# required by dev-haskell/text-1.2.4.1::gentoo
+# required by dev-haskell/hashable-1.2.7.0::gentoo
+# required by dev-haskell/nats-1.1.2::gentoo[hashable]
+# required by dev-haskell/semigroups-0.18.5::gentoo
+# required by dev-haskell/parsec-3.1.14.0::gentoo
+# required by dev-haskell/cabal-3.2.1.0-r1::gentoo
+# required by dev-haskell/setlocale-1.0.0.9::gentoo
+# required by x11-wm/xmonad-0.15-r1::gentoo
+# required by x11-wm/xmonad-contrib-0.16::gentoo
+# required by xmonad-contrib (argument)
+=dev-lang/ghc-8.10.4-r1 ~amd64
+# required by x11-wm/xmonad-contrib-0.16::gentoo
+# required by xmonad-contrib (argument)
+=dev-haskell/cabal-3.2.1.0-r1 ~amd64
+# required by dev-haskell/cabal-3.2.1.0-r1::gentoo
+# required by dev-haskell/setlocale-1.0.0.9::gentoo
+# required by x11-wm/xmonad-0.15-r1::gentoo
+# required by x11-wm/xmonad-contrib-0.16::gentoo
+# required by xmonad-contrib (argument)
+=dev-haskell/text-1.2.4.1 ~amd64
+# required by dev-haskell/tagged-0.8.6::gentoo
+# required by dev-haskell/semigroups-0.18.5::gentoo
+# required by dev-haskell/parsec-3.1.14.0::gentoo
+# required by dev-haskell/cabal-3.2.1.0-r1::gentoo
+# required by dev-haskell/setlocale-1.0.0.9::gentoo
+# required by x11-wm/xmonad-0.15-r1::gentoo
+# required by x11-wm/xmonad-contrib-0.16::gentoo
+# required by xmonad-contrib (argument)
+=dev-haskell/transformers-compat-0.6.6 ~amd64
+# required by dev-python/adblock-0.5.0::gentoo
+# required by www-client/qutebrowser-2.3.0::gentoo[adblock]
+# required by qutebrowser (argument)
+=dev-util/maturin-0.11.1 ~amd64
+# required by www-client/qutebrowser-2.3.0::gentoo[adblock]
+# required by qutebrowser (argument)
+=dev-python/adblock-0.5.0 ~amd64
+# required by app-emulation/wine-vanilla-6.16::gentoo[mono]
+# required by virtual/wine-0-r7::gentoo
+# required by wine (argument)
+=app-emulation/wine-mono-6.3.0 ~amd64
+# required by lutris (argument)
+=games-util/lutris-0.5.8.4 ~amd64

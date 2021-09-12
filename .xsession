@@ -17,4 +17,5 @@ picom -b
 # sleep 0.5
 xcape -e 'Alt_L=Escape' &
 xcape -e 'Control_R=Escape' &
+pulseaudio &
 polybar main &

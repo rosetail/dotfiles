@@ -17,6 +17,4 @@ picom -b
 xcape -e 'Alt_L=Escape' &
 xcape -e 'Control_R=Escape' &
 polybar main &
-sxhkd &
-kitty &
-exec dbus-launch --exit-with-session bspwm
+exec dbus-launch --exit-with-session xmonad
