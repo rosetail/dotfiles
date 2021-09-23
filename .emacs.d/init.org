@@ -649,7 +649,6 @@ my/add-to-global-hydra to add entries")
   :general
   ("M-o" 'embark-act))
 
-
 (use-package consult
   :defer t
   :general
@@ -739,6 +738,7 @@ my/add-to-global-hydra to add entries")
         org-tags-column 0
         org-edit-src-content-indentation 0
         org-src-tab-acts-natively t
+        org-src-window-setup 'current-window
         org-startup-indented t
         org-startup-folded t
         org-hide-emphasis-markers t
@@ -931,59 +931,109 @@ my/add-to-global-hydra to add entries")
   :straight nil
   :defer t
   :init
-  (setq org-directory    "~/org"
+  (setq org-directory "~/org"
+        ;; inbox.org must be first here or refiletargets will break
         org-agenda-files (list "~/org/inbox.org"
                                "~/org/agenda.org"
                                ;; "~/org/projects.org"
                                )
-        org-agenda-hide-tags-regexp "\\(inbox\\|project\\)"
         org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "HOLD(h)" "|" "DONE(d)" "CANCELLED(c)"))
+        ;; org-agenda-window-setup 'current-frame ; make agenda buffer only use the current frame
+        org-use-fast-todo-selection 'expert
 
-        ;; org-agenda-prefix-format
-        ;; '((agenda . " %i %-12:c%?-12t% s")
-        ;;   (todo   . " ")
-        ;;   (tags   . " %i %-12:c")
-        ;;   (search . " %i %-12:c"))
-        org-refile-targets '((org-agenda-files :maxlevel . 9))
+        
+        
+        org-agenda-prefix-format
+        '((agenda . "  %i %-12:c%?-12t% s")
+          (todo   . "  ")
+          (tags   . "  %(my/org-print-parent-heading)")
+          (search . "  %i %-12:c"))
+        
+        ;; org-agenda-hide-tags-regexp "inbox\\|school\\|computer\\|emacs"
+        org-agenda-hide-tags-regexp ".*"
+        org-refile-targets `((,(cdr org-agenda-files) :maxlevel . 9))
         org-refile-use-outline-path 'file
         org-outline-path-complete-in-steps nil
+
+        org-log-done 'time ; record when tasks are completed so we can see what was done today
 
         org-capture-templates
         `(("i" "Inbox" entry  (file "inbox.org")
            "* TODO %?\n/Entered on/ %U")))
   
+  ;; helper functions for org-agenda-custom-commands
+  
+  ;; from https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html
+  ;; modified to also skip entries that are scheaduled or have a deadline
+  (defun my/org-agenda-skip-all-siblings-but-first ()
+    "Skip all but the first TODO entry that is unscheduled and has no deadline."
+    (let (should-skip-entry)
+      (unless (my/org-current-is-todo-and-not-scheduled-or-deadline)
+        (setq should-skip-entry t))
+      (save-excursion
+        (while (and (not should-skip-entry) (org-goto-sibling t))
+          (when (my/org-current-is-todo-and-not-scheduled-or-deadline)
+            (setq should-skip-entry t))))
+      (when should-skip-entry
+        (or (outline-next-heading)
+            (goto-char (point-max))))))
+
+  (defun my/org-current-is-todo-and-not-scheduled-or-deadline ()
+    "Return t if todo state of the element at point is \"TODO\", it is not scheduled,
+and it has no deadline"
+    (and (string= "TODO" (org-get-todo-state))
+         (not (org-element-property :deadline (org-element-at-point)))
+         (not (org-element-property :scheduled (org-element-at-point)))))
+
+  (defun my/org-print-parent-heading ()
+    "Print the name of the parent of the org element at point
+The name is formatted to end in a colon and take up 24 characters
+If the element has no header, return an empty string
+If the parent heading has the tag \"printParentHeadingRecurse\", go up a level"
+    (save-excursion
+      (if (org-up-heading-safe)
+          
+          (if (member "printParentHeadingRecurse" (org-get-local-tags))
+              (my/org-print-parent-heading)
+            (format "%-24s" (concat (org-element-property :title (org-element-at-point)) ":")))
+        "")))
+  
   (setq org-agenda-custom-commands
         '((" " "Agenda"
+           ;; weekly agenda
            ((agenda "" ((org-agenda-span 7)
-                        (org-deadline-warning-days 0))) ;; week agenda
-            
+                        ;; don't wark about deadlines because they will be displayed below
+                        (org-deadline-warning-days 0)))
+
+            ;; tasks to refile
             (tags "inbox"
                   ((org-agenda-overriding-header "\nInbox")))
 
+            ;; next tasks
             (todo "NEXT"
                   ((org-agenda-overriding-header "\nNext Tasks")))
-            
+
+            ;; all tasks with a deadline
             (todo 'todo
                   ((org-agenda-skip-function
                     '(org-agenda-skip-entry-if 'notdeadline))
                    (org-agenda-sorting-strategy '(deadline-up))
                    (org-agenda-overriding-header "\nDeadlines")))
 
+            ;; the first TODO item that isn't NEXT and has no deadline or schedule from each heading
+            ;; this shows things that would otherwise get list
+            (tags "-inbox"
+                  ((org-agenda-skip-function #'my/org-agenda-skip-all-siblings-but-first)
+                   (org-agenda-sorting-strategy '(priority-down))
+                   (org-agenda-overriding-header "\nUndated Tasks")))
+
+            ;; tasks that were completed today
+            ;; from https://www.labri.fr/perso/nrougier/GTD/index.html
             (tags "CLOSED>=\"<today>\""
-                  ((org-agenda-overriding-header "\nCompleted today"))))
+                  ((org-agenda-overriding-header "\nCompleted Today"))))
 
-           ((org-agenda-compact-blocks t)
-            ;; (org-agenda-skip-function
-            ;; '(org-agenda-skip-entry-if 'todo '("HOLD")))
-            ))))
+           ((org-agenda-compact-blocks t)))))
 
-
-
-  (setq org-log-done 'time)
-
-  
-  
-  
   (defhydra hydra-org (:color blue :hint nil)
     "
 _a_: Agenda, _c_: Capture"
@@ -1298,11 +1348,17 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
         rainbow-r-colors nil
         rainbow-x-colors nil)
   :hook (prog-mode . rainbow-mode))
+
 (use-package avy
   :init 
   (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o))
   (my/add-to-global-hydra '("a" avy-goto-subword-1 "Avy" :column "Editing"))
   :commands avy-goto-subword-1)
+
+(use-package iedit
+  :init 
+  (my/add-to-global-hydra '("i" iedit-mode "Iedit" :column "Editing")))
+
 (use-package comment-dwim-2
   :general
   ("M-;" 'comment-dwim-2)
