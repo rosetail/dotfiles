@@ -436,10 +436,10 @@ my/add-to-global-hydra to add entries")
    :states '(normal motion visual operater)
    :keymaps 'override
    "SPC" 'my/global-hydra)
-  (general-define-key
-   :states '(normal insert emacs motion visual operater)
-   :keymaps 'override
-   "C-SPC" 'my/global-hydra)
+  ;; (general-define-key
+  ;;  :states '(normal insert emacs motion visual operater)
+  ;;  :keymaps 'override
+  ;;  "C-SPC" 'my/global-hydra)
   :demand t)
 #+end_src
 
