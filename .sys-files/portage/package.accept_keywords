@@ -287,3 +287,5 @@ net-im/discord-bin ~amd64
 =app-emulation/wine-mono-6.3.0 ~amd64
 # required by lutris (argument)
 =games-util/lutris-0.5.8.4 ~amd64
+# required by telegram-desktop-bin (argument)
+=net-im/telegram-desktop-bin-3.0.1 ~amd64

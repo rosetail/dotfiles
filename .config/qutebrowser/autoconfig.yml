@@ -264,6 +264,7 @@ settings:
     '*://*.minecraft.gamepedia.com/*': true
     '*://*.minecraft.tools/*': true
     '*://*.mixtape.moe/*': true
+    '*://*.mlm.pearson.com/*': true
     '*://*.my.indeed.com/*': true
     '*://*.my.minecraft.net/*': true
     '*://*.my.pugetsound.edu/*': true
@@ -281,11 +282,14 @@ settings:
     '*://*.pirateproxy.llc/*': true
     '*://*.play.typeracer.com/*': true
     '*://*.please.hackmii.com/*': true
+    '*://*.portal.mypearson.com/*': true
     '*://*.pridepalace.lgbt/*': true
     '*://*.pugetsound-csm.symplicity.com/*': true
     '*://*.pugetsound.digication.com/*': false
     '*://*.pugetsound.instructure.com/*': true
+    '*://*.pvpoke.com/*': true
     '*://*.reddit-user-analyser.netlify.app/*': true
+    '*://*.rha.ole.redhat.com/*': true
     '*://*.riot.im/*': true
     '*://*.rutracker.org/*': true
     '*://*.search-proquest-com.deanza.idm.oclc.org/*': true
@@ -327,8 +331,10 @@ settings:
     '*://*.www.oneplus.com/*': true
     '*://*.www.pawsitivityservicedogs.com/*': true
     '*://*.www.principledtechnologies.com/*': true
+    '*://*.www.psychologytoday.com/*': true
     '*://*.www.pugetsound.edu/*': true
     '*://*.www.reddit.com/*': true
+    '*://*.www.redhat.com/*': true
     '*://*.www.smashladder.com/*': true
     '*://*.www.southwest.com/*': true
     '*://*.www.speedtest.net/*': true
