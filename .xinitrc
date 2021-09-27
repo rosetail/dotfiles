@@ -17,4 +17,5 @@ picom -b
 xcape -e 'Alt_L=Escape' &
 xcape -e 'Control_R=Escape' &
 polybar main &
+pulseaudio &
 exec dbus-launch --exit-with-session xmonad
