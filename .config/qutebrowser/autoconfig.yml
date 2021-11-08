@@ -215,6 +215,7 @@ settings:
     https://www.carfax.com: false
     https://www.google.com: false
     https://www.hinshawshonda.com: false
+    https://www.sutterhealth.org: false
   content.headers.user_agent:
     global: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)
       Chrome/75.0.3770.100 Safari/537.36 '
@@ -241,6 +242,7 @@ settings:
     '*://*.duckduckgo.com/*': true
     '*://*.dw-prod.ec.fhda.edu/*': true
     '*://*.egvv.fa.us6.oraclecloud.com/*': true
+    '*://*.fluffychat.im/*': true
     '*://*.foothill.edu/*': true
     '*://*.foothillcollege.instructure.com/*': true
     '*://*.forums.kc-mm.com/*': true
@@ -267,13 +269,16 @@ settings:
     '*://*.mlm.pearson.com/*': true
     '*://*.my.indeed.com/*': true
     '*://*.my.minecraft.net/*': true
+    '*://*.my.patientfusion.com/*': true
     '*://*.my.pugetsound.edu/*': true
     '*://*.myaccount.mytpu.org/*': true
     '*://*.myportal.fhda.edu/*': true
+    '*://*.nebula2.deanza.edu/*': true
     '*://*.network.experience.com/*': true
     '*://*.nixos.org/*': true
     '*://*.nordvpn.com/*': true
     '*://*.novaskin.me/*': true
+    '*://*.openlab.bayict.cabrillo.edu/*': true
     '*://*.packages.gentoo.org/*': true
     '*://*.partners.subaru.com/*': true
     '*://*.patient.labcorp.com/*': true
@@ -296,9 +301,11 @@ settings:
     '*://*.seattle.craigslist.org/*': true
     '*://*.secure1.fadv.com/*': true
     '*://*.shale.peopleanswers.com/*': true
+    '*://*.silph.gg/*': true
     '*://*.ssb-prod.ec.fhda.edu/*': true
     '*://*.ssocas.fhda.edu/*': true
     '*://*.streamable.com/*': true
+    '*://*.streamdb9web.securenetsystems.net/*': true
     '*://*.supertuxkart.net/*': true
     '*://*.trade.aliexpress.com/*': true
     '*://*.triplebyte.com/*': true
@@ -320,6 +327,7 @@ settings:
     '*://*.www.carfax.com/*': true
     '*://*.www.choicehotels.com/*': true
     '*://*.www.dmv.ca.gov/*': true
+    '*://*.www.drgrthomson.com/*': true
     '*://*.www.emathhelp.net/*': true
     '*://*.www.fastmail.com/*': true
     '*://*.www.gentoo.org/*': true
@@ -333,6 +341,7 @@ settings:
     '*://*.www.principledtechnologies.com/*': true
     '*://*.www.psychologytoday.com/*': true
     '*://*.www.pugetsound.edu/*': true
+    '*://*.www.rapidtables.com/*': true
     '*://*.www.reddit.com/*': true
     '*://*.www.redhat.com/*': true
     '*://*.www.smashladder.com/*': true

@@ -289,3 +289,21 @@ net-im/discord-bin ~amd64
 =games-util/lutris-0.5.8.4 ~amd64
 # required by telegram-desktop-bin (argument)
 =net-im/telegram-desktop-bin-3.0.1 ~amd64
+# required by element-desktop-bin (argument)
+=net-im/element-desktop-bin-1.8.4 ~amd64
+# required by www-client/qutebrowser-2.4.0::gentoo[python_single_target_python3_9]
+# required by @selected
+# required by @world (argument)
+=dev-python/typing-extensions-3.10.0.2 ~amd64
+# required by www-client/qutebrowser-2.4.0::gentoo[python_single_target_python3_9]
+# required by @selected
+# required by @world (argument)
+=dev-python/jinja-3.0.2 ~amd64
+# required by www-client/qutebrowser-2.4.0::gentoo[python_single_target_python3_9]
+# required by @selected
+# required by @world (argument)
+=dev-python/zipp-3.6.0 ~amd64
+# required by www-client/qutebrowser-2.4.0::gentoo[python_single_target_python3_9]
+# required by @selected
+# required by @world (argument)
+=dev-python/pyyaml-6.0 ~amd64

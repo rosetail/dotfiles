@@ -1,0 +1,112 @@
+* users and stuff
+- /etc/passwd format: user01:x:1000:1000:User One:/home/user01:/bin/bash
+  1. username
+  2. used to be encrypted passwd, now just x. passwd moved to /etc/shadow
+  3. UID
+  4. GID (usually same as UID, for primary group)
+  5. real name
+  6. home dir
+  7. login shell (/bin/nologin if interactive use not allowed)
+- /etc/group format: group01:x:10000:user01,user02
+  1. group name
+  2. used to be passwd
+  3. GID
+  4. user list
+- UID's:
+  - 0 is root
+  - 1-200 is system users (for daemons and such)
+  - 201-999 is less privileged system users
+  - 1000+ is regular users
+- /etc/shadow format: user03:<hash goes here>:17933:0:99999:7:2:18119:
+  1. username
+  2. encrypted password
+  3. date password last changed (in days since epoch)
+  4. min days after passwd change that the passwwd can be changed again
+  5. max days until passwd expires (empty for no expiry)
+  6. num of warning days before passwd expiry
+  7. num of inactivity days after password expiry before account is locked
+  8. account expiry date (in days since epoch). empty for no expiry
+  9. reserved for future use
+- use =chage= to set passwd expiry options
+  - =chage -d 0 user03= to make user change passwd on next login
+- lock accounts with usermod
+- /etc/login.defs for new user settings
+* file permissions
+- ls -l output: first ownership name is user, second is group
+- =chmod go+rwx= to change permissions for group members and others
+- + for add, - to remove, = to set to exactly
+- u for current user, g for group, o for other, a for all
+- prefix groups with colon ie :wheel
+- sticky bit:
+  - u+s: executes file as user that is owner, not current user (suid)
+  - g+s: executes file as group that is owner, not current user (sgid), if dir, new files are owned by same group as dir, not the creator's group
+  - o+t: on dir: users with write access can only write to files they own
+- umask: default permissions on new files. Setting a bit makes new files not have that permission
+* processes
+- process states:
+  - R: running
+  - Sleep states:
+    - S: interruptible (waiting for a syscall or signal or something)
+    - D: uninterruptible (like S but doesn't respond to signals)
+    - K: killable (D but will respond to kill signal)
+    - I: report_idle (D but for kernel threads)
+  - T: stopped or traced (traced = stacktrace)
+  - Z: exit_zombie
+  - X: exit_dead (after zombie is reaped)
+- ps output:
+  - ps lax is ps aux but long form
+  - bracketed processes are kernel threads
+  - jobs or ps j to list jobs
+  - fg %n to bring specific task to fg
+- process signals:
+  1. HUP (hangup): report program end to terminal. Also, request config reload without termination
+  2. INT (keyboard interrupt)
+  3. QUIT (keyboard quit) INT but dumps core (can do with C-\)
+  4. KILL unblockable
+  5. TERM (terminate) default kill option. allows for cleanup
+  6. CONT (continue) resumes a process. can't be blocked
+  7. STOP suspends process. can't be blocked
+  8. TSTP (keyboard stop) like stop, but can be handled or ignored
+- kill -l shows available signals with their numbers
+- can use %n with kill for background jobs
+- pkill kills all processes with substring-matched command names
+- pkill with options can kill processes by owner, user, group, or terminal
+- w lists logged in users
+- log out other users with pkill, either by user or by location of their terminal session
+- /dev/pts/n is for gui terminals
+- VIRT memory shows all memory/swap a process including libs is using
+- RES shows only physical memory
+* daemons
+- service files start daemons
+- socket files (.socket endings) used for inter-process communication
+- path files (.path) delay activation of service until specific file system change occurs
+- systemctl list-unit-files --type=service lists active services
+- servics statuses:
+  - loaded: loaded to memory
+  - active: if it's running (and if so, how long)
+  - main PID: PID
+  - status: additional info
+- service states:
+  - loaded: config file processed
+  - active (running)
+  - active (exited): successfully complete 1-time configuration
+  - active (waiting): running but waiting for an event
+  - inactive
+  - enabled: is started at boot
+  - disabled
+  - static: can't be enabled but can be started by an enabled unit
+- systemctl --failed --type=service shows failed services
+- check status with is-active, is-enabled, and is-failed
+- systemctl reload to reload config
+- systemctl reload-or-restart will restart if unable to reload config
+- systemctl list-dependencies shows deps tree
+  - use --reverse for rdeps
+- systemctl mask is like masking a package in portage
+- systemctl unmask to unmask
+* ssh
+the message about failing to establish authenticity the first time you ssh is because the server's pubkey isn't in ~/.ssh/known_hosts, so the connection might have been hijacked
+- if the warning happens, add the server's /etc/ssh/ssh/ssh_host_*key.pub to your known hosts file
+- create keys with ssh-keygen
+- copy over keys with ssh-copy-id user@host
+  - use -i to specify which key
+
