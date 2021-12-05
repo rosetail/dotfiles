@@ -109,4 +109,232 @@ the message about failing to establish authenticity the first time you ssh is be
 - create keys with ssh-keygen
 - copy over keys with ssh-copy-id user@host
   - use -i to specify which key
+- start ssh-agent with eval $(ssh-agent)
+  - use ssh-add to make ssh-agent use your keys
+- ssh -i to specify which key (aka id) to use
+- config file is /etc/ssh/sshd_config
+  - PermitRootLogin no
+  - PasswordAuthentication no disables passwords. you must use pubkey instead. First, make sure new users can get their pubkey on the server
+  - update with systemctl reload sshd
+* syslog
+- paths:
+  - /var/log/messages: most messages here
+  - /var/log/secure: security/auth
+  - /var/log/maillog: mail
+  - /var/log/cron: cron
+  - /var/log/boot.log: boot
+- logrotate will rotate log files so they don't take up too much space
+- use logger command to manually add log entries
+- use journalctl to see logs
+  - -n 5 for last 5 entries
+  - -f is like tail -f
+  - -p for priority [debug,info,notice,warning,err,crit,alert,emerg]
+  - --since today for today's records
+  - --until is opposite of since
+  - -o verbose to show other fields
+  - -b 3 to show last 3 boot cycles
+  - can use jouralctl _COMM=foo (or other fields listed under -o verbose)
+- journals are kept in /run/log/journal
+- config file is /etc/systemd/journald.conf
+  - Storage parameter in conf file defines how to store journals
+    - can be persistent, volatile (cleared on boot), or auto (persistent only if /var/log/journal directory exists), or none (drop all logs)
+  - persistent journals will slowly be deleted over time
+  - run systemctl restart systemd-journald after this
+- use timedatectl to set time and stuff
+- chronyd will help to keep hardware clock at the right time
+* networking
+- tcp/ip model
+  - has 4 layers:
+    - application: https/ftp/ssh and other such protocols used on the program levels
+    - transport: tcp/udp (tcp is the reliable one)
+    - internet: ipv4/6 protocols
+    - link: physical hardware (usually ethernet or wlan)
+- interface names
+  - types:
+    - en=ethernet
+    - wl=wlan
+    - ww=wwan
+  - after type comes:
+    - O3 (capital o): 3rd onboard device
+    - S2: PCI hotplug slot 2
+    - p5s0: PCI device 5 on slot 0
+- ipv4
+  - normal ip addresses
+  - 2 parts: network and host (ips with same network part are on the same subnet)
+  - lowest address on subnet (all of the host part are 0s) is called the network address
+  - highest address is to send messages and is called broadcast address
+  - netmask says how many bits of an address belong to the subnet
+    - 2 syntaxes:
+      - old syntax just uses 24 bits for network part and reads 255.255.0
+      - new syntax (cidr) is /N, wher N is the number of bits for the subnet
+    - example
+      - host: 10.1.1.8
+      - netmask: /8 (or 255.0.0.0)
+      - calculations:
+        - network address: 10.0.0.0
+        - broadcast address: 10.255.255.255
+  - ipv4 routing
+    - hosts have routing tables that work like maps for where to send the traffic to
+      - routing tables work like a hash map that includes destination network, interface, and the ips of any intermediate routers needed to route through
+      - if the router can't find the destination for the traffic, it'll route it back to the full internet on another router that has access
+    - DHCP can help a server auto-configure network by getting settings from the link, or you can manually set up static settings
+- ipv6
+  - 128 bit addresses, in groups of 4 hex digits separated by colons
+  - there are many leading 0s in groups, so they can be omitted
+  - multiple sequences of 0's can be represented by :: (but only once per ip address)
+  - when specifying a port, keep the ip in brackets so you can tell that the port isn't part of the address
+  - 2 part: network prefix (1st 64) and interface id (last 64). network prefix is the subnet
+  - special addresses:
+    - ::1/128 - localhost
+    - :: - unspecified (listening on all configured IPs)
+    - ::/0 - default route
+    - 2000::/3 - global unicast addr (all normal ips are from this space)
+    - fd00::/8 - unique local address (only for intranet use)
+    - ff00::/8 - multicast (transmits to multiple hosts at once. used as ipv6 version of broadcast address)
+    - fe80::/10 - link-local unicast that talks to hosts on a specific link as opposed to subnet
+  - ipv6 configuration
+    - dhcpv6 works like dhcp
+    - manual configuration works too
+    - slaac will auto configure through router advertisements
+- ip link show shows available network interfaces
+- ip addr show [interface name] for more
+  - link/ether is the mac address
+  - inet is ipv4 address plus its prefix and scope
+  - inet6 is ipv6 address
+  - 2nd inet6 is local ipv6 address
+- ip -s link show to see performance (RX means received and TX means transmitted)
+- ip route shows ipv4 routing table (add -6 for ipv6)
+- tracepath or traceroute shows where the packet goes (use -6 for ipv6)
+- ss (replacement for netstat) shows socket statistics
+  - ss -ta output:
+    -*:ssh - listening to all ssh ports
+    172.25.250.10:ssh - ssh connection with that ip
+  - opteons:
+  - -l for listening
+  - -n for numbers instead of names
+  - -t for tcp only
+  - -u for udp only
+  - -a for allowed
+  - -p for process using the sockets
+  - -A (look it up)
+- nmcli
+  - settings in /etc/sysconfig/network-scripts
+  - nmcli dev status to show network devices
+  - nmcli con show to get list of connections. --active shows only active ones
+  - nmcli con add con-name foo type ethernet ifname eno2
+    - add connection for eno2 device named foo getting settings from dhcp
+    - add ipv4.address foo to make it have static ip of foo
+    - nmcli con up foo to activate connection
+    - nmcli dev dis wlp5s0 to disconnect that interface
+      - you should use this because nmcli con down will have it auto reconnect
+  - nmcli con show <connectionName> will list all properties
+  - nmcli con modd <connectionName> property val will modify a connection
+    - when changing dhcp to static, set ipv4.method to manual, or ipv6.method to manual
+  - nmcli con del to delete connection
+  - nmcli con reload to reload conf files after they were edited by hand
+- changing the hostname
+  - run hostnamectl set-hostname foo
+- stub resolver gets ips from hostnames
+  - looks in paths listed in /etc/nsswitch.conf
+  - starts with /etc/hosts
+    - format is ip host1 host2 host3... where hostn is any hostname to associate with an ip
+  - otherwise tries to resolve from dns setup in /etc/resolv.conf
+    - format:
+      - doman foo (this line optional, if left out will be the default for any domain)
+      - search foo (list of domain names to try)
+      - nameserver <ip> (ip of nameserver to query)
+    - you can add a custom dns for a specific connection with nmcli con mod ID +ipv4.dns IP
+* archiving and transferring
+- tar -cf archivename filesToCompress to create archive
+- tar -tf to list contents
+- tar -xf to extract contents
+- -f for filename to use
+- -z for gzip
+- -j for bzip
+- -J or -xz to use xz (best compression)
+- -p to preserve permissions instead of obeying umask
+- to copy over ssh, use scp and for path on other computer use user@host:path
+- use sftp for interactive remote file management
+  - puts you in a session where you can use mkdir and cd and stuff directly on the host
+  - use put [path] in sftp session to upload local file to server
+  - use get [path] to download file
+- rsync is good
+* yum/redhat support
+- support (all commands here start with subscription-manager)
+  - register with =subscription-manager register --username=foo --password=bar=
+  - view subscriptions with =subscription-manager list --available | less=
+  - autoattach with =attach --auto=
+  - attach from specific pool with =attach --pool=poolID=
+  - view consumed subs with =list --consumed=
+  - unregister with =unregister=
+- rpms
+  - filename format is name-version-release-arch.rpm
+  - file contains the files to be installed, scripts to run on install/uninstall/update, and metadata (including deps)
+  - file should usually be gpg signed
+  - portage-like slotting is allowed for things like the kernel
+  - =rpm -q= for query
+    - -qa: list all installed packages
+    - -qf file: find what package provides file
+    - -q package: find version of package currently installed
+    - -qi package: get info about the package
+    - -ql package: list files that come from the package
+    - -qc package: list conf files of package
+    - -qd package: list documentation files
+    - -q --scripts package: list scripts that run after package is installed or removed
+    - -q --changelog package: show package changelog
+  - rpm -ivh file.rpm to install package
+- yum
+  - list to show all packages
+  - search to search name/summary
+  - search all to also include description field
+  - info package to show package info
+  - provides path (wildcards allowed) to show packages providing files
+  - install to install
+  - update package to update a given package, or just update to update everything
+  - remove to uninstall and remove reverse dependencies
+  - groups are basically metapackages
+    - group list to list groups
+    - group info foo for group info
+    - group install to install group
+  - /var/log/dnf.rpm.log contains all install/remove transactions
+  - yum history will also show this stuff
+  - yum history undo N to undo N transactions
+- yum repositories
+  - yum repolist all to show repos
+  - yum config-manager --enable repo to enable a given repo
+  - yum config-manager --add-repo="url" to add 3rd party repo to list
+- appstream
+  - appstream is an official repo. basically contains programs or os components such as java or webserver stuff that can be updated more quickly than everything else. sign up for the webserver appstream or whatever to have up to date webserver stuff but have everything else be stable.
+    - modules streams are groups of packages. each module can have multiple streams, each of which has different program versions
+    - module profiles actually contain the packages of a module. If you don't install one of the profiles you get the default versions. Java always comes from the java module, but you can install a different profile from the java module to get different versions for java stuff
+    - yum module list to list modules
+      - add a module name to list its stream
+    - yum module install foo to install module foo
+    - yum module remove to remove. this can break stuff though
+    - switch streams by removing, the module, run =yum module reset foo=, then =yum module install foo:versionNumber/profileName=
+* file systems
+- lsblk -fp to show uuid
+- mount UUID="foo" /path/to/mountpoint
+- lsof /path/to/mountpoint to show what processes are stopping unmounting
+- locate uses the mlocate database to find files. It's instant but it needs the files to already be in the database.
+  - database is updated every day, but you can manually update it with updatedb
+  - automatically searches from root
+  - -n 5 means show only 1st 5 matches
+  - -i ignores case
+- find
+  - -iname is like name but ignores case
+  - -user -group -uid and -gid match those user fields
+  - -perm for permissions
+    - -perm 764 only matches 764
+    - -perm -764 matches at least. As long as each field has the permissions specified (and possibly others) it matches
+    - -perm /764 means only 7 of the fields has to match at least. So as long as the value for others is at least 4 it matches
+  - -size for sizes
+    - prefix k M or G for kilo/mega/giga
+    - 10M for 10 megabytes (rounded up)
+    - +10M for more than 10
+    - -10M for less than 10
+  - -mmin for modification type
+    - 120 for 120 minutes ago
+    - +120 for more than
+    - -120 for less than
 

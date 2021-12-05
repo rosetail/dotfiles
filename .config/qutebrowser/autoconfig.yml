@@ -230,6 +230,7 @@ settings:
     '*://*.app3.checksconnect.com/*': true
     '*://*.archive.org/*': true
     '*://*.auto-buy.geico.com/*': true
+    '*://*.baypropertygroup.appfolio.com/*': true
     '*://*.caccl-deanza.primo.exlibrisgroup.com/*': true
     '*://*.cas.pugetsound.edu/*': true
     '*://*.connect.secure.wellsfargo.com/*': true
@@ -260,6 +261,7 @@ settings:
     '*://*.jobs-brookdale.icims.com/*': true
     '*://*.joncorbett.ca/*': true
     '*://*.keisan.casio.com/*': true
+    '*://*.latexresu.me/*': true
     '*://*.libgen.io/*': true
     '*://*.localhost/*': true
     '*://*.mega.nz/*': true
@@ -267,6 +269,8 @@ settings:
     '*://*.minecraft.tools/*': true
     '*://*.mixtape.moe/*': true
     '*://*.mlm.pearson.com/*': true
+    '*://*.mountainmoves.co/*': true
+    '*://*.moversguide.usps.com/*': true
     '*://*.my.indeed.com/*': true
     '*://*.my.minecraft.net/*': true
     '*://*.my.patientfusion.com/*': true
@@ -287,6 +291,7 @@ settings:
     '*://*.pirateproxy.llc/*': true
     '*://*.play.typeracer.com/*': true
     '*://*.please.hackmii.com/*': true
+    '*://*.porch.com/*': true
     '*://*.portal.mypearson.com/*': true
     '*://*.pridepalace.lgbt/*': true
     '*://*.pugetsound-csm.symplicity.com/*': true
@@ -299,6 +304,7 @@ settings:
     '*://*.rutracker.org/*': true
     '*://*.search-proquest-com.deanza.idm.oclc.org/*': true
     '*://*.seattle.craigslist.org/*': true
+    '*://*.secure.indeed.com/*': true
     '*://*.secure1.fadv.com/*': true
     '*://*.shale.peopleanswers.com/*': true
     '*://*.silph.gg/*': true
@@ -344,12 +350,15 @@ settings:
     '*://*.www.rapidtables.com/*': true
     '*://*.www.reddit.com/*': true
     '*://*.www.redhat.com/*': true
+    '*://*.www.selectphysicaltherapy.com/*': true
     '*://*.www.smashladder.com/*': true
+    '*://*.www.sonic.com/*': true
     '*://*.www.southwest.com/*': true
     '*://*.www.speedtest.net/*': true
     '*://*.www.subarunet.com/*': true
     '*://*.www.symbolab.com/*': true
     '*://*.www.twitch.tv/*': true
+    '*://*.www.usbank.com/*': true
     '*://*.www.webassign.net/*': true
     '*://*.www.youtube.com/*': true
     '*://*.xkcd.com/*': true
