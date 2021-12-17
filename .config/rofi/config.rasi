@@ -1,0 +1,19 @@
+configuration {
+	modi: "run,window,session:~/bin/rofi-session";
+//	width: 25;
+//	lines: 10;
+	font: "monospace 10";
+	location: 0;
+	yoffset: -300;
+	xoffset: 0;
+	fixed-num-lines: false;
+	terminal: "kitty";
+	run-command: "fish -c '{cmd}'";
+	sidebar-mode: true;
+//	separator-style: "solid";
+//	hide-scrollbar: true;
+	dpi: 192;
+	theme: "base16-eighties";
+	kb-move-end: "Control+Shift+e";
+	kb-row-up: "Up,Control+e,ISO_Left_Tab";
+}

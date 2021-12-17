@@ -343,6 +343,7 @@ settings:
     '*://*.www.namecheap.com/*': true
     '*://*.www.omorashi.org/*': true
     '*://*.www.oneplus.com/*': true
+    '*://*.www.packages24.com/*': true
     '*://*.www.pawsitivityservicedogs.com/*': true
     '*://*.www.principledtechnologies.com/*': true
     '*://*.www.psychologytoday.com/*': true

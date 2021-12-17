@@ -228,7 +228,7 @@ the message about failing to establish authenticity the first time you ssh is be
     - nmcli dev dis wlp5s0 to disconnect that interface
       - you should use this because nmcli con down will have it auto reconnect
   - nmcli con show <connectionName> will list all properties
-  - nmcli con modd <connectionName> property val will modify a connection
+  - nmcli con mod <connectionName> property val will modify a connection
     - when changing dhcp to static, set ipv4.method to manual, or ipv6.method to manual
   - nmcli con del to delete connection
   - nmcli con reload to reload conf files after they were edited by hand
@@ -337,4 +337,6 @@ the message about failing to establish authenticity the first time you ssh is be
     - 120 for 120 minutes ago
     - +120 for more than
     - -120 for less than
+  - -type [f,d,l,b] for file, dir, link, or block device respectively
+  - -links 2 for files with 2 hardlinks. accepts + for more than and - for less than
 

@@ -5,7 +5,11 @@
  *  Scheme: Chris Kempson (http://chriskempson.com)
  *  Template: Jordi Pakey-Rodriguez (https://github.com/0xdec), Andrea Scarpino (https://github.com/ilpianista)
  */
+
 * {
+    width: 30%;
+    lines: 10;
+
     red:                         rgba ( 242, 119, 122, 100 % );
     blue:                        rgba ( 102, 153, 204, 100 % );
     lightfg:                     rgba ( 232, 230, 223, 100 % );
@@ -37,8 +41,8 @@
 }
 window {
     background-color: @background;
-    border:           1;
-    padding:          5;
+    border:           2;
+    padding:          0;
 }
 mainbox {
     border:           0;
@@ -47,10 +51,11 @@ mainbox {
 message {
     border:           1px solid 0px 0px ;
     border-color:     @separatorcolor;
-    padding:          1px ;
+    padding:          6px ;
 }
 textbox {
     text-color:       @foreground;
+
 }
 listview {
     fixed-height:     0;
@@ -58,7 +63,11 @@ listview {
     border-color:     @separatorcolor;
     spacing:          2px ;
     scrollbar:        true;
-    padding:          2px 0px 0px ;
+    padding:          2px 5px 5px ;
+}
+element-text, element-icon {
+     background-color: inherit;
+     text-color:       inherit;
 }
 element {
     border:           0;
@@ -107,11 +116,15 @@ scrollbar {
     handle-width:     8px ;
     padding:          0;
 }
-sidebar {
-    border:           2px solid 0px 0px ;
+mode-switcher {
+   border:           2px solid 0px 0px;
     border-color:     @separatorcolor;
+    padding: 5;
 }
+
 button {
+    horizontal-align: 0.5;
+    // border:           2px solid 0px 0px;
     spacing:          0;
     text-color:       @normal-foreground;
 }
@@ -122,7 +135,7 @@ button selected {
 inputbar {
     spacing:          0px;
     text-color:       @normal-foreground;
-    padding:          1px ;
+    padding:          6px ;
     children:         [ prompt,textbox-prompt-colon,entry,case-indicator ];
 }
 case-indicator {
@@ -143,3 +156,4 @@ textbox-prompt-colon {
     margin:           0px 0.3000em 0.0000em 0.0000em ;
     text-color:       inherit;
 }
+

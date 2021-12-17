@@ -629,3 +629,18 @@ x11-misc/dunst dunstify
 # required by virtual/wine-0-r7::gentoo
 # required by wine (argument)
 >=dev-libs/libusb-1.0.24-r2 abi_x86_32
+# required by media-sound/pulseaudio-15.0-r1::gentoo
+# required by app-emulation/wine-vanilla-6.0.2::gentoo[pulseaudio]
+# required by virtual/wine-0-r7::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/speexdsp-1.2.0 abi_x86_32
+# required by virtual/libcrypt-2::gentoo
+# required by sys-apps/systemd-tmpfiles-249.5::gentoo
+# required by virtual/tmpfiles-0-r1::gentoo
+# required by media-sound/pulseaudio-15.0-r1::gentoo
+# required by app-emulation/wine-vanilla-6.0.2::gentoo[pulseaudio]
+# required by virtual/wine-0-r7::gentoo
+# required by @selected
+# required by @world (argument)
+>=sys-libs/libxcrypt-4.4.25-r1 abi_x86_32

@@ -159,6 +159,9 @@ def_key "x"
 def_key "e"
  scroll_up
 
+def_key "f"
+ edit_song
+
 def_key "n"
  scroll_down
 

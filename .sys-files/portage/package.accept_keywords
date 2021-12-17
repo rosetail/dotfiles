@@ -241,8 +241,6 @@ net-im/discord-bin ~amd64
 =www-client/browsh-1.6.4_p1 ~amd64
 # required by xkcdpass (argument)
 =app-admin/xkcdpass-1.19.2 ~amd64
-# required by emacs:28-vcs (argument)
-=app-editors/emacs-28.0.9999 **
 # required by bat (argument)
 =sys-apps/bat-0.18.3 ~amd64
 # required by dev-haskell/text-1.2.4.1::gentoo
@@ -307,3 +305,5 @@ net-im/discord-bin ~amd64
 # required by @selected
 # required by @world (argument)
 =dev-python/pyyaml-6.0 ~amd64
+# required by emacs:28-vcs (argument)
+=app-editors/emacs-28.0.9999-r1 **
