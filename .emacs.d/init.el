@@ -910,6 +910,22 @@ _a_: Agenda, _c_: Capture"
   :config
   (global-flycheck-mode))
 
+(use-package vimish-fold)
+
+(use-package evil-vimish-fold
+  :after vimish-fold
+  :init
+  ;; enable in all modes, not just prog-mode
+  (setq evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
+  :general
+  (:states
+   '(motion normal visual)
+   "z?" 'vimish-fold-avy
+   "zn" ' evil-vimish-fold/next-fold
+   "ze" ' evil-vimish-fold/previous-fold)
+  :config
+  (global-evil-vimish-fold-mode))
+
 (use-package projectile
   :defer 0.5
   :after (hydra)

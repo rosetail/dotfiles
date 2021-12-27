@@ -2,3 +2,4 @@
 yadm add -N ~/.config/localrepo
 cp -r /etc/portage ~/.sys-files/
 yadm add -N ~/.sys-files/portage
+yadm add -N ~/.emacs.d/vimish-fold/
