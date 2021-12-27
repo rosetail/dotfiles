@@ -396,6 +396,9 @@ my/add-to-global-hydra to add entries")
         ;; modus-themes-org-blocks 'rainbow
         modus-themes-headings '((t . rainbow))
         modus-themes-bold-constructs nil)
+  
+  ;; don't make modeline be variable pitched
+  (set-face-attribute 'mode-line-active nil :inherit 'mode-line)
 
   ;; Load the theme files before enabling a theme
   (modus-themes-load-themes)
@@ -631,11 +634,15 @@ my/add-to-global-hydra to add entries")
 (use-package marginalia
   :demand t
   :init
-  (setq marginalia-annotators
-        '(marginalia-annotators-heavy
-          marginalia-annotators-light))
+  ;; TODO: figure out what happened to this variable
+  ;; (setq marginalia-annotators
+  ;;       '(marginalia-annotators-heavy
+  ;;         marginalia-annotators-light))
   :config
-  (marginalia-mode))
+  (marginalia-mode)
+  ;; this fixes the annotations for describe variable/functions
+  (add-to-list 'marginalia-annotator-registry
+	       '(symbol-help marginalia-annotate-variable)))
 
 (use-package embark
   :demand t

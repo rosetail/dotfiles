@@ -245,6 +245,9 @@ my/add-to-global-hydra to add entries")
         ;; modus-themes-org-blocks 'rainbow
         modus-themes-headings '((t . rainbow))
         modus-themes-bold-constructs nil)
+  
+  ;; don't make modeline be variable pitched
+  (set-face-attribute 'mode-line-active nil :inherit 'mode-line)
 
   ;; Load the theme files before enabling a theme
   (modus-themes-load-themes)
@@ -465,11 +468,15 @@ my/add-to-global-hydra to add entries")
 (use-package marginalia
   :demand t
   :init
-  (setq marginalia-annotators
-        '(marginalia-annotators-heavy
-          marginalia-annotators-light))
+  ;; TODO: figure out what happened to this variable
+  ;; (setq marginalia-annotators
+  ;;       '(marginalia-annotators-heavy
+  ;;         marginalia-annotators-light))
   :config
-  (marginalia-mode))
+  (marginalia-mode)
+  ;; this fixes the annotations for describe variable/functions
+  (add-to-list 'marginalia-annotator-registry
+	       '(symbol-help marginalia-annotate-variable)))
 
 (use-package embark
   :demand t
@@ -1149,15 +1156,3 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 ;; reset file-name-handler-alist
 (when (boundp 'my/file-name-handler-alist)
       (setq file-name-handler-alist my/file-name-handler-alist))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(auth-source-save-behavior nil))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
