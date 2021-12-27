@@ -1167,14 +1167,15 @@ _a_: Agenda, _c_: Capture"
   :init
   ;; enable in all modes, not just prog-mode
   (setq evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
+  (global-evil-vimish-fold-mode)
   :general
   (:states
    '(motion normal visual)
-   "z?" 'vimish-fold-avy
+   "z SPC" 'evil-toggle-fold
+   "za" 'vimish-fold-avy
    "zn" ' evil-vimish-fold/next-fold
    "ze" ' evil-vimish-fold/previous-fold)
-  :config
-  (global-evil-vimish-fold-mode))
+  )
 #+end_src
 
 * projectile
