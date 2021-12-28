@@ -309,3 +309,7 @@ net-im/discord-bin ~amd64
 =app-editors/emacs-29.0.9999 **
 # required by git-filter-repo (argument)
 =dev-vcs/git-filter-repo-2.34.0 ~amd64
+# required by x11-wm/xmonad-contrib-0.17.0::haskell
+# required by @selected
+# required by @world (argument)
+=dev-haskell/x11-1.10 ~amd64

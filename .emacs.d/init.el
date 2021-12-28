@@ -924,8 +924,7 @@ _a_: Agenda, _c_: Capture"
    "z SPC" 'evil-toggle-fold
    "za" 'vimish-fold-avy
    "zn" ' evil-vimish-fold/next-fold
-   "ze" ' evil-vimish-fold/previous-fold)
-  )
+   "ze" ' evil-vimish-fold/previous-fold))
 
 (use-package projectile
   :defer 0.5

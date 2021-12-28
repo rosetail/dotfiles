@@ -12,23 +12,24 @@ import XMonad.Hooks.InsertPosition
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers
 import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.WindowSwallowing
+import XMonad.Hooks.RefocusLast
 import XMonad.Layout.Drawer
 import XMonad.Layout.Groups.Examples
 import XMonad.Layout.WindowNavigation
 import XMonad.Layout.Spacing
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
-import XMonad.Layout.TrackFloating
 import XMonad.Layout.Tabbed
 import XMonad.Layout.SubLayouts
 import XMonad.Layout.Simplest
-import XMonad.Layout.Fullscreen
 import XMonad.Layout.NoBorders
 import XMonad.Util.NamedScratchpad
+import XMonad.Util.WorkspaceCompare
 import XMonad.Util.EZConfig
 main :: IO()
 main = 
-  xmonad $ docks $ ewmh $ dynamicProjects projects $
+  xmonad $ addEwmhWorkspaceSort (pure myFilter) . ewmhFullscreen . ewmh $ docks $ dynamicProjects projects $
    navigation2DP myNav2DConf
    ("e", "h", "n", "i") [
     ("M-",   windowGo),
@@ -42,39 +43,33 @@ main =
     focusedBorderColor = "#d3d0c8",
     normalBorderColor  = "#2d2d2d",
     XMonad.workspaces  = toWorkspaces myWorkspaces,
-    handleEventHook    = XMonad.Layout.Fullscreen.fullscreenEventHook,
+    handleEventHook    = refocusLastWhen refocusingIsActive <+>
+                         swallowEventHook (className =? "Alacritty" <||>
+                                           className =? "Termite") (return True),
+                         -- <+>
+                         -- XMonad.Layout.Fullscreen.fullscreenEventHook,
     mouseBindings      = myMouseBindings,
-    logHook            = ewmhDesktopsLogHookCustom
-                         namedScratchpadFilterOutWorkspace,
+    logHook            = refocusLastLogHook,
     layoutHook         =
         configurableNavigation noNavigateBorders $
-        fullscreenFull $
+        -- fullscreenFull $
         smartBorders $
         mkToggle (single NBFULL) $
         avoidStruts $
 
 
-        (trackFloating $
-        addTabs shrinkText myTabConfig $
+        (addTabs shrinkText myTabConfig $
         subLayout [] Simplest $
-
         mySpacing $ 
-        trackFloating $
-
         Tall 1 (3/100) (1/2) |||
 
-        -- combineTwo (Tall 1 (3/100) (1/2)) (simpleTabbed) (tabbed shrinkText myTabConfig) |||
-        -- tallTabs def |||
-
-        (trackFloating $ mySpacing $ simpleDrawer 0.01 0.3 (ClassName "Emacs" `Or` ClassName "alacritty")  `onRight` (Tall 1 0.03 0.5)) ) |||
-
-        -- (mySpacing $ mastered (1/100) (1/2) $ tabbed shrinkText myTabConfig) |||
-  
+        (mySpacing $ simpleDrawer 0.01 0.3 (ClassName "Emacs" `Or` ClassName "alacritty")  `onRight` (Tall 1 0.03 0.5)) ) |||
         (mySpacing $ tabbed shrinkText myTabConfig)
       
     }
-    -- `removeMouseBindings` [(mod4Mask, button1)]
   `additionalKeysP` myKeys
+
+myFilter = filterOutWs [scratchpadWorkspaceTag]
 
 mySpacing = 
   spacingRaw False (Border 8 8 8 8) True (Border 8 8 8 8) True
@@ -96,10 +91,11 @@ myMouseBindings (XConfig {XMonad.modMask = modMask}) = M.fromList [
                                          >> windows W.shiftMaster)
     ]
 
-  
+-- make polybar lower itself
+polybarFix = ask >>= \w -> liftX $ withDisplay $ \dpy -> io (lowerWindow dpy w) >> mempty
+
 myManageHook :: Query (Endo WindowSet)
 myManageHook = 
-  fullscreenManageHook <+>
   manageHook def <+>
   manageDocks <+>
   namedScratchpadManageHook scratchpads <+>
@@ -116,6 +112,7 @@ myManageHook =
   className =? "net-minecraft-launcher-Main" -?> doFloat,
   className =? "TelegramDesktop" -?> doFloat,
   className =? "net-minecraft-bootstrap-Bootstrap" -?> doFloat,
+  className =? "polybar" --> polybarFix,
   title =?     "CS 240 Project"  -?> doFloat,
     -- zoom's temporary windows just have zoom title
   title =?     "zoom" -?> doFloat,
