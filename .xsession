@@ -3,7 +3,6 @@ feh --no-fehbg --bg-fill /home/rose/.background.jpg &
 export GDK_SCALE=2
 export GDK_DPI_SCALE=0.5
 xrdb -merge ~/.Xresources
-emacs --bg-daemon &
 xsetroot -cursor_name left_ptr
 unclutter --timeout 1 -b --ignore-scrolling
 setxkbmap us -variant colemak
@@ -18,3 +17,4 @@ xcape -e 'Alt_L=Escape' &
 xcape -e 'Control_R=Escape' &
 polybar main &
 pulseaudio &
+emacs --bg-daemon &

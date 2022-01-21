@@ -13,7 +13,7 @@ configuration {
 //	separator-style: "solid";
 //	hide-scrollbar: true;
 	dpi: 192;
-	theme: "base16-eighties";
 	kb-move-end: "Control+Shift+e";
 	kb-row-up: "Up,Control+e,ISO_Left_Tab";
 }
+@theme "base16-eighties"

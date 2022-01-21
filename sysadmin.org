@@ -339,4 +339,38 @@ the message about failing to establish authenticity the first time you ssh is be
     - -120 for less than
   - -type [f,d,l,b] for file, dir, link, or block device respectively
   - -links 2 for files with 2 hardlinks. accepts + for more than and - for less than
-
+* bash scripts
+- double quotes allows variables and single quotes don't
+- use ${foo} for var access in quotes
+- =echo "foo" >&2= to output to stderr
+- loop format:
+#+begin_src sh
+for VAR in LIST; do
+    code
+done
+#+end_src
+- LIST can be =1 2 3=, ={1..3}= or =*= for all files in current dir
+- =exit n= for exit code. Without an arg it uses the exit code of the most recent command
+- =test= does conditionals
+- =[ foo ]= also does conditionals
+- =[[ foo ]]= uses newer syntax for conditionals
+  - -eq for ==
+  - -ne for !=
+  - -gt for >
+  - -ge for >=
+  - -lt and le for less
+  - = compares strings
+  - != also compares strings
+  - -z to test if string is empty
+  - -n to test if string is not empty
+- if syntax:
+#+begin_src sh
+if [ TEST ]; then
+    code
+elif [ TEST ]; then
+    more code
+else
+    more code
+fi
+#+end_src
+- in regex =\{2\}= is like * but only matches 2 chars

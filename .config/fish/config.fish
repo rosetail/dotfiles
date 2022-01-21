@@ -43,7 +43,7 @@ set -x _JAVA_AWT_WM_NONREPARENTING "true"
 set -x COLORTERM "truecolor"
 set -x PATH ~/bin $PATH
 set -x BROWSER "qutebrowser"
-set -x EDITOR "em"
+set -x EDITOR "emacs"
 set -x GPG_TTY (tty)
 
 alias ee 'emacsclient -a emacs $PWD'

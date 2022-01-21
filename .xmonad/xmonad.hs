@@ -16,6 +16,7 @@ import XMonad.Hooks.WindowSwallowing
 import XMonad.Hooks.RefocusLast
 import XMonad.Layout.Drawer
 import XMonad.Layout.Groups.Examples
+import XMonad.Layout.TrackFloating
 import XMonad.Layout.WindowNavigation
 import XMonad.Layout.Spacing
 import XMonad.Layout.MultiToggle
@@ -51,7 +52,7 @@ main =
     mouseBindings      = myMouseBindings,
     logHook            = refocusLastLogHook,
     layoutHook         =
-        configurableNavigation noNavigateBorders $
+        refocusLastLayoutHook . trackFloating $ configurableNavigation noNavigateBorders $
         -- fullscreenFull $
         smartBorders $
         mkToggle (single NBFULL) $
