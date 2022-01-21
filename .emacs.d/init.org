@@ -1,32 +1,32 @@
 * early-init.el
 #+begin_src emacs-lisp :tangle early-init.el
-  ;;; -*- lexical-binding: t; -*-
-  ;; taken from doom emacs
+;;; -*- lexical-binding: t; -*-
+;; taken from doom emacs
 
-  ;; file-name-handler-alist is consulted a lot so disable it during startup
-  (defvar my/file-name-handler-alist file-name-handler-alist)
-  (setq file-name-handler-alist nil)
-  ;; Defer garbage collection further back in the startup process
-  (setq gc-cons-threshold most-positive-fixnum)
+;; file-name-handler-alist is consulted a lot so disable it during startup
+(defvar my/file-name-handler-alist file-name-handler-alist)
+(setq file-name-handler-alist nil)
+;; Defer garbage collection further back in the startup process
+(setq gc-cons-threshold most-positive-fixnum)
 
 
-  ;; Prevent the glimpse of un-styled Emacs by disabling these UI elements early.
-  (push '(menu-bar-lines . 0) default-frame-alist)
-  (push '(tool-bar-lines . 0) default-frame-alist)
-  (push '(vertical-scroll-bars) default-frame-alist)
+;; Prevent the glimpse of un-styled Emacs by disabling these UI elements early.
+(push '(menu-bar-lines . 0) default-frame-alist)
+(push '(tool-bar-lines . 0) default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
 
-  ;; Resizing the Emacs frame can be a terribly expensive part of changing the
-  ;; font. By inhibiting this, we easily halve startup times with fonts that are
-  ;; larger than the system default.
-  (setq frame-inhibit-implied-resize t)
+;; Resizing the Emacs frame can be a terribly expensive part of changing the
+;; font. By inhibiting this, we easily halve startup times with fonts that are
+;; larger than the system default.
+(setq frame-inhibit-implied-resize t)
 
-  ;; Prevent unwanted runtime builds in gccemacs (native-comp); packages are
-  ;; compiled ahead-of-time when they are installed and site files are compiled
-  ;; when gccemacs is installed.
-  ;; (setq comp-deferred-compilation t)
+;; Prevent unwanted runtime builds in gccemacs (native-comp); packages are
+;; compiled ahead-of-time when they are installed and site files are compiled
+;; when gccemacs is installed.
+;; (setq comp-deferred-compilation t)
 
-  ;; don't enable package.el so we can use straight
-  (setq package-enable-at-startup nil)
+;; don't enable package.el so we can use straight
+(setq package-enable-at-startup nil)
 #+end_src
 
 * initial setup
@@ -199,7 +199,8 @@ my/add-to-global-hydra to add entries")
 ** package loading notice
 #+begin_src emacs-lisp :tangle yes
 ;; from https://gist.github.com/tttuuu888/267a8a56c207d725ea999e353646eec9
-(defvar sk-pacakge-loading-notice-list '(org yasnippet))
+(defvar sk-pacakge-loading-notice-list '(yasnippet))
+;; (defvar sk-pacakge-loading-notice-list '(org yasnippet))
 
 (defun sk-package-loading-notice (old &rest r)
   (let* ((elt (car r))
@@ -249,6 +250,7 @@ my/add-to-global-hydra to add entries")
   :init
   ;; show word count of region
   (setq doom-modeline-enable-word-count t)
+  (doom-modeline-mode)
   :custom-face
   ;; (doom-modeline-bar ((t (:background "#f99157"))))
   ;; (doom-modeline-evil-normal-state   ((t (:foreground "#99cc99"))))
@@ -258,7 +260,8 @@ my/add-to-global-hydra to add entries")
   ;; (doom-modeline-evil-motion-state   ((t (:foreground "#ffcc66"))))
   ;; (doom-modeline-evil-replace-state  ((t (:foreground "#f99157"))))
   ;; (doom-modeline-evil-emacs-state    ((t (:foreground "#f2777a"))))
-  :hook (after-init . doom-modeline-mode))
+  ;; :hook (after-init . doom-modeline-mode)
+  )
 
 ;; show line numbers in fringe, but only in programming modes
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
@@ -720,8 +723,12 @@ my/add-to-global-hydra to add entries")
 #+begin_src emacs-lisp :tangle yes
 ;; TODO: refactor this whole section
 (use-package org
-  :defer t
+  :demand t
   :init
+  ;; start in org-mode with a source block for lisp evaluation
+  (setq initial-major-mode #'org-mode
+        initial-scratch-message
+        "#+begin_src emacs-lisp\n;; This block is for text that is not saved, and for Lisp evaluation.\n;; To create a file, visit it with \\[find-file] and enter text in its buffer.\n\n#+end_src\n\n")
   (add-hook 'org-mode-hook #'flyspell-mode)
   ;; override C-RET
   ;; (add-hook 'org-mode-hook
@@ -797,7 +804,7 @@ my/add-to-global-hydra to add entries")
 #+begin_src emacs-lisp :tangle yes
 (use-package ox ; needed for org-export-filter-headline-function
   :straight nil
-  :after org
+  :defer t
   :config
   ;; use the soul and csquotes packages
   ;; TODO: see if this can be done with 1 call to add-to-list

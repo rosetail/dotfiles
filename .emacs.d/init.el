@@ -158,7 +158,8 @@ my/add-to-global-hydra to add entries")
                           "Indent Buffer" :column "Editing"))
 
 ;; from https://gist.github.com/tttuuu888/267a8a56c207d725ea999e353646eec9
-(defvar sk-pacakge-loading-notice-list '(org yasnippet))
+(defvar sk-pacakge-loading-notice-list '(yasnippet))
+;; (defvar sk-pacakge-loading-notice-list '(org yasnippet))
 
 (defun sk-package-loading-notice (old &rest r)
   (let* ((elt (car r))
@@ -205,6 +206,7 @@ my/add-to-global-hydra to add entries")
   :init
   ;; show word count of region
   (setq doom-modeline-enable-word-count t)
+  (doom-modeline-mode)
   :custom-face
   ;; (doom-modeline-bar ((t (:background "#f99157"))))
   ;; (doom-modeline-evil-normal-state   ((t (:foreground "#99cc99"))))
@@ -214,7 +216,8 @@ my/add-to-global-hydra to add entries")
   ;; (doom-modeline-evil-motion-state   ((t (:foreground "#ffcc66"))))
   ;; (doom-modeline-evil-replace-state  ((t (:foreground "#f99157"))))
   ;; (doom-modeline-evil-emacs-state    ((t (:foreground "#f2777a"))))
-  :hook (after-init . doom-modeline-mode))
+  ;; :hook (after-init . doom-modeline-mode)
+  )
 
 ;; show line numbers in fringe, but only in programming modes
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
@@ -504,8 +507,12 @@ my/add-to-global-hydra to add entries")
 
 ;; TODO: refactor this whole section
 (use-package org
-  :defer t
+  :demand t
   :init
+  ;; start in org-mode with a source block for lisp evaluation
+  (setq initial-major-mode #'org-mode
+        initial-scratch-message
+        "#+begin_src emacs-lisp\n;; This block is for text that is not saved, and for Lisp evaluation.\n;; To create a file, visit it with \\[find-file] and enter text in its buffer.\n\n#+end_src\n\n")
   (add-hook 'org-mode-hook #'flyspell-mode)
   ;; override C-RET
   ;; (add-hook 'org-mode-hook
@@ -577,7 +584,7 @@ my/add-to-global-hydra to add entries")
 
 (use-package ox ; needed for org-export-filter-headline-function
   :straight nil
-  :after org
+  :defer t
   :config
   ;; use the soul and csquotes packages
   ;; TODO: see if this can be done with 1 call to add-to-list
