@@ -564,7 +564,7 @@ my/add-to-global-hydra to add entries")
         ;; use colemak movement
         evil-org-movement-bindings '((up . "e") (down . "n") (left . "h") (right . "i"))
 
-        ;; add keybindings for more thinds
+        ;; add keybindings for more things
         evil-org-key-theme '(navigation
                              insert
                              return
@@ -835,6 +835,7 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
   ;; (add-hook 'focus-in-hook 'org-keep-tags-to-right)
   ;; (add-hook 'focus-out-hook 'org-keep-tags-to-right)
 
+  :general (:keymaps 'org-mode-map :states '(normal insert) "M-n" nil)
   :config
   ;; TODO: switch this to custom-face
   ;; (set-face-attribute 'org-block-begin-line nil :background 'unspecified)
@@ -1138,14 +1139,71 @@ _a_: Agenda, _c_: Capture"
 #+begin_src elisp :tangle yes
 (use-package corfu
   :init
-  (setq corfu-quit-no-match t
+  (setq tab-always-indent 'complete
+        corfu-quit-no-match t
         corfu-preview-current nil
         corfu-auto t)
+  
   (corfu-global-mode)
+  
+  (defun corfu-move-to-minibuffer ()
+    "Transfer the current completion session to the minibuffer"
+    (interactive)
+    (let ((completion-extra-properties corfu--extra)
+          completion-cycle-threshold completion-cycling)
+      (apply #'consult-completion-in-region completion-in-region--data)))
+
+  ;; stop C-n and C-e from being overridden
+  (general-unbind '(insert normal motion visual operator) "C-n" "C-e" "C-d")
+  :general
+  (:keymaps 'corfu-map
+            ;; "C-m" 'corfu-move-to-minibuffer
+            "C-n" 'corfu-next
+            "C-e" 'corfu-previous)
   :hook (eshell-mode . (lambda ()
                          (setq-local corfu-quit-at-boundary t
                                      corfu-auto nil)
                          (corfu-mode))))
+
+;; add more capf functions
+(use-package cape
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  (add-to-list 'completion-at-point-functions #'cape-ispell)
+  (add-to-list 'completion-at-point-functions #'cape-line))
+
+;; show corfu icons
+(use-package kind-icon
+  :after corfu
+  :custom
+  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
+;; show documentation
+(use-package corfu-doc
+  :straight (corfu-doc :type git :host github :repo "galeo/corfu-doc")
+  :general (:keymaps 'corfu-map
+                     "C-d" 'corfu-doc-toggle
+                     ;; scroll-down and scroll-up are reversed for some reason here
+                     "M-e" 'corfu-doc-scroll-down
+                     "M-n" 'corfu-doc-scroll-up))
+
+;; better eshell completion
+(use-package pcmpl-args
+  :init
+  ;; corfu doc told me to add this part
+  
+  ;; Silence the pcomplete capf, no errors or messages!
+  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
+
+  ;; Ensure that pcomplete does not write to the buffer
+  ;; and behaves as a pure `completion-at-point-function'.
+  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
+
+  :after eshell)
 #+end_src
 
 * smartparens
@@ -1378,7 +1436,6 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 #+begin_src emacs-lisp :tangle yes
 (use-package yasnippet
   :defer 5
-  :general ("TAB" 'yas-expand)
   :config
   (yas-global-mode))
 (use-package yasnippet-snippets
