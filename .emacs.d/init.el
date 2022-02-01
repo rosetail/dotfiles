@@ -112,6 +112,13 @@
 ;; make middle click paste not move the cursor
 (setq mouse-yank-at-point t)
 
+;; use electric pair mode
+(electric-pair-mode)
+;; disable <> pair
+(setq electric-pair-inhibit-predicate
+      `(lambda (c)
+         (if (char-equal c ?\<) t (,electric-pair-inhibit-predicate c))))
+
 ;; install hydra first so it's available to other packages
 (use-package hydra
   :custom-face 
@@ -192,8 +199,36 @@ my/add-to-global-hydra to add entries")
 (advice-add 'require :around #'sk-package-loading-notice)
 (advice-add 'find-file-noselect :around #'sk-package-loading-notice)
 
-;; set default font
-(set-frame-font "monospace-10" nil t)
+(use-package general
+  :config
+  ;; create leader key
+  ;; bound to M-SPC in insert mode and SPC in all other modes
+  ;; this has now been replaced with my/global-hydra
+  ;; (general-create-definer leader-def
+  ;;   :states '(normal insert emacs motion visual operater)
+  ;;   :keymaps 'override
+  ;;   :prefix "SPC"
+  ;;   :non-normal-prefix "C-SPC"
+  ;;   :prefix-map 'leader-prefix-map)
+
+  ;; ;; global leader keys
+  ;; (leader-def
+  ;;   ;; indent whole buffer
+  ;;   "TAB" (lambda ()
+  ;;           (interactive)
+  ;;           (save-excursion
+  ;;             (mark-whole-buffer)
+  ;;             (indent-for-tab-command))))
+  ;; we have to demand general to global leader keys get bound during init
+  (general-define-key
+   :states '(normal motion visual operater)
+   :keymaps 'override
+   "SPC" 'my/global-hydra)
+  ;; (general-define-key
+  ;;  :states '(normal insert emacs motion visual operater)
+  ;;  :keymaps 'override
+  ;;  "C-SPC" 'my/global-hydra)
+  :demand t)
 
 ;; don't confirm when running load-theme interactively
 (advice-add 'load-theme
@@ -261,38 +296,7 @@ my/add-to-global-hydra to add entries")
   ;; skip startup screen and go to scratch buffer
   ;; TODO: see about using general-custom
   (inhibit-startup-screen t)
-  :bind ("<f5>" . modus-themes-toggle))
-
-(use-package general
-  :config
-  ;; create leader key
-  ;; bound to M-SPC in insert mode and SPC in all other modes
-  ;; this has now been replaced with my/global-hydra
-  ;; (general-create-definer leader-def
-  ;;   :states '(normal insert emacs motion visual operater)
-  ;;   :keymaps 'override
-  ;;   :prefix "SPC"
-  ;;   :non-normal-prefix "C-SPC"
-  ;;   :prefix-map 'leader-prefix-map)
-
-  ;; ;; global leader keys
-  ;; (leader-def
-  ;;   ;; indent whole buffer
-  ;;   "TAB" (lambda ()
-  ;;           (interactive)
-  ;;           (save-excursion
-  ;;             (mark-whole-buffer)
-  ;;             (indent-for-tab-command))))
-  ;; we have to demand general to global leader keys get bound during init
-  (general-define-key
-   :states '(normal motion visual operater)
-   :keymaps 'override
-   "SPC" 'my/global-hydra)
-  ;; (general-define-key
-  ;;  :states '(normal insert emacs motion visual operater)
-  ;;  :keymaps 'override
-  ;;  "C-SPC" 'my/global-hydra)
-  :demand t)
+  :general ("<f5>" 'modus-themes-toggle))
 
 (use-package evil
   :demand t
@@ -457,15 +461,18 @@ my/add-to-global-hydra to add entries")
   :config
   (ctrlf-mode))
 
-(use-package selectrum
+(use-package vertico
   :demand t
+  ;; TODO: move this to somewhere better
   :general ("C-x C-a" 'find-file)
-  :config (selectrum-mode))
+  :config
+  (savehist-mode)
+  (vertico-mode))
 
 (use-package orderless
   :demand t
   :init
-  (setq orderless-matching-styles '(orderless-initialism orderless-prefixes))
+  (setq orderless-matching-styles '(orderless-initialism orderless-prefixes orderless-regexp))
   :custom (completion-styles '(orderless)))
 
 (use-package marginalia
@@ -496,8 +503,11 @@ my/add-to-global-hydra to add entries")
 (use-package consult
   :defer t
   :general
+  
   ("M-'" 'consult-line)
-  ("C-x b" 'consult-buffer))
+  ("C-x b" 'consult-buffer)
+  (:keymaps 'consult-narrow-map
+            "<" 'consult-narrow-help))
 
 (use-package embark-consult
   :demand t
@@ -505,14 +515,59 @@ my/add-to-global-hydra to add entries")
   :hook
   (embark-collect-mode . embark-consult-preview-minor-mode))
 
+(use-package dtache
+  :after hydra
+  :init
+  (setq dtache-detach-key (kbd "C-\\"))
+  :config
+  ;; create a hydra for all the common actions
+  (defhydra hydra-dtache (:color blue :hint nil)
+    "
+_SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy output, _k_: kill, _d_: delete"
+    ("SPC" dtache-shell-command)
+    ("a" dtache-attach-session)
+    ("=" dtache-diff-session)
+    ("r" dtache-rerun-session)
+    ("w" dtache-copy-session-command)
+    ("W" dtache-copy-session)
+    ("k" dtache-kill-session)
+    ("d" dtache-delete-session)
+    ("o" dtache-consult-session))
+  
+  (my/add-to-global-hydra '("d" hydra-dtache/body "Dtache" :column "Misc"))
+  
+  ;; add embark actions to dtache-open-session
+  (defvar embark-dtache-map (make-composed-keymap dtache-action-map embark-general-map))
+  (add-to-list 'embark-keymap-alist '(dtache . embark-dtache-map))
+  
+  :hook (after-init . dtache-setup)
+  :bind (([remap async-shell-command] . dtache-shell-command)))
+
+(use-package dtache-consult
+  :straight nil
+  :after dtache ; included with dtache
+  :bind ([remap dtache-open-session] . dtache-consult-session))
+
+;; detatch commands run in eshell
+(use-package dtache-eshell
+  :straight nil ; included with dtache
+  :hook (eshell-mode . dtache-eshell-mode))
+
+;; enable detatching compile commands
+(use-package dtache-compile
+  :straight nil
+  :hook (after-init . dtache-compile-setup)
+  :bind (([remap compile] . dtache-compile)
+         ([remap recompile] . dtache-compile-recompile)))
+
 ;; TODO: refactor this whole section
 (use-package org
   :demand t
   :init
   ;; start in org-mode with a source block for lisp evaluation
   (setq initial-major-mode #'org-mode
-        initial-scratch-message
-        "#+begin_src emacs-lisp\n;; This block is for text that is not saved, and for Lisp evaluation.\n;; To create a file, visit it with \\[find-file] and enter text in its buffer.\n\n#+end_src\n\n")
+        initial-scratch-message "#+begin_src emacs-lisp\n;; This block is for text that is not saved, and for Lisp evaluation.\n;; To create a file, visit it with \\[find-file] and enter text in its buffer.\n\n#+end_src\n\n")
+  
   (add-hook 'org-mode-hook #'flyspell-mode)
   ;; override C-RET
   ;; (add-hook 'org-mode-hook
@@ -566,10 +621,10 @@ my/add-to-global-hydra to add entries")
   ;; (set-face-attribute 'org-block-begin-line nil :background 'unspecified)
   ;; (set-face-attribute 'org-block-end-line nil :background 'unspecified)
   (set-face-attribute 'org-block nil :extend t)
-  :general
-  (:keymaps 'org-mode-map
-            :states 'insert
-            "C-<return>" 'company-complete)
+  ;; :general
+  ;; (:keymaps 'org-mode-map
+  ;;           :states 'insert
+  ;;           "C-<return>" 'company-complete)
   :custom-face
   ;; make default face in org src block look right
   ;; (org-block ((t (:foreground "#cbced0" :background "#232530" :extend t))))
@@ -820,95 +875,16 @@ _a_: Agenda, _c_: Capture"
 
   (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc")))
 
-(use-package company
-  :defer 0.75
-  :config (global-company-mode)
-  :general
-  ("C-<return>" 'company-complete))
-(use-package company-posframe
-  :after company
+(use-package corfu
   :init
-  (setq company-posframe-show-indicator nil
-        company-posframe-show-metadata nil)
-  :config (company-posframe-mode t))
-
-(use-package smartparens
-  :demand t
-  :init
-  ;; bind <leader>-s to smartparens hydra
-  (my/add-to-global-hydra '("s" hydra-smartparens/body "Smartparens" :column "Editing"))
-  
-  :config
-  (smartparens-global-strict-mode 1)
-  ;; highlight matching delimiter
-  (show-smartparens-global-mode 1)
-
-  ;; hydra for most smartparens actions
-  (defhydra hydra-smartparens (:hint nil)
-    "
- Moving^^^^                       Slurp & Barf^^   Wrapping^^            Sexp juggling^^^^               Destructive
-------------------------------------------------------------------------------------------------------------------------
- [_a_] beginning  [_n_] down      [_h_] bw slurp   [_R_]   rewrap        [_S_] split   [_t_] transpose   [_c_] change inner  [_w_] copy
- [_e_] end        [_N_] bw down   [_H_] bw barf    [_u_]   unwrap        [_s_] splice  [_A_] absorb      [_C_] change outer
- [_f_] forward    [_p_] up        [_l_] slurp      [_U_]   bw unwrap     [_r_] raise   [_E_] emit        [_k_] kill          [_g_] quit
- [_b_] backward   [_P_] bw up     [_L_] barf       [_(__{__[_] wrap (){}[]   [_j_] join    [_o_] convolute   [_K_] bw kill       [_q_] quit"
-    ;; Moving
-    ("a" sp-beginning-of-sexp)
-    ("e" sp-end-of-sexp)
-    ("f" sp-forward-sexp)
-    ("b" sp-backward-sexp)
-    ("n" sp-down-sexp)
-    ("N" sp-backward-down-sexp)
-    ("p" sp-up-sexp)
-    ("P" sp-backward-up-sexp)
-    
-    ;; Slurping & barfing
-    ("h" sp-backward-slurp-sexp)
-    ("H" sp-backward-barf-sexp)
-    ("l" sp-forward-slurp-sexp)
-    ("L" sp-forward-barf-sexp)
-    
-    ;; Wrapping
-    ("R" sp-rewrap-sexp)
-    ("u" sp-unwrap-sexp)
-    ("U" sp-backward-unwrap-sexp)
-    ("(" sp-wrap-round)
-    ("{" sp-wrap-curly)
-    ("[" sp-wrap-square)
-    
-    ;; Sexp juggling
-    ("S" sp-split-sexp)
-    ("s" sp-splice-sexp)
-    ("r" sp-raise-sexp)
-    ("j" sp-join-sexp)
-    ("t" sp-transpose-sexp)
-    ("A" sp-absorb-sexp)
-    ("E" sp-emit-sexp)
-    ("o" sp-convolute-sexp)
-    
-    ;; Destructive editing
-    ("c" sp-change-inner :exit t)
-    ("C" sp-change-enclosing :exit t)
-    ("k" sp-kill-sexp)
-    ("K" sp-backward-kill-sexp)
-    ("w" sp-copy-sexp)
-
-    ("q" nil)
-    ("g" nil)))
-
-;; enable default smartparens config
-(use-package smartparens-config
-  ;; don't ensure because this is built in to smartparent
-  :straight nil
-  :demand t
-  :after smartparens)
-
-
-
-(use-package evil-smartparens
-  :demand t
-  :after smartparens-config
-  :hook (smartparens-enabled . evil-smartparens-mode))
+  (setq corfu-quit-no-match t
+        corfu-preview-current nil
+        corfu-auto t)
+  (corfu-global-mode)
+  :hook (eshell-mode . (lambda ()
+                         (setq-local corfu-quit-at-boundary t
+                                     corfu-auto nil)
+                         (corfu-mode))))
 
 (use-package flycheck
   :defer 1
@@ -1036,6 +1012,8 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 
   (my/add-to-global-hydra '("t" hydra-popwin/body "Popwin" :column "Misc"))
   :config
+  (push '("\\*dtache.*" :regexp t) popwin:special-display-config)
+  (push '("\\*vterm\\*" :regexp t) popwin:special-display-config)
   (popwin-mode 1))
 
 (use-package yasnippet
@@ -1175,6 +1153,8 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 (use-package minimap
   :defer t
   :init (setq minimap-window-location 'right))
+
+(use-package vterm)
 
 ;; reset file-name-handler-alist
 (when (boundp 'my/file-name-handler-alist)
