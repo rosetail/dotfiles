@@ -8,11 +8,11 @@
 
 if [ -z "$@" ];
 then
-	emacsclient -c --eval "(progn
-					  (switch-to-buffer \"*scratch*\")
-					  (select-frame-set-input-focus (selected-frame))
-					  (cd \"$PWD\"))" "$@"
-
+    emacsclient -c
+    # --eval "(progn
+    #                            (switch-to-buffer \"*scratch*\")
+    #                            (select-frame-set-input-focus (selected-frame))
+    #                            (cd \"$PWD\"))" "$@"
 else
-	emacsclient -c "$@"
+    emacsclient -c -a "emacs" "$@"
 fi

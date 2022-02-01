@@ -326,3 +326,7 @@ net-im/discord-bin ~amd64
 # required by @selected
 # required by @world (argument)
 =x11-terms/kitty-shell-integration-0.24.1 ~amd64
+# required by games-action/minecraft-launcher-1093::gentoo
+# required by @selected
+# required by @world (argument)
+=dev-libs/libffi-3.4.2-r1 ~amd64

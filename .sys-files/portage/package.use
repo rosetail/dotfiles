@@ -645,3 +645,6 @@ x11-misc/dunst dunstify
 # required by @selected
 # required by @world (argument)
 >=sys-libs/libxcrypt-4.4.25-r1 abi_x86_32
+# for undertale abi_x86_32
+dev-libs/openssl abi_x86_32
+media-libs/openal abi_x86_32

@@ -374,3 +374,13 @@ else
 fi
 #+end_src
 - in regex =\{2\}= is like * but only matches 2 chars
+* cron
+* tuning profile
+- static tuning done with =tuned= and kernel parameters
+- dynamic tuning done with =tuned=
+- profiles:
+  - balanced: compromise
+  - desktop: balanced but makes interactive programs faster
+  - throughput-performance: max throughput
+  - latency-performance: min latency (but uses a lot of power)
+  - network-latency: latency-performance but adds network params

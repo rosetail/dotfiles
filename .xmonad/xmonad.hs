@@ -502,7 +502,7 @@ myKeys = [
   ("M-/",           spawn "rofi -show run"),
   ("M-w",           spawn "rofi -show window -width 40"),
   ("M-q",           spawn "rofi -show session"), 
-  ("M-x",           spawn "emacs-autoclient"),
+  ("M-x",           spawn "emacsclient -c -a emacs"),
   ("M-p",           spawn "rofi-pass"),
   ("M-z",           spawn "xmonad --recompile; xmonad --restart"),
   ("M-<Up>",        spawn "change_volume + > /dev/null"),
