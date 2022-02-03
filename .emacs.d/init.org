@@ -288,18 +288,7 @@ my/add-to-global-hydra to add entries")
   :init
   ;; show word count of region
   (setq doom-modeline-enable-word-count t)
-  (doom-modeline-mode)
-  :custom-face
-  ;; (doom-modeline-bar ((t (:background "#f99157"))))
-  ;; (doom-modeline-evil-normal-state   ((t (:foreground "#99cc99"))))
-  ;; (doom-modeline-evil-insert-state   ((t (:foreground "#6699cc"))))
-  ;; (doom-modeline-evil-visual-state   ((t (:foreground "#66cccc"))))
-  ;; (doom-modeline-evil-operator-state ((t (:foreground "#cc99cc"))))
-  ;; (doom-modeline-evil-motion-state   ((t (:foreground "#ffcc66"))))
-  ;; (doom-modeline-evil-replace-state  ((t (:foreground "#f99157"))))
-  ;; (doom-modeline-evil-emacs-state    ((t (:foreground "#f2777a"))))
-  ;; :hook (after-init . doom-modeline-mode)
-  )
+  (doom-modeline-mode))
 
 ;; show line numbers in fringe, but only in programming modes
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
@@ -315,9 +304,6 @@ my/add-to-global-hydra to add entries")
 (setq scroll-margin 2
       scroll-conservatively 10000
       scroll-preserve-screen-position t)
-
-;; emacs renders Mononoki 2 pixels too short
-;; (setq-default line-spacing 0)
 #+end_src
 
 ** theme
@@ -430,12 +416,11 @@ my/add-to-global-hydra to add entries")
   :init
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-slanted-constructs t
-        modus-themes-region 'bg-only
+        modus-themes-region '(bg-only)
         modus-themes-completions 'opinionated
         modus-themes-fringes 'intense
         modus-themes-org-blocks 'grayscale
-        ;; modus-themes-org-blocks 'rainbow
-        modus-themes-headings '((t . rainbow))
+        modus-themes-headings '((t . (rainbow)))
         modus-themes-bold-constructs nil)
   
   ;; don't make modeline be variable pitched
@@ -449,6 +434,7 @@ my/add-to-global-hydra to add entries")
   :custom
   ;; skip startup screen and go to scratch buffer
   ;; TODO: see about using general-custom
+  ;; TODO: add this to a (use-package emacs...) declaration
   (inhibit-startup-screen t)
   :general ("<f5>" 'modus-themes-toggle))
 #+end_src
@@ -683,49 +669,75 @@ my/add-to-global-hydra to add entries")
 
 #+end_src
 
-* ivy
-#+begin_src emacs-lisp :tangle no
-;; make sure we have flx so ivy does better fuzzy matching
-(use-package flx :defer t)
-;; not having ivy-hydra breaks some things
-(use-package ivy-hydra :defer t)
-
-(use-package ivy
+* corfu
+#+begin_src elisp :tangle yes
+(use-package corfu
   :init
-  ;; use fuzzy search everywhere except swiper
-  (setq ivy-re-builders-alist
-        '((swiper . ivy--regex-plus)
-          (t      . ivy--regex-fuzzy)))
+  (setq tab-always-indent 'complete
+        corfu-quit-no-match t
+        corfu-preview-current nil
+        corfu-auto t)
+  
+  (corfu-global-mode)
+  
+  (defun corfu-move-to-minibuffer ()
+    "Transfer the current completion session to the minibuffer"
+    (interactive)
+    (let ((completion-extra-properties corfu--extra)
+          completion-cycle-threshold completion-cycling)
+      (apply #'consult-completion-in-region completion-in-region--data)))
 
+  ;; stop C-n and C-e from being overridden
+  (general-unbind '(insert normal motion visual operator) "C-n" "C-e" "C-d")
   :general
-  ;; C-x C-a is much more comfortable on colemak than C-x C-f
-  ("C-x C-a" 'counsel-find-file
-   ;; use counsel to insert unicode characters
-   "C-x 8 RET" 'counsel-unicode-char
-   ;; replace isearch with swiper
-   "C-s" 'swiper)
-  (:keymaps 'ivy-minibuffer-map
-            ;; make enter descend into directory instead of opening dired
-            "RET" 'ivy-alt-done
-            ;; make C-j open dired instead
-            "C-j" 'ivy-immediate-done)
-  :diminish ivy-mode
-  :config
-  (ivy-mode 1)
-  :demand t)
+  (:keymaps 'corfu-map
+            ;; "C-m" 'corfu-move-to-minibuffer
+            "C-n" 'corfu-next
+            "C-e" 'corfu-previous)
+  :hook (eshell-mode . (lambda ()
+                         (setq-local corfu-quit-at-boundary t
+                                     corfu-auto nil)
+                         (corfu-mode))))
 
-(use-package counsel
-  :after ivy
-  :general
-  (:keymaps 'swiper-map
-            "ESC" 'minibuffer-keyboard-quit)
-  :config
-  (counsel-mode))
+;; add more capf functions
+(use-package cape
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  (add-to-list 'completion-at-point-functions #'cape-ispell)
+  (add-to-list 'completion-at-point-functions #'cape-line))
 
-;; improve projectile integration
-(use-package counsel-projectile
-  :after (counsel projectile)
-  :config (counsel-projectile-mode 1))
+;; show corfu icons
+(use-package kind-icon
+  :after corfu
+  :custom
+  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
+;; show documentation
+(use-package corfu-doc
+  :straight (corfu-doc :type git :host github :repo "galeo/corfu-doc")
+  :general (:keymaps 'corfu-map
+                     "C-d" 'corfu-doc-toggle
+                     ;; scroll-down and scroll-up are reversed for some reason here
+                     "M-e" 'corfu-doc-scroll-down
+                     "M-n" 'corfu-doc-scroll-up))
+
+;; better eshell completion
+(use-package pcmpl-args
+  :init
+  ;; corfu doc told me to add this part
+  
+  ;; Silence the pcomplete capf, no errors or messages!
+  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
+
+  ;; Ensure that pcomplete does not write to the buffer
+  ;; and behaves as a pure `completion-at-point-function'.
+  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
+
+  :after eshell)
 #+end_src
 
 * dtache
@@ -970,16 +982,6 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
     (message "Enabled org latex export on save for current buffer..."))))
 #+end_src
 
-**** org ref
-#+begin_src emacs-lisp :tangle no
-(use-package org-ref
-  :after org
-  :init
-  (setq org-ref-default-citation-link "autocite"
-        bibtex-dialect 'biblatex
-        org-ref-completion-library 'org-ref-reftex))
-#+end_src
-
 *** HTML
 #+begin_src emacs-lisp :tangle yes
 (use-package htmlize
@@ -1114,179 +1116,6 @@ _a_: Agenda, _c_: Capture"
     ("c" org-capture))
 
   (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc")))
-#+end_src
-
-* company
-#+begin_src emacs-lisp :tangle no
-(use-package company
-  :defer 0.75
-  :config (global-company-mode)
-  :general
-  ("C-<return>" 'company-complete)
-  (:keymaps 'company-posframe-active-map
-            "C-n" 'next-line
-            "C-e" 'next-line)
-  )
-(use-package company-posframe
-  :after company
-  :init
-  (setq company-posframe-show-indicator nil
-        company-posframe-show-metadata nil)
-  :config (company-posframe-mode t))
-#+end_src
-
-* corfu
-#+begin_src elisp :tangle yes
-(use-package corfu
-  :init
-  (setq tab-always-indent 'complete
-        corfu-quit-no-match t
-        corfu-preview-current nil
-        corfu-auto t)
-  
-  (corfu-global-mode)
-  
-  (defun corfu-move-to-minibuffer ()
-    "Transfer the current completion session to the minibuffer"
-    (interactive)
-    (let ((completion-extra-properties corfu--extra)
-          completion-cycle-threshold completion-cycling)
-      (apply #'consult-completion-in-region completion-in-region--data)))
-
-  ;; stop C-n and C-e from being overridden
-  (general-unbind '(insert normal motion visual operator) "C-n" "C-e" "C-d")
-  :general
-  (:keymaps 'corfu-map
-            ;; "C-m" 'corfu-move-to-minibuffer
-            "C-n" 'corfu-next
-            "C-e" 'corfu-previous)
-  :hook (eshell-mode . (lambda ()
-                         (setq-local corfu-quit-at-boundary t
-                                     corfu-auto nil)
-                         (corfu-mode))))
-
-;; add more capf functions
-(use-package cape
-  :init
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  (add-to-list 'completion-at-point-functions #'cape-ispell)
-  (add-to-list 'completion-at-point-functions #'cape-line))
-
-;; show corfu icons
-(use-package kind-icon
-  :after corfu
-  :custom
-  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
-
-;; show documentation
-(use-package corfu-doc
-  :straight (corfu-doc :type git :host github :repo "galeo/corfu-doc")
-  :general (:keymaps 'corfu-map
-                     "C-d" 'corfu-doc-toggle
-                     ;; scroll-down and scroll-up are reversed for some reason here
-                     "M-e" 'corfu-doc-scroll-down
-                     "M-n" 'corfu-doc-scroll-up))
-
-;; better eshell completion
-(use-package pcmpl-args
-  :init
-  ;; corfu doc told me to add this part
-  
-  ;; Silence the pcomplete capf, no errors or messages!
-  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
-
-  ;; Ensure that pcomplete does not write to the buffer
-  ;; and behaves as a pure `completion-at-point-function'.
-  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
-
-  :after eshell)
-#+end_src
-
-* smartparens
-#+begin_src emacs-lisp :tangle no
-(use-package smartparens
-  :demand t
-  :init
-  ;; bind <leader>-s to smartparens hydra
-  (my/add-to-global-hydra '("s" hydra-smartparens/body "Smartparens" :column "Editing"))
-  
-  :config
-  (smartparens-global-strict-mode 1)
-  ;; highlight matching delimiter
-  (show-smartparens-global-mode 1)
-
-  ;; hydra for most smartparens actions
-  (defhydra hydra-smartparens (:hint nil)
-    "
- Moving^^^^                       Slurp & Barf^^   Wrapping^^            Sexp juggling^^^^               Destructive
-------------------------------------------------------------------------------------------------------------------------
- [_a_] beginning  [_n_] down      [_h_] bw slurp   [_R_]   rewrap        [_S_] split   [_t_] transpose   [_c_] change inner  [_w_] copy
- [_e_] end        [_N_] bw down   [_H_] bw barf    [_u_]   unwrap        [_s_] splice  [_A_] absorb      [_C_] change outer
- [_f_] forward    [_p_] up        [_l_] slurp      [_U_]   bw unwrap     [_r_] raise   [_E_] emit        [_k_] kill          [_g_] quit
- [_b_] backward   [_P_] bw up     [_L_] barf       [_(__{__[_] wrap (){}[]   [_j_] join    [_o_] convolute   [_K_] bw kill       [_q_] quit"
-    ;; Moving
-    ("a" sp-beginning-of-sexp)
-    ("e" sp-end-of-sexp)
-    ("f" sp-forward-sexp)
-    ("b" sp-backward-sexp)
-    ("n" sp-down-sexp)
-    ("N" sp-backward-down-sexp)
-    ("p" sp-up-sexp)
-    ("P" sp-backward-up-sexp)
-    
-    ;; Slurping & barfing
-    ("h" sp-backward-slurp-sexp)
-    ("H" sp-backward-barf-sexp)
-    ("l" sp-forward-slurp-sexp)
-    ("L" sp-forward-barf-sexp)
-    
-    ;; Wrapping
-    ("R" sp-rewrap-sexp)
-    ("u" sp-unwrap-sexp)
-    ("U" sp-backward-unwrap-sexp)
-    ("(" sp-wrap-round)
-    ("{" sp-wrap-curly)
-    ("[" sp-wrap-square)
-    
-    ;; Sexp juggling
-    ("S" sp-split-sexp)
-    ("s" sp-splice-sexp)
-    ("r" sp-raise-sexp)
-    ("j" sp-join-sexp)
-    ("t" sp-transpose-sexp)
-    ("A" sp-absorb-sexp)
-    ("E" sp-emit-sexp)
-    ("o" sp-convolute-sexp)
-    
-    ;; Destructive editing
-    ("c" sp-change-inner :exit t)
-    ("C" sp-change-enclosing :exit t)
-    ("k" sp-kill-sexp)
-    ("K" sp-backward-kill-sexp)
-    ("w" sp-copy-sexp)
-
-    ("q" nil)
-    ("g" nil)))
-
-;; enable default smartparens config
-(use-package smartparens-config
-  ;; don't ensure because this is built in to smartparent
-  :straight nil
-  :demand t
-  :after smartparens)
-
-
-
-(use-package evil-smartparens
-  :demand t
-  :after smartparens-config
-  :hook (smartparens-enabled . evil-smartparens-mode))
-
-
 #+end_src
 
 * flycheck
@@ -1559,20 +1388,6 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :init
   (my/add-to-global-hydra '("m" smart-compile "Smart Compile" :column "Tools")))
 
-;; (use-package quickrun
-;;   :after hydra
-;;   :defer t
-;;   :init
-;;   (defhydra hydra-quickrun (:color blue :hint nil)
-;;     "
-;; _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
-;;     ("c" quickrun-compile-only)
-;;     ("r" quickrun)
-;;     ("s" quickrun-shell)
-;;     ("a" quickrun-with-arg)
-;;     ("R" quickrun-region))
-;;   (my/add-to-global-hydra '("r" hydra-quickrun/body "Quickrun" :column "Tools"))
-
 (use-package undo-tree
   :demand t
   :config
@@ -1592,5 +1407,170 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 ;; reset file-name-handler-alist
 (when (boundp 'my/file-name-handler-alist)
       (setq file-name-handler-alist my/file-name-handler-alist))
+#+end_src
+
+* COMMENT archive
+** company
+#+begin_src emacs-lisp :tangle yes
+(use-package company
+  :defer 0.75
+  :config (global-company-mode)
+  :general
+  ("C-<return>" 'company-complete)
+  (:keymaps 'company-posframe-active-map
+            "C-n" 'next-line
+            "C-e" 'next-line))
+
+(use-package company-posframe
+  :after company
+  :init
+  (setq company-posframe-show-indicator nil
+        company-posframe-show-metadata nil)
+  :config (company-posframe-mode t))
+#+end_src
+
+** ivy
+#+begin_src emacs-lisp :tangle yes
+;; make sure we have flx so ivy does better fuzzy matching
+(use-package flx :defer t)
+;; not having ivy-hydra breaks some things
+(use-package ivy-hydra :defer t)
+
+(use-package ivy
+  :init
+  ;; use fuzzy search everywhere except swiper
+  (setq ivy-re-builders-alist
+        '((swiper . ivy--regex-plus)
+          (t      . ivy--regex-fuzzy)))
+
+  :general
+  ;; C-x C-a is much more comfortable on colemak than C-x C-f
+  ("C-x C-a" 'counsel-find-file
+   ;; use counsel to insert unicode characters
+   "C-x 8 RET" 'counsel-unicode-char
+   ;; replace isearch with swiper
+   "C-s" 'swiper)
+  (:keymaps 'ivy-minibuffer-map
+            ;; make enter descend into directory instead of opening dired
+            "RET" 'ivy-alt-done
+            ;; make C-j open dired instead
+            "C-j" 'ivy-immediate-done)
+  :diminish ivy-mode
+  :config
+  (ivy-mode 1)
+  :demand t)
+
+(use-package counsel
+  :after ivy
+  :general
+  (:keymaps 'swiper-map
+            "ESC" 'minibuffer-keyboard-quit)
+  :config
+  (counsel-mode))
+
+;; improve projectile integration
+(use-package counsel-projectile
+  :after (counsel projectile)
+  :config (counsel-projectile-mode 1))
+#+end_src
+
+** quickrun
+#+begin_src emacs-lisp :tangle yes
+(use-package quickrun
+  :after hydra
+  :defer t
+  :init
+  (defhydra hydra-quickrun (:color blue :hint nil)
+    "
+_c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
+    ("c" quickrun-compile-only)
+    ("r" quickrun)
+    ("s" quickrun-shell)
+    ("a" quickrun-with-arg)
+    ("R" quickrun-region))
+  (my/add-to-global-hydra '("r" hydra-quickrun/body "Quickrun" :column "Tools"))
+#+end_src
+
+** smartparens
+#+begin_src emacs-lisp :tangle yes
+(use-package smartparens
+  :demand t
+  :init
+  ;; bind <leader>-s to smartparens hydra
+  (my/add-to-global-hydra '("s" hydra-smartparens/body "Smartparens" :column "Editing"))
+  
+  :config
+  (smartparens-global-strict-mode 1)
+  ;; highlight matching delimiter
+  (show-smartparens-global-mode 1)
+
+  ;; hydra for most smartparens actions
+  (defhydra hydra-smartparens (:hint nil)
+    "
+ Moving^^^^                       Slurp & Barf^^   Wrapping^^            Sexp juggling^^^^               Destructive
+------------------------------------------------------------------------------------------------------------------------
+ [_a_] beginning  [_n_] down      [_h_] bw slurp   [_R_]   rewrap        [_S_] split   [_t_] transpose   [_c_] change inner  [_w_] copy
+ [_e_] end        [_N_] bw down   [_H_] bw barf    [_u_]   unwrap        [_s_] splice  [_A_] absorb      [_C_] change outer
+ [_f_] forward    [_p_] up        [_l_] slurp      [_U_]   bw unwrap     [_r_] raise   [_E_] emit        [_k_] kill          [_g_] quit
+ [_b_] backward   [_P_] bw up     [_L_] barf       [_(__{__[_] wrap (){}[]   [_j_] join    [_o_] convolute   [_K_] bw kill       [_q_] quit"
+    ;; Moving
+    ("a" sp-beginning-of-sexp)
+    ("e" sp-end-of-sexp)
+    ("f" sp-forward-sexp)
+    ("b" sp-backward-sexp)
+    ("n" sp-down-sexp)
+    ("N" sp-backward-down-sexp)
+    ("p" sp-up-sexp)
+    ("P" sp-backward-up-sexp)
+    
+    ;; Slurping & barfing
+    ("h" sp-backward-slurp-sexp)
+    ("H" sp-backward-barf-sexp)
+    ("l" sp-forward-slurp-sexp)
+    ("L" sp-forward-barf-sexp)
+    
+    ;; Wrapping
+    ("R" sp-rewrap-sexp)
+    ("u" sp-unwrap-sexp)
+    ("U" sp-backward-unwrap-sexp)
+    ("(" sp-wrap-round)
+    ("{" sp-wrap-curly)
+    ("[" sp-wrap-square)
+    
+    ;; Sexp juggling
+    ("S" sp-split-sexp)
+    ("s" sp-splice-sexp)
+    ("r" sp-raise-sexp)
+    ("j" sp-join-sexp)
+    ("t" sp-transpose-sexp)
+    ("A" sp-absorb-sexp)
+    ("E" sp-emit-sexp)
+    ("o" sp-convolute-sexp)
+    
+    ;; Destructive editing
+    ("c" sp-change-inner :exit t)
+    ("C" sp-change-enclosing :exit t)
+    ("k" sp-kill-sexp)
+    ("K" sp-backward-kill-sexp)
+    ("w" sp-copy-sexp)
+
+    ("q" nil)
+    ("g" nil)))
+
+;; enable default smartparens config
+(use-package smartparens-config
+  ;; don't ensure because this is built in to smartparent
+  :straight nil
+  :demand t
+  :after smartparens)
+
+
+
+(use-package evil-smartparens
+  :demand t
+  :after smartparens-config
+  :hook (smartparens-enabled . evil-smartparens-mode))
+
+
 #+end_src
 

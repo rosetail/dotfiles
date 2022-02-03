@@ -241,18 +241,7 @@ my/add-to-global-hydra to add entries")
   :init
   ;; show word count of region
   (setq doom-modeline-enable-word-count t)
-  (doom-modeline-mode)
-  :custom-face
-  ;; (doom-modeline-bar ((t (:background "#f99157"))))
-  ;; (doom-modeline-evil-normal-state   ((t (:foreground "#99cc99"))))
-  ;; (doom-modeline-evil-insert-state   ((t (:foreground "#6699cc"))))
-  ;; (doom-modeline-evil-visual-state   ((t (:foreground "#66cccc"))))
-  ;; (doom-modeline-evil-operator-state ((t (:foreground "#cc99cc"))))
-  ;; (doom-modeline-evil-motion-state   ((t (:foreground "#ffcc66"))))
-  ;; (doom-modeline-evil-replace-state  ((t (:foreground "#f99157"))))
-  ;; (doom-modeline-evil-emacs-state    ((t (:foreground "#f2777a"))))
-  ;; :hook (after-init . doom-modeline-mode)
-  )
+  (doom-modeline-mode))
 
 ;; show line numbers in fringe, but only in programming modes
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
@@ -269,19 +258,15 @@ my/add-to-global-hydra to add entries")
       scroll-conservatively 10000
       scroll-preserve-screen-position t)
 
-;; emacs renders Mononoki 2 pixels too short
-;; (setq-default line-spacing 0)
-
 (use-package modus-themes
   :init
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-slanted-constructs t
-        modus-themes-region 'bg-only
+        modus-themes-region '(bg-only)
         modus-themes-completions 'opinionated
         modus-themes-fringes 'intense
         modus-themes-org-blocks 'grayscale
-        ;; modus-themes-org-blocks 'rainbow
-        modus-themes-headings '((t . rainbow))
+        modus-themes-headings '((t . (rainbow)))
         modus-themes-bold-constructs nil)
   
   ;; don't make modeline be variable pitched
@@ -295,6 +280,7 @@ my/add-to-global-hydra to add entries")
   :custom
   ;; skip startup screen and go to scratch buffer
   ;; TODO: see about using general-custom
+  ;; TODO: add this to a (use-package emacs...) declaration
   (inhibit-startup-screen t)
   :general ("<f5>" 'modus-themes-toggle))
 
@@ -514,6 +500,74 @@ my/add-to-global-hydra to add entries")
   :after (embark consult)
   :hook
   (embark-collect-mode . embark-consult-preview-minor-mode))
+
+(use-package corfu
+  :init
+  (setq tab-always-indent 'complete
+        corfu-quit-no-match t
+        corfu-preview-current nil
+        corfu-auto t)
+  
+  (corfu-global-mode)
+  
+  (defun corfu-move-to-minibuffer ()
+    "Transfer the current completion session to the minibuffer"
+    (interactive)
+    (let ((completion-extra-properties corfu--extra)
+          completion-cycle-threshold completion-cycling)
+      (apply #'consult-completion-in-region completion-in-region--data)))
+
+  ;; stop C-n and C-e from being overridden
+  (general-unbind '(insert normal motion visual operator) "C-n" "C-e" "C-d")
+  :general
+  (:keymaps 'corfu-map
+            ;; "C-m" 'corfu-move-to-minibuffer
+            "C-n" 'corfu-next
+            "C-e" 'corfu-previous)
+  :hook (eshell-mode . (lambda ()
+                         (setq-local corfu-quit-at-boundary t
+                                     corfu-auto nil)
+                         (corfu-mode))))
+
+;; add more capf functions
+(use-package cape
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  (add-to-list 'completion-at-point-functions #'cape-ispell)
+  (add-to-list 'completion-at-point-functions #'cape-line))
+
+;; show corfu icons
+(use-package kind-icon
+  :after corfu
+  :custom
+  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
+;; show documentation
+(use-package corfu-doc
+  :straight (corfu-doc :type git :host github :repo "galeo/corfu-doc")
+  :general (:keymaps 'corfu-map
+                     "C-d" 'corfu-doc-toggle
+                     ;; scroll-down and scroll-up are reversed for some reason here
+                     "M-e" 'corfu-doc-scroll-down
+                     "M-n" 'corfu-doc-scroll-up))
+
+;; better eshell completion
+(use-package pcmpl-args
+  :init
+  ;; corfu doc told me to add this part
+  
+  ;; Silence the pcomplete capf, no errors or messages!
+  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
+
+  ;; Ensure that pcomplete does not write to the buffer
+  ;; and behaves as a pure `completion-at-point-function'.
+  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
+
+  :after eshell)
 
 (use-package dtache
   :after hydra
@@ -876,74 +930,6 @@ _a_: Agenda, _c_: Capture"
 
   (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc")))
 
-(use-package corfu
-  :init
-  (setq tab-always-indent 'complete
-        corfu-quit-no-match t
-        corfu-preview-current nil
-        corfu-auto t)
-  
-  (corfu-global-mode)
-  
-  (defun corfu-move-to-minibuffer ()
-    "Transfer the current completion session to the minibuffer"
-    (interactive)
-    (let ((completion-extra-properties corfu--extra)
-          completion-cycle-threshold completion-cycling)
-      (apply #'consult-completion-in-region completion-in-region--data)))
-
-  ;; stop C-n and C-e from being overridden
-  (general-unbind '(insert normal motion visual operator) "C-n" "C-e" "C-d")
-  :general
-  (:keymaps 'corfu-map
-            ;; "C-m" 'corfu-move-to-minibuffer
-            "C-n" 'corfu-next
-            "C-e" 'corfu-previous)
-  :hook (eshell-mode . (lambda ()
-                         (setq-local corfu-quit-at-boundary t
-                                     corfu-auto nil)
-                         (corfu-mode))))
-
-;; add more capf functions
-(use-package cape
-  :init
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  (add-to-list 'completion-at-point-functions #'cape-ispell)
-  (add-to-list 'completion-at-point-functions #'cape-line))
-
-;; show corfu icons
-(use-package kind-icon
-  :after corfu
-  :custom
-  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
-
-;; show documentation
-(use-package corfu-doc
-  :straight (corfu-doc :type git :host github :repo "galeo/corfu-doc")
-  :general (:keymaps 'corfu-map
-                     "C-d" 'corfu-doc-toggle
-                     ;; scroll-down and scroll-up are reversed for some reason here
-                     "M-e" 'corfu-doc-scroll-down
-                     "M-n" 'corfu-doc-scroll-up))
-
-;; better eshell completion
-(use-package pcmpl-args
-  :init
-  ;; corfu doc told me to add this part
-  
-  ;; Silence the pcomplete capf, no errors or messages!
-  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
-
-  ;; Ensure that pcomplete does not write to the buffer
-  ;; and behaves as a pure `completion-at-point-function'.
-  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
-
-  :after eshell)
-
 (use-package flycheck
   :defer 1
   :init
@@ -1185,20 +1171,6 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :defer t
   :init
   (my/add-to-global-hydra '("m" smart-compile "Smart Compile" :column "Tools")))
-
-;; (use-package quickrun
-;;   :after hydra
-;;   :defer t
-;;   :init
-;;   (defhydra hydra-quickrun (:color blue :hint nil)
-;;     "
-;; _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
-;;     ("c" quickrun-compile-only)
-;;     ("r" quickrun)
-;;     ("s" quickrun-shell)
-;;     ("a" quickrun-with-arg)
-;;     ("R" quickrun-region))
-;;   (my/add-to-global-hydra '("r" hydra-quickrun/body "Quickrun" :column "Tools"))
 
 (use-package undo-tree
   :demand t
