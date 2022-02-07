@@ -267,7 +267,8 @@ my/add-to-global-hydra to add entries")
         modus-themes-fringes 'intense
         modus-themes-org-blocks 'grayscale
         modus-themes-headings '((t . (rainbow)))
-        modus-themes-bold-constructs nil)
+        modus-themes-bold-constructs nil
+        modus-themes-markup '(background intense))
   
   ;; don't make modeline be variable pitched
   (set-face-attribute 'mode-line-active nil :inherit 'mode-line)
@@ -458,7 +459,9 @@ my/add-to-global-hydra to add entries")
 (use-package orderless
   :demand t
   :init
-  (setq orderless-matching-styles '(orderless-initialism orderless-prefixes orderless-regexp))
+  (setq orderless-matching-styles '(orderless-initialism orderless-prefixes orderless-regexp)
+        orderless-component-separator " +\\|/")
+
   :custom (completion-styles '(orderless)))
 
 (use-package marginalia
@@ -478,13 +481,19 @@ my/add-to-global-hydra to add entries")
   :demand t
   :after which-key
   :init
-  (setq embark-action-indicator
-        (lambda (map)
-          (which-key--show-keymap "Embark" map nil nil 'no-paging)
-          #'which-key--hide-popup-ignore-command)
-        embark-become-indicator embark-action-indicator)
+  (setq embark-indicators #'embark-minimal-indicator)
+  ;; disable which-key in favor of using C-h
+  ;; (setq embark-action-indicator
+  ;;       (lambda (map)
+  ;;         (which-key--show-keymap "Embark" map nil nil 'no-paging)
+  ;;         #'which-key--hide-popup-ignore-command)
+  ;;       embark-become-indicator embark-action-indicator)
   :general
-  ("M-o" 'embark-act))
+  (:keymaps 'override
+   :states '(normal insert emacs motion visual operater)
+            "C-." 'embark-act)
+  (:keymaps 'vertico-map
+            "C-." 'embark-act))
 
 (use-package consult
   :defer t
@@ -506,6 +515,7 @@ my/add-to-global-hydra to add entries")
   (setq tab-always-indent 'complete
         corfu-quit-no-match t
         corfu-preview-current nil
+        corfu-quit-at-boundary t
         corfu-auto t)
   
   (corfu-global-mode)
@@ -521,7 +531,7 @@ my/add-to-global-hydra to add entries")
   (general-unbind '(insert normal motion visual operator) "C-n" "C-e" "C-d")
   :general
   (:keymaps 'corfu-map
-            ;; "C-m" 'corfu-move-to-minibuffer
+            "C-i" 'corfu-move-to-minibuffer
             "C-n" 'corfu-next
             "C-e" 'corfu-previous)
   :hook (eshell-mode . (lambda ()
@@ -535,8 +545,7 @@ my/add-to-global-hydra to add entries")
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-file)
   (add-to-list 'completion-at-point-functions #'cape-keyword)
-  (add-to-list 'completion-at-point-functions #'cape-ispell)
-  (add-to-list 'completion-at-point-functions #'cape-line))
+  (add-to-list 'completion-at-point-functions #'cape-ispell))
 
 ;; show corfu icons
 (use-package kind-icon
@@ -618,9 +627,13 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
 (use-package org
   :demand t
   :init
-  ;; start in org-mode with a source block for lisp evaluation
-  (setq initial-major-mode #'org-mode
-        initial-scratch-message "#+begin_src emacs-lisp\n;; This block is for text that is not saved, and for Lisp evaluation.\n;; To create a file, visit it with \\[find-file] and enter text in its buffer.\n\n#+end_src\n\n")
+  (setq ;; let emphasis markers be nested
+   org-emphasis-regexp-components '("-[:space:]('\"{*/=~_" "-[:space:].,*/=~_:!?;'\")}\\[" "[:space:]" "." 1)
+   ;; start in org-mode with a source block for lisp evaluation
+   initial-major-mode #'org-mode
+   initial-scratch-message "#+begin_src emacs-lisp\n;; This block is for text that is not saved, and for Lisp evaluation.\n;; To create a file, visit it with \\[find-file] and enter text in its buffer.\n\n#+end_src\n\n")
+
+
   
   (add-hook 'org-mode-hook #'flyspell-mode)
   ;; override C-RET
@@ -691,6 +704,10 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
   ;; (outline-4 ((t (:foreground "#efaf8e"))))
   ;; (outline-8 ((t (:foreground "#6f6f70"))))
   )
+
+(use-package org-appear
+  :after org
+  :hook (org-mode . org-appear-mode))
 
 (use-package ox ; needed for org-export-filter-headline-function
   :straight nil
@@ -822,9 +839,7 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
   (setq org-directory "~/org"
         ;; inbox.org must be first here or refiletargets will break
         org-agenda-files (list "~/org/inbox.org"
-                               "~/org/agenda.org"
-                               ;; "~/org/projects.org"
-                               )
+                               "~/org/agenda.org")
         org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "HOLD(h)" "|" "DONE(d)" "CANCELLED(c)"))
         ;; org-agenda-window-setup 'current-frame ; make agenda buffer only use the current frame
         org-use-fast-todo-selection 'expert
@@ -853,6 +868,9 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
   
   ;; from https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html
   ;; modified to also skip entries that are scheaduled or have a deadline
+  ;; TODO: make this actually give the highest priority
+  ;; possibly can be done by first going through all siblings and finding the highest priority
+  ;; then skip all entries with lower priorities
   (defun my/org-agenda-skip-all-siblings-but-first ()
     "Skip all but the first TODO entry that is unscheduled and has no deadline."
     (let (should-skip-entry)
@@ -1092,6 +1110,9 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
             "TAB" 'magit-section-cycle
             "e" 'magit-section-backward))
 
+;; add support for git forges
+(use-package forge :after magit)
+
 (use-package auctex
   :after tex
   :no-require t
@@ -1110,6 +1131,9 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
    '("Latexmk" "latexmk -pvc -interaction=nonstopmode %t" TeX-run-TeX nil t
      :help "Make pdf output using latexmk.")
    TeX-command-list))
+
+;; TODO: see if this is actually the package I should be using
+(use-package haskell-mode)
 
 (use-package esh-help
   :after esh-mode
@@ -1183,7 +1207,9 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :defer t
   :init (setq minimap-window-location 'right))
 
-(use-package vterm)
+(use-package vterm
+  :defer t
+  :init (setq vterm-always-compile-module t))
 
 ;; reset file-name-handler-alist
 (when (boundp 'my/file-name-handler-alist)

@@ -3,3 +3,7 @@
 	name = Rose Osterheld
 [init]
 	defaultBranch = main
+[github]
+	user = rosetail
+[gitlab]
+	user = rosetail

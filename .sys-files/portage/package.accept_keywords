@@ -8,6 +8,7 @@ net-im/zoom ~amd64
 x11-terms/alacritty ~amd64
 x11-terms/kitty ~amd64
 x11-terms/kitty-terminfo ~amd64
+x11-terms/kitty-shell-integration ~amd64
 x11-wm/xmonad ~amd64
 x11-wm/xmonad-contrib ~amd64
 net-misc/youtube-dl ~amd64
@@ -318,15 +319,9 @@ net-im/discord-bin ~amd64
 =games-util/game-device-udev-rules-20201228 ~amd64
 # required by steam-launcher (argument)
 =games-util/steam-launcher-1.0.0.74 ~amd64
-# required by x11-terms/kitty-0.24.0-r1::gentoo
-# required by @selected
-# required by @world (argument)
-=x11-terms/kitty-shell-integration-0.24.0 ~amd64
-# required by x11-terms/kitty-0.24.1::gentoo
-# required by @selected
-# required by @world (argument)
-=x11-terms/kitty-shell-integration-0.24.1 ~amd64
 # required by games-action/minecraft-launcher-1093::gentoo
 # required by @selected
 # required by @world (argument)
 =dev-libs/libffi-3.4.2-r1 ~amd64
+# required by olm (argument)
+=dev-libs/olm-3.2.9 ~amd64

@@ -384,3 +384,16 @@ fi
   - throughput-performance: max throughput
   - latency-performance: min latency (but uses a lot of power)
   - network-latency: latency-performance but adds network params
+  - network-throughput: max network throughput
+  - powersave
+  - oracle: just for oracle databases
+  - virtual-guest: best performance if system is running on a vm
+  - virtual-host: best performance for vm host
+- =tuned-adm= controls =tuned= settings
+- commands (format is =tuned-adm /COMMAND/=)
+  - =active= shows current profile
+  - =list= shows available profiles, including custom ones
+  - =profile /PROFILE-NAME/= changes profile
+  - =recommend= recommends a profile
+  - =off= to turn off
+- t

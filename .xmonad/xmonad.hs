@@ -294,7 +294,7 @@ projects = [
   Project {
       projectName      = "Prog",
       projectDirectory = "~/",
-      projectStartHook = Just $ do spawn "emacs-autoclient"
+      projectStartHook = Nothing
       },
 
   Project {
@@ -502,7 +502,7 @@ myKeys = [
   ("M-/",           spawn "rofi -show run"),
   ("M-w",           spawn "rofi -show window -width 40"),
   ("M-q",           spawn "rofi -show session"), 
-  ("M-x",           spawn "emacsclient -c -a emacs"),
+  ("M-x",           spawn "emacsclient -c -a \"\""),
   ("M-p",           spawn "rofi-pass"),
   ("M-z",           spawn "xmonad --recompile; xmonad --restart"),
   ("M-<Up>",        spawn "change_volume + > /dev/null"),
