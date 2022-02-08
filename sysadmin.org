@@ -27,13 +27,13 @@
   7. num of inactivity days after password expiry before account is locked
   8. account expiry date (in days since epoch). empty for no expiry
   9. reserved for future use
-- use =chage= to set passwd expiry options
-  - =chage -d 0 user03= to make user change passwd on next login
+- use ~chage~ to set passwd expiry options
+  - ~chage -d 0 user03~ to make user change passwd on next login
 - lock accounts with usermod
 - /etc/login.defs for new user settings
 * file permissions
 - ls -l output: first ownership name is user, second is group
-- =chmod go+rwx= to change permissions for group members and others
+- ~chmod go+rwx~ to change permissions for group members and others
 - + for add, - to remove, = to set to exactly
 - u for current user, g for group, o for other, a for all
 - prefix groups with colon ie :wheel
@@ -261,18 +261,18 @@ the message about failing to establish authenticity the first time you ssh is be
 - rsync is good
 * yum/redhat support
 - support (all commands here start with subscription-manager)
-  - register with =subscription-manager register --username=foo --password=bar=
-  - view subscriptions with =subscription-manager list --available | less=
-  - autoattach with =attach --auto=
-  - attach from specific pool with =attach --pool=poolID=
-  - view consumed subs with =list --consumed=
-  - unregister with =unregister=
+  - register with ~subscription-manager register --username=foo --password=bar~
+  - view subscriptions with ~subscription-manager list --available | less~
+  - autoattach with ~attach --auto~
+  - attach from specific pool with ~attach --pool=poolID~
+  - view consumed subs with ~list --consumed~
+  - unregister with ~unregister~
 - rpms
   - filename format is name-version-release-arch.rpm
   - file contains the files to be installed, scripts to run on install/uninstall/update, and metadata (including deps)
   - file should usually be gpg signed
   - portage-like slotting is allowed for things like the kernel
-  - =rpm -q= for query
+  - ~rpm -q~ for query
     - -qa: list all installed packages
     - -qf file: find what package provides file
     - -q package: find version of package currently installed
@@ -311,7 +311,7 @@ the message about failing to establish authenticity the first time you ssh is be
       - add a module name to list its stream
     - yum module install foo to install module foo
     - yum module remove to remove. this can break stuff though
-    - switch streams by removing, the module, run =yum module reset foo=, then =yum module install foo:versionNumber/profileName=
+    - switch streams by removing, the module, run ~yum module reset foo~, then ~yum module install foo:versionNumber/profileName~
 * file systems
 - lsblk -fp to show uuid
 - mount UUID="foo" /path/to/mountpoint
@@ -342,18 +342,18 @@ the message about failing to establish authenticity the first time you ssh is be
 * bash scripts
 - double quotes allows variables and single quotes don't
 - use ${foo} for var access in quotes
-- =echo "foo" >&2= to output to stderr
+- ~echo "foo" >&2~ to output to stderr
 - loop format:
 #+begin_src sh
 for VAR in LIST; do
     code
 done
 #+end_src
-- LIST can be =1 2 3=, ={1..3}= or =*= for all files in current dir
-- =exit n= for exit code. Without an arg it uses the exit code of the most recent command
-- =test= does conditionals
-- =[ foo ]= also does conditionals
-- =[[ foo ]]= uses newer syntax for conditionals
+- LIST can be ~1 2 3~, ~{1..3}~ or ~*~ for all files in current dir
+- ~exit n~ for exit code. Without an arg it uses the exit code of the most recent command
+- ~test~ does conditionals
+- ~[ foo ]~ also does conditionals
+- ~[[ foo ]]~ uses newer syntax for conditionals
   - -eq for ==
   - -ne for !=
   - -gt for >
@@ -373,11 +373,11 @@ else
     more code
 fi
 #+end_src
-- in regex =\{2\}= is like * but only matches 2 chars
+- in regex ~\{2\}~ is like * but only matches 2 chars
 * cron
 * tuning profile
-- static tuning done with =tuned= and kernel parameters
-- dynamic tuning done with =tuned=
+- static tuning done with ~tuned~ and kernel parameters
+- dynamic tuning done with ~tuned~
 - profiles:
   - balanced: compromise
   - desktop: balanced but makes interactive programs faster
@@ -389,11 +389,18 @@ fi
   - oracle: just for oracle databases
   - virtual-guest: best performance if system is running on a vm
   - virtual-host: best performance for vm host
-- =tuned-adm= controls =tuned= settings
-- commands (format is =tuned-adm /COMMAND/=)
-  - =active= shows current profile
-  - =list= shows available profiles, including custom ones
-  - =profile /PROFILE-NAME/= changes profile
-  - =recommend= recommends a profile
-  - =off= to turn off
-- t
+- ~tuned-adm~ controls ~tuned~ settings
+- commands (format is ~tuned-adm /COMMAND/~)
+  - ~active~ shows current profile
+  - ~list~ shows available profiles, including custom ones
+  - ~profile /PROFILE-NAME/~ changes profile
+  - ~recommend~ recommends a profile
+  - ~off~ to turn off
+- scheduling/niceness
+  - niceness can be from -20 (highest priority) to 19 (lowest)
+  - ~ps --sort=-nice~ sorts from highest to lowest niceness
+  - ~nice -n /NUM/ /COMMAND/~ to run COMMAND with niceness of NUM
+  - ~renice -n /NUM/ /PID/~ to change niceness of existing process
+  - only root can decrease niceness
+  - press r in top to change niceness too
+  

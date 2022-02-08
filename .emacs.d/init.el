@@ -872,24 +872,51 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
   ;; possibly can be done by first going through all siblings and finding the highest priority
   ;; then skip all entries with lower priorities
   (defun my/org-agenda-skip-all-siblings-but-first ()
-    "Skip all but the first TODO entry that is unscheduled and has no deadline."
-    (let (should-skip-entry)
-      (unless (my/org-current-is-todo-and-not-scheduled-or-deadline)
+    "Skip all but the highest priority TODO entry that is unscheduled and has no deadline."
+    (let ((should-skip-entry nil)
+          (priority (my/most-positive-fixnum-if-nil
+                     (org-element-property :priority (org-element-at-point)))))
+      (unless (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
+        (setq should-skip-entry t))
+      (when (my/org-agenda-scan-for-higher-priority-siblings-below)
         (setq should-skip-entry t))
       (save-excursion
         (while (and (not should-skip-entry) (org-goto-sibling t))
-          (when (my/org-current-is-todo-and-not-scheduled-or-deadline)
+          (when (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
             (setq should-skip-entry t))))
       (when should-skip-entry
         (or (outline-next-heading)
             (goto-char (point-max))))))
 
-  (defun my/org-current-is-todo-and-not-scheduled-or-deadline ()
+  (defun my/org-agenda-is-heading-valid-for-unscheduled-tasks (priority)
     "Return t if todo state of the element at point is \"TODO\", it is not scheduled,
-and it has no deadline"
-    (and (string= "TODO" (org-get-todo-state))
-         (not (org-element-property :deadline (org-element-at-point)))
-         (not (org-element-property :scheduled (org-element-at-point)))))
+it has no deadline, and it's priority is >= PRIORITY"
+    ;; it should be noted that in org, smallers numbers represent higher priorities
+    (let ((current-heading-priority (my/most-positive-fixnum-if-nil
+                                     (org-element-property :priority (org-element-at-point)))))
+      (and (string= "TODO" (org-get-todo-state))
+           (not (org-element-property :deadline (org-element-at-point)))
+           (not (org-element-property :scheduled (org-element-at-point)))
+           (<= current-heading-priority priority))))
+
+  (defun my/org-agenda-scan-for-higher-priority-siblings-below ()
+    "Return t if the current heading has a sibling below it of a
+higher priority"
+    (let ((return-val nil)
+          (priority (my/most-positive-fixnum-if-nil
+                     (org-element-property :priority (org-element-at-point)))))
+      (save-excursion
+        (while (org-goto-sibling)
+          (when (> priority (my/most-positive-fixnum-if-nil
+                             (org-element-property :priority (org-element-at-point))))
+            (setq return-val t))))
+      return-val))
+
+  (defun my/most-positive-fixnum-if-nil (num)
+    "If NUM is nil, return most-positive-fixnum. Otherwise return NUM"
+    (if num
+        num
+      most-positive-fixnum))
 
   (defun my/org-print-parent-heading ()
     "Print the name of the parent of the org element at point
@@ -898,10 +925,13 @@ If the element has no header, return an empty string
 If the parent heading has the tag \"printParentHeadingRecurse\", go up a level"
     (save-excursion
       (if (org-up-heading-safe)
-          
           (if (member "printParentHeadingRecurse" (org-get-local-tags))
               (my/org-print-parent-heading)
-            (format "%-24s" (concat (org-element-property :title (org-element-at-point)) ":")))
+            (format "%-24s" 
+                    ;; (concat
+                    (org-element-property :title (org-element-at-point))
+                    ;; ":")
+                    ))
         "")))
   
   (setq org-agenda-custom-commands
