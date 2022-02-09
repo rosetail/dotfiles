@@ -119,6 +119,11 @@
       `(lambda (c)
          (if (char-equal c ?\<) t (,electric-pair-inhibit-predicate c))))
 
+;; use pp-eval-last-sexp instead of eval-last-sexp
+;; TODO: put this in the use-package emacs declaration next refactor
+(global-set-key [remap eval-last-sexp] 'pp-eval-last-sexp)
+(global-set-key [remap eval-expression] 'pp-eval-expression)
+
 ;; install hydra first so it's available to other packages
 (use-package hydra
   :custom-face 
@@ -381,7 +386,7 @@ my/add-to-global-hydra to add entries")
   :config
   (global-evil-surround-mode 1))
 
-;; TODO: actually learn these keybindings
+; TODO: actually learn these keybindings
 (use-package evil-org
   :after (:any (:all evil org) (:all evil org-agenda))
   :commands org-agenda
@@ -394,7 +399,6 @@ my/add-to-global-hydra to add entries")
         ;; add keybindings for more things
         evil-org-key-theme '(navigation
                              insert
-                             return
                              textobjects
                              additional
                              todo
@@ -404,6 +408,8 @@ my/add-to-global-hydra to add entries")
   :hook ((org-mode . evil-org-mode)
          (evil-org-mode . evil-org-set-key-theme))
   :general
+  ;; bind RET here so it doesn't clobber corfu
+  (:keymaps 'org-mode-map "RET" 'evil-org-return)
   (:keymaps 'evil-org-mode-map 
             :states '(motion normal visual operator)
             "g i" 'org-down-element
@@ -527,11 +533,16 @@ my/add-to-global-hydra to add entries")
           completion-cycle-threshold completion-cycling)
       (apply #'consult-completion-in-region completion-in-region--data)))
 
+  ;; we need to do this to bind C-m
+  ;; from https://emacs.stackexchange.com/questions/20240/how-to-distinguish-c-m-from-return
+  (define-key input-decode-map [?\C-m] [C-m])
+
   ;; stop C-n and C-e from being overridden
-  (general-unbind '(insert normal motion visual operator) "C-n" "C-e" "C-d")
+  (general-unbind '(insert normal motion visual operator) "C-n" "C-e" "C-d" "C-p")
   :general
+  ("C-<tab>" 'completion-at-point)
   (:keymaps 'corfu-map
-            "C-i" 'corfu-move-to-minibuffer
+            "<C-m>" 'corfu-move-to-minibuffer
             "C-n" 'corfu-next
             "C-e" 'corfu-previous)
   :hook (eshell-mode . (lambda ()
@@ -868,10 +879,7 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
   
   ;; from https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html
   ;; modified to also skip entries that are scheaduled or have a deadline
-  ;; TODO: make this actually give the highest priority
-  ;; possibly can be done by first going through all siblings and finding the highest priority
-  ;; then skip all entries with lower priorities
-  (defun my/org-agenda-skip-all-siblings-but-first ()
+  (defun my/org-agenda-skip-all-siblings-but-highest-priority ()
     "Skip all but the highest priority TODO entry that is unscheduled and has no deadline."
     (let ((should-skip-entry nil)
           (priority (my/most-positive-fixnum-if-nil
@@ -907,8 +915,9 @@ higher priority"
                      (org-element-property :priority (org-element-at-point)))))
       (save-excursion
         (while (org-goto-sibling)
-          (when (> priority (my/most-positive-fixnum-if-nil
-                             (org-element-property :priority (org-element-at-point))))
+          (when (and (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
+                     (> priority (my/most-positive-fixnum-if-nil
+                                  (org-element-property :priority (org-element-at-point)))))
             (setq return-val t))))
       return-val))
 
@@ -959,7 +968,7 @@ If the parent heading has the tag \"printParentHeadingRecurse\", go up a level"
             ;; the first TODO item that isn't NEXT and has no deadline or schedule from each heading
             ;; this shows things that would otherwise get list
             (tags "-inbox"
-                  ((org-agenda-skip-function #'my/org-agenda-skip-all-siblings-but-first)
+                  ((org-agenda-skip-function #'my/org-agenda-skip-all-siblings-but-highest-priority)
                    (org-agenda-sorting-strategy '(priority-down))
                    (org-agenda-overriding-header "\nUndated Tasks")))
 
