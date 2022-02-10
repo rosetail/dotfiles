@@ -513,7 +513,7 @@ my/add-to-global-hydra to add entries")
   ;;       embark-become-indicator embark-action-indicator)
   :general
   (:keymaps 'override
-   :states '(normal insert emacs motion visual operater)
+            :states '(normal insert emacs motion visual operater)
             "C-." 'embark-act)
   (:keymaps 'vertico-map
             "C-." 'embark-act))
@@ -526,6 +526,12 @@ my/add-to-global-hydra to add entries")
   ("C-x b" 'consult-buffer)
   (:keymaps 'consult-narrow-map
             "<" 'consult-narrow-help))
+
+(use-package consult-dir
+  :general ("C-x C-d" 'consult-dir)
+  (:keymaps 'vertico-map
+            "C-x C-d" 'consult-dir
+            "C-x C-j" 'consult-dir-jump-file))
 
 (use-package embark-consult
   :demand t
