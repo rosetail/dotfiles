@@ -134,6 +134,14 @@
   ;; (hydra-face-pink     ((t (:foreground "#cc99cc"))))
   )
 
+(defun my/disable-cursor ()
+  (interactive)
+  (hl-line-mode)
+  ;; hide the cursor
+  ;; idk what this does but it works
+  (setq-local evil-default-cursor '(ignore))
+  (setq-local cursor-type nil))
+
 (defvar my/global-hydra-heads-list '()
   "List of hydra heads to be used by global-hydra. Use
 my/add-to-global-hydra to add entries")
@@ -229,10 +237,17 @@ my/add-to-global-hydra to add entries")
    :states '(normal motion visual operater)
    :keymaps 'override
    "SPC" 'my/global-hydra)
-  ;; (general-define-key
-  ;;  :states '(normal insert emacs motion visual operater)
-  ;;  :keymaps 'override
-  ;;  "C-SPC" 'my/global-hydra)
+
+  (defun my/C-SPC (arg)
+    "Call set-mark-command if there's a prefix arg, otherwise call my/global-hydra"
+    (interactive "P")
+    (if arg
+        (set-mark-command arg)
+      (call-interactively #'my/global-hydra)))
+  (general-define-key
+   :states '(normal insert emacs motion visual operater)
+   :keymaps 'override
+   "C-SPC" 'my/C-SPC)
   :demand t)
 
 ;; don't confirm when running load-theme interactively
@@ -273,6 +288,7 @@ my/add-to-global-hydra to add entries")
         modus-themes-org-blocks 'grayscale
         modus-themes-headings '((t . (rainbow)))
         modus-themes-bold-constructs nil
+        ;; modus-themes-hl-line '(intense)
         modus-themes-markup '(background intense))
   
   ;; don't make modeline be variable pitched
@@ -422,13 +438,14 @@ my/add-to-global-hydra to add entries")
             "R" 'evil-org-inner-subtree)
   (:keymaps 'org-agenda-mode-map
             :states '(motion normal visual operator)
-            "n"   'org-agenda-next-line
-            "e"   'org-agenda-previous-line
+            "n"   'org-agenda-next-item
+            "e"   'org-agenda-previous-item
             "gn"  'org-agenda-next-item
             "ge"  'org-agenda-previous-item
             "gI"  'evil-window-bottom
-            "C-n" 'org-agenda-next-item
-            "C-e" 'org-agenda-previous-item
+            "C-n" 'org-agenda-next-line
+            "C-e" 'org-agenda-previous-line
+            "b"   'org-agenda-tree-to-indirect-buffer
             "N"   'org-agenda-priority-down
             "E"   'org-agenda-priority-up
             "I"   'org-agenda-do-date-later
@@ -535,7 +552,15 @@ my/add-to-global-hydra to add entries")
 
   ;; we need to do this to bind C-m
   ;; from https://emacs.stackexchange.com/questions/20240/how-to-distinguish-c-m-from-return
-  (define-key input-decode-map [?\C-m] [C-m])
+  ;; also from https://emacs.stackexchange.com/questions/31348/local-function-key-map-gets-overwritten-by-emacsclient/31359#31359
+  (defun my/allow-C-m-binding (&optional frame)
+    "Make frame- and/or terminal-local changes."
+    (with-selected-frame (or frame (selected-frame))
+      (define-key input-decode-map [?\C-m] [C-m])))
+  ;; Run now, for non-daemon Emacs...
+  (my/allow-C-m-binding)
+  ;; ...and later, for new frames / emacsclient
+  (add-hook 'after-make-frame-functions 'my/allow-C-m-binding)
 
   ;; stop C-n and C-e from being overridden
   (general-unbind '(insert normal motion visual operator) "C-n" "C-e" "C-d" "C-p")
@@ -545,10 +570,11 @@ my/add-to-global-hydra to add entries")
             "<C-m>" 'corfu-move-to-minibuffer
             "C-n" 'corfu-next
             "C-e" 'corfu-previous)
-  :hook (eshell-mode . (lambda ()
-                         (setq-local corfu-quit-at-boundary t
-                                     corfu-auto nil)
-                         (corfu-mode))))
+  :hook
+  (eshell-mode . (lambda ()
+                   (setq-local corfu-quit-at-boundary t
+                               corfu-auto nil)
+                   (corfu-mode))))
 
 ;; add more capf functions
 (use-package cape
@@ -875,8 +901,12 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
         `(("i" "Inbox" entry  (file "inbox.org")
            "* TODO %?\n/Entered on/ %U")))
   
-  ;; helper functions for org-agenda-custom-commands
+  (add-to-list 'org-modules 'org-habit t)
+  ;; save agenda buffers before quitting
+  ;; from https://emacs.stackexchange.com/questions/477/how-do-i-automatically-save-org-mode-buffers
+  (advice-add 'org-agenda-quit :before 'org-save-all-org-buffers)
   
+  ;; helper functions for org-agenda-custom-commands
   ;; from https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html
   ;; modified to also skip entries that are scheaduled or have a deadline
   (defun my/org-agenda-skip-all-siblings-but-highest-priority ()
@@ -985,7 +1015,12 @@ _a_: Agenda, _c_: Capture"
     ("a" org-agenda)
     ("c" org-capture))
 
-  (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc")))
+  (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc"))
+  
+  ;; (use-package hl-line+)
+  ;; start with cursor on first item
+  :hook 
+  (org-agenda-mode . my/disable-cursor))
 
 (use-package flycheck
   :defer 1
@@ -1173,6 +1208,9 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 
 ;; TODO: see if this is actually the package I should be using
 (use-package haskell-mode)
+
+(use-package package.use-mode
+  :straight (package.use-mode :type git :host github :repo "C-xC-c/package.use-mode"))
 
 (use-package esh-help
   :after esh-mode
