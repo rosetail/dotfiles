@@ -403,4 +403,8 @@ fi
   - ~renice -n /NUM/ /PID/~ to change niceness of existing process
   - only root can decrease niceness
   - press r in top to change niceness too
-  
+* ACL
+- basically just extends normal file permissions
+- lets you give permissions to multiple users or groups
+  - these are called named users and named groups
+- 

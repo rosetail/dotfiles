@@ -20,3 +20,7 @@ location = /var/db/repos/haskell
 sync-type = git
 sync-uri = https://github.com/gentoo-mirror/haskell.git
 
+[akater]
+location = /var/db/repos/akater
+sync-type = git
+sync-uri = https://github.com/gentoo-mirror/akater.git

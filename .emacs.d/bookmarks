@@ -2,7 +2,10 @@
 ;;; This format is meant to be slightly human-readable;
 ;;; nevertheless, you probably don't want to edit it.
 ;;; -*- End Of Bookmark File Format Version Stamp -*-
-(("sysadmin.org"
+(("Twin Peaks"
+ (location . "/home/rose/Videos/Twin.Peaks.SEASON.02.S02.COMPLETE.1080p.10bit.BluRay.6CH.x265.HEVC-PSA/")
+ (handler . eshell-bookmark-jump))
+("sysadmin.org"
  (filename . "~/sysadmin.org")
  (front-context-string . "* users and stuf")
  (rear-context-string)
@@ -28,12 +31,12 @@
  (position . 1))
 ("org-refile-last-stored"
  (filename . "~/org/agenda.org")
- (front-context-string . "**** TODO see ab")
- (rear-context-string . "2-06 Sun 14:06]\n")
- (position . 5849))
+ (front-context-string . "*** TODO [#C] re")
+ (rear-context-string . "2-10 Thu 21:45]\n")
+ (position . 7259))
 ("org-capture-last-stored"
  (filename . "~/org/inbox.org")
- (front-context-string . "* TODO check out")
- (rear-context-string . "2-10 Thu 12:58]\n")
- (position . 217))
+ (front-context-string . "* TODO adjust ev")
+ (rear-context-string . "FILETAGS: inbox\n")
+ (position . 19))
 )

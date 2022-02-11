@@ -166,6 +166,31 @@
   ;; (hydra-face-teal     ((t (:foreground "#66cccc"))))
   ;; (hydra-face-pink     ((t (:foreground "#cc99cc"))))
   )
+
+;; enable local vars for init file
+(setq safe-local-variable-values '((eval add-hook 'after-save-hook (lambda () ( org-babel-tangle)) nil t)))
+
+(recentf-mode 1)
+
+;; always save bookmarks
+(setq bookmark-save-flag 1)
+
+
+;; allow C-m and M-i binding
+;; TODO: rename this
+;; from https://emacs.stackexchange.com/questions/20240/how-to-distinguish-c-m-from-return
+;; also from https://emacs.stackexchange.com/questions/31348/local-function-key-map-gets-overwritten-by-emacsclient/31359#31359
+(defun my/allow-C-m-binding (&optional frame)
+  "Make frame- and/or terminal-local changes."
+  (with-selected-frame (or frame (selected-frame))
+    (define-key input-decode-map [?\C-m] [C-m])
+    (define-key input-decode-map [?\M-i] [M-i])))
+
+;; Run now, for non-daemon Emacs...
+(my/allow-C-m-binding)
+;; ...and later, for new frames / emacsclient
+(add-hook 'after-make-frame-functions 'my/allow-C-m-binding)
+
 #+end_src
 
 * functions
@@ -638,6 +663,22 @@ my/add-to-global-hydra to add entries")
   (ctrlf-mode))
 #+end_src
 
+* eshell
+#+begin_src emacs-lisp :tangle yes
+(use-package eshell
+  :straight nil
+  :defer t
+  :general
+  (:keymaps 'eshell-mode-map :states '(normal insert emacs motion visual operater)
+            "C-e" 'eshell-previous-prompt
+            "C-n" 'eshell-next-prompt
+            "M-h" 'eshell-backward-argument
+            "<M-i>" 'eshell-forward-argument
+            "M-e" 'eshell-previous-matching-input-from-input
+            "M-n" 'eshell-next-matching-input-from-input
+            "C-a" 'eshell-kill-input))
+#+end_src
+
 * minibuffer completion
 #+begin_src emacs-lisp :tangle yes
 (use-package vertico
@@ -689,8 +730,24 @@ my/add-to-global-hydra to add entries")
 
 (use-package consult
   :defer t
+  :config
+  (defun my/consult-dont-preview-portage-bookmark ()
+    "Buffer state function that doesn't preview Tramp buffers."
+    (let ((orig-state (consult--bookmark-state))
+          ;; TODO: maybe make this work for all tramp buffers
+          ;; TODO: alsy maybe have this work for recentf too
+          (filter (lambda (cand restore)
+                    (if (or restore
+                            (string= "portage" cand))
+                        nil
+                      cand))))
+      (lambda (cand restore)
+        (funcall orig-state (funcall filter cand restore) restore))))
+
+  (setq consult--source-bookmark
+        (plist-put consult--source-bookmark :state #'my/consult-dont-preview-portage-bookmark))
+
   :general
-  
   ("M-'" 'consult-line)
   ("C-x b" 'consult-buffer)
   (:keymaps 'consult-narrow-map
@@ -700,7 +757,7 @@ my/add-to-global-hydra to add entries")
   :general ("C-x C-d" 'consult-dir)
   (:keymaps 'vertico-map
             "C-x C-d" 'consult-dir
-            "C-x C-j" 'consult-dir-jump-file))
+            "C-x C-a" 'consult-dir-jump-file))
 
 (use-package embark-consult
   :demand t
@@ -728,18 +785,6 @@ my/add-to-global-hydra to add entries")
     (let ((completion-extra-properties corfu--extra)
           completion-cycle-threshold completion-cycling)
       (apply #'consult-completion-in-region completion-in-region--data)))
-
-  ;; we need to do this to bind C-m
-  ;; from https://emacs.stackexchange.com/questions/20240/how-to-distinguish-c-m-from-return
-  ;; also from https://emacs.stackexchange.com/questions/31348/local-function-key-map-gets-overwritten-by-emacsclient/31359#31359
-  (defun my/allow-C-m-binding (&optional frame)
-    "Make frame- and/or terminal-local changes."
-    (with-selected-frame (or frame (selected-frame))
-      (define-key input-decode-map [?\C-m] [C-m])))
-  ;; Run now, for non-daemon Emacs...
-  (my/allow-C-m-binding)
-  ;; ...and later, for new frames / emacsclient
-  (add-hook 'after-make-frame-functions 'my/allow-C-m-binding)
 
   ;; stop C-n and C-e from being overridden
   (general-unbind '(insert normal motion visual operator) "C-n" "C-e" "C-d" "C-p")
@@ -876,17 +921,17 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
         ;; make checkbox counters recursive
         org-checkbox-hierarchical-statistics nil)
 
-  ;; make indentation work properly when editing org src
-  (setq org-adapt-indentation nil
-        org-tags-column 0
+  (setq org-tags-column 0
         org-edit-src-content-indentation 0
         org-src-tab-acts-natively t
         org-src-window-setup 'current-window
-        org-startup-indented t
         org-startup-folded t
         org-hide-emphasis-markers t
         org-catch-invisible-edits 'smart
-        org-ctrl-k-protect-subtree t)
+        org-ctrl-k-protect-subtree t
+        org-hide-leading-stars t)
+        ;; org-adapt-indentation nil
+        ;; org-startup-indented t
 
   ;; align tags to the right regardless of window size
   (defun org-keep-tags-to-right ()
@@ -1431,8 +1476,19 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 
 * other packages
 #+begin_src emacs-lisp :tangle yes
+(use-package transmission
+  :init
+  (setq transmission-refresh-modes
+        '(transmission-mode transmission-files-mode transmission-info-mode transmission-peers-mode))
+  :hook ((transmission-mode .       my/disable-cursor)
+         (transmission-files-mode . my/disable-cursor)
+         (transmission-info-mode .  my/disable-cursor)
+         (transmission-peers-mode . my/disable-cursor)))
+
 ;; TODO: see if this is actually the package I should be using
 (use-package haskell-mode)
+
+(use-package ebuild-mode)
 
 (use-package package.use-mode
   :straight (package.use-mode :type git :host github :repo "C-xC-c/package.use-mode"))
@@ -1444,7 +1500,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 
 (use-package eshell-syntax-highlighting
   :after esh-mode
-  :demand t ;; Install if not already installed.
+  :demand t
   :config
   ;; Enable in all Eshell buffers.
   (eshell-syntax-highlighting-global-mode +1))
@@ -1685,4 +1741,10 @@ _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
 
 
 #+end_src
+
+** local vars
+# eval: (call-interactively #'consult-org-heading)
+# Local Variables: 
+# eval: (add-hook 'after-save-hook (lambda ()( org-babel-tangle)) nil t)
+# End:
 
