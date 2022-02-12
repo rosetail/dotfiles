@@ -201,6 +201,16 @@ my/add-to-global-hydra to add entries")
                               (indent-for-tab-command)))
                           "Indent Buffer" :column "Editing"))
 
+(defun my/major-mode-hydra ()
+  "Call `<major-mode>-hydra/body` if it is defined"
+  (interactive)
+  (let ((hydra-name (intern (concat (symbol-name major-mode) "-hydra/body"))))
+    (if (fboundp hydra-name)
+        (call-interactively hydra-name)
+      (message (concat "No hydra defined for " (symbol-name major-mode))))))
+
+(my/add-to-global-hydra '("m" my/major-mode-hydra "Major Mode" :column "Tools"))
+
 ;; from https://gist.github.com/tttuuu888/267a8a56c207d725ea999e353646eec9
 (defvar sk-pacakge-loading-notice-list '(yasnippet))
 ;; (defvar sk-pacakge-loading-notice-list '(org yasnippet))
@@ -746,8 +756,8 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
         org-catch-invisible-edits 'smart
         org-ctrl-k-protect-subtree t
         org-hide-leading-stars t)
-        ;; org-adapt-indentation nil
-        ;; org-startup-indented t
+  ;; org-adapt-indentation nil
+  ;; org-startup-indented t
 
   ;; align tags to the right regardless of window size
   (defun org-keep-tags-to-right ()
@@ -761,11 +771,15 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
 	(when (not buffer-modified)
 	  (set-buffer-modified-p nil)))))
   
-  
   ;; TODO: switch to :hook
   ;; (add-hook 'window-configuration-change-hook 'org-keep-tags-to-right)
   ;; (add-hook 'focus-in-hook 'org-keep-tags-to-right)
   ;; (add-hook 'focus-out-hook 'org-keep-tags-to-right)
+  
+  (defhydra org-mode-hydra (:color blue :hint nil)
+    "
+_SPC_: Jump to heading"
+    ("SPC" consult-org-heading)) 
 
   :general (:keymaps 'org-mode-map :states '(normal insert) "M-n" nil)
   :config
@@ -1329,7 +1343,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 (use-package smart-compile
   :defer t
   :init
-  (my/add-to-global-hydra '("m" smart-compile "Smart Compile" :column "Tools")))
+  (my/add-to-global-hydra '("c" smart-compile "Smart Compile" :column "Tools")))
 
 (use-package undo-tree
   :demand t

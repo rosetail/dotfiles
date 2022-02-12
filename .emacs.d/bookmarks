@@ -31,9 +31,9 @@
  (position . 1))
 ("org-refile-last-stored"
  (filename . "~/org/agenda.org")
- (front-context-string . "*** TODO [#C] re")
- (rear-context-string . "2-10 Thu 21:45]\n")
- (position . 7259))
+ (front-context-string . "*** DONE adjust ")
+ (rear-context-string . "2-11 Fri 12:50]\n")
+ (position . 7601))
 ("org-capture-last-stored"
  (filename . "~/org/inbox.org")
  (front-context-string . "* TODO adjust ev")
