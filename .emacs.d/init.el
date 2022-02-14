@@ -121,8 +121,8 @@
 
 ;; use pp-eval-last-sexp instead of eval-last-sexp
 ;; TODO: put this in the use-package emacs declaration next refactor
-(global-set-key [remap eval-last-sexp] 'pp-eval-last-sexp)
-(global-set-key [remap eval-expression] 'pp-eval-expression)
+;; (global-set-key [remap eval-last-sexp] 'pp-eval-last-sexp)
+;; (global-set-key [remap eval-expression] 'pp-eval-expression)
 
 ;; install hydra first so it's available to other packages
 (use-package hydra
@@ -135,7 +135,10 @@
   )
 
 ;; enable local vars for init file
-(setq safe-local-variable-values '((eval add-hook 'after-save-hook (lambda () ( org-babel-tangle)) nil t)))
+(setq safe-local-variable-values '((eval add-hook 'after-save-hook (lambda () ( org-babel-tangle)) nil t))
+      ;; this is for the dtache repo
+      ignored-local-variable-values '((magit-todos-exclude-globs))
+      warning-suppress-types '((org-element-cache)))
 
 (recentf-mode 1)
 
@@ -505,19 +508,6 @@ my/add-to-global-hydra to add entries")
   :config
   (ctrlf-mode))
 
-(use-package eshell
-  :straight nil
-  :defer t
-  :general
-  (:keymaps 'eshell-mode-map :states '(normal insert emacs motion visual operater)
-            "C-e" 'eshell-previous-prompt
-            "C-n" 'eshell-next-prompt
-            "M-h" 'eshell-backward-argument
-            "<M-i>" 'eshell-forward-argument
-            "M-e" 'eshell-previous-matching-input-from-input
-            "M-n" 'eshell-next-matching-input-from-input
-            "C-a" 'eshell-kill-input))
-
 (use-package vertico
   :demand t
   ;; TODO: move this to somewhere better
@@ -567,12 +557,38 @@ my/add-to-global-hydra to add entries")
 
 (use-package consult
   :defer t
+  :init
+  (defhydra hydra-consult (:color blue :hint nil)
+    
+    "
+_b_: bookmarks    _r_: ripgrep        ^^_y_: yank
+_i_: imenu        _f_/_l_: find/locate  _Y_: yank replace
+_I_: imenu multi  _g_: grep
+_m_: jump to mark _G_: git grep
+"
+    ("b" consult-bookmark)
+    ("i" consult-imenu)
+    ("I" consult-imenu-multi)
+    ("m" consult-global-mark)
+    ("r" consult-ripgrep)
+    ("f" consult-find)
+    ("l" consult-locate)
+    ("g" consult-grep)
+    ("G" consult-git-grep)
+    ("y" consult-yank-from-kill-ring)
+    ("Y" consult-yank-replace))
+    (my/add-to-global-hydra '("c" hydra-consult/body "Consult" :column "Misc"))
   :config
+  (add-to-list 'consult-buffer-filter "magit.*")
+  (add-to-list 'consult-buffer-filter "\\*forge.*")
+  (add-to-list 'consult-buffer-filter "\\*straight.*")
+  (add-to-list 'consult-buffer-filter "\\*Async-native-compile-log\\*")
+  
   (defun my/consult-dont-preview-portage-bookmark ()
     "Buffer state function that doesn't preview Tramp buffers."
     (let ((orig-state (consult--bookmark-state))
           ;; TODO: maybe make this work for all tramp buffers
-          ;; TODO: alsy maybe have this work for recentf too
+          ;; TODO: also maybe have this work for recentf too
           (filter (lambda (cand restore)
                     (if (or restore
                             (string= "portage" cand))
@@ -583,24 +599,23 @@ my/add-to-global-hydra to add entries")
 
   (setq consult--source-bookmark
         (plist-put consult--source-bookmark :state #'my/consult-dont-preview-portage-bookmark))
+    :general
+    ("M-'" 'consult-line)
+    ("C-x b" 'consult-buffer)
+    (:keymaps 'consult-narrow-map
+              "<" 'consult-narrow-help))
 
-  :general
-  ("M-'" 'consult-line)
-  ("C-x b" 'consult-buffer)
-  (:keymaps 'consult-narrow-map
-            "<" 'consult-narrow-help))
+  (use-package consult-dir
+    :general ("C-x C-d" 'consult-dir)
+    (:keymaps 'vertico-map
+              "C-x C-d" 'consult-dir
+              "C-x C-a" 'consult-dir-jump-file))
 
-(use-package consult-dir
-  :general ("C-x C-d" 'consult-dir)
-  (:keymaps 'vertico-map
-            "C-x C-d" 'consult-dir
-            "C-x C-a" 'consult-dir-jump-file))
-
-(use-package embark-consult
-  :demand t
-  :after (embark consult)
-  :hook
-  (embark-collect-mode . embark-consult-preview-minor-mode))
+  (use-package embark-consult
+    :demand t
+    :after (embark consult)
+    :hook
+    (embark-collect-mode . embark-consult-preview-minor-mode))
 
 (use-package corfu
   :init
@@ -672,10 +687,77 @@ my/add-to-global-hydra to add entries")
 
   :after eshell)
 
+(use-package comint
+  :straight nil
+  :defer t
+  :init
+  ;; TODO: move this somewhere better
+  (general-unbind '(insert normal motion visual operator) "C-a")
+  :general
+  (:keymaps 'comint-mode-map
+            "C-e" 'comint-previous-prompt
+            "C-n" 'comint-next-prompt
+            ;; "M-h" 'comint-backward-argument
+            ;; "<M-i>" 'shell-forward-argument
+            "M-e" 'comint-previous-matching-input-from-input
+            "M-n" 'comint-next-matching-input-from-input
+            "C-a" 'comint-kill-input)
+  (:keymaps 'shell-mode-map :states '(normal emacs motion visual operater)
+            "g e" 'comint-previous-prompt
+            "g n" 'comint-next-prompt
+            ;; "B"   'comint-backward-argument
+            ;; "W"   'comint-forward-argument
+            "M-e" 'comint-previous-matching-input-from-input
+            "M-n" 'comint-next-matching-input-from-input
+            "C-a" 'comint-kill-input))
+
+(use-package eshell
+  :straight nil
+  :defer t
+  :config
+  ;; default eshell bookmark handler doesn't work so we have to rewrite it
+  ;; this needs to be evaluated after eshell loads so it isn't overwritten
+  (defun eshell-bookmark-jump (bookmark)
+    "Default bookmark handler for Eshell buffers."
+    (eshell)
+    (setq-local default-directory (bookmark-prop-get bookmark 'location))
+    (eshell-reset))
+  
+  :general
+  (:keymaps 'eshell-mode-map
+            "C-e" 'eshell-previous-prompt
+            "C-n" 'eshell-next-prompt
+            "M-h" 'eshell-backward-argument
+            "<M-i>" 'eshell-forward-argument
+            "M-e" 'eshell-previous-matching-input-from-input
+            "M-n" 'eshell-next-matching-input-from-input
+            "C-a" 'eshell-kill-input)
+  (:keymaps 'eshell-mode-map :states '(normal emacs motion visual operater)
+            "g e" 'eshell-previous-prompt
+            "g n" 'eshell-next-prompt
+            "B"   'eshell-backward-argument
+            "W"   'eshell-forward-argument
+            "M-e" 'eshell-previous-matching-input-from-input
+            "M-n" 'eshell-next-matching-input-from-input
+            "C-a" 'eshell-kill-input))
+
+(use-package fish-completion
+  :after pcomplete
+  :config (global-fish-completion-mode))
+
+(use-package eshell-bookmark
+  :after eshell
+  :config
+  (add-hook 'eshell-mode-hook #'eshell-bookmark-setup))
+
 (use-package dtache
+  :straight (dtache :type git :host gitlab :repo "niklaseklund/dtache"
+                    :fork (:host gitlab :repo "rosetail/dtache"))
   :after hydra
   :init
-  (setq dtache-detach-key (kbd "C-\\"))
+  (setq dtache-detach-key (kbd "C-\\")
+        ;; use custom env script with unbuffer
+        dtache-env "~/.emacs.d/dtache-env")
   :config
   ;; create a hydra for all the common actions
   (defhydra hydra-dtache (:color blue :hint nil)
@@ -691,7 +773,7 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
     ("d" dtache-delete-session)
     ("o" dtache-consult-session))
   
-  (my/add-to-global-hydra '("d" hydra-dtache/body "Dtache" :column "Misc"))
+  (my/add-to-global-hydra '("d" hydra-dtache/body "Dtache" :column "Tools"))
   
   ;; add embark actions to dtache-open-session
   (defvar embark-dtache-map (make-composed-keymap dtache-action-map embark-general-map))
@@ -709,6 +791,11 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
 (use-package dtache-eshell
   :straight nil ; included with dtache
   :hook (eshell-mode . dtache-eshell-mode))
+
+(use-package dtache-shell
+  :straight nil ; included with dtache
+  :after dtache
+  :config (dtache-shell-setup))
 
 ;; enable detatching compile commands
 (use-package dtache-compile
@@ -963,9 +1050,10 @@ _SPC_: Jump to heading"
            "* TODO %?\n/Entered on/ %U")))
   
   (add-to-list 'org-modules 'org-habit t)
-  ;; save agenda buffers before quitting
+  ;; save agenda buffers before quitting and after reloading
   ;; from https://emacs.stackexchange.com/questions/477/how-do-i-automatically-save-org-mode-buffers
   (advice-add 'org-agenda-quit :before 'org-save-all-org-buffers)
+  (advice-add 'org-agenda-redo :after 'org-save-all-org-buffers)
   
   ;; helper functions for org-agenda-custom-commands
   ;; from https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html
@@ -1078,10 +1166,10 @@ _a_: Agenda, _c_: Capture"
 
   (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc"))
   
-  ;; (use-package hl-line+)
   ;; start with cursor on first item
-  :hook 
-  (org-agenda-mode . my/disable-cursor))
+  ;; :hook 
+  ;; (org-agenda-mode . my/disable-cursor)
+  )
 
 (use-package flycheck
   :defer 1
@@ -1343,7 +1431,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 (use-package smart-compile
   :defer t
   :init
-  (my/add-to-global-hydra '("c" smart-compile "Smart Compile" :column "Tools")))
+  (my/add-to-global-hydra '("b" smart-compile "Smart Compile" :column "Tools")))
 
 (use-package undo-tree
   :demand t
