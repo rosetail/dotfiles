@@ -1,6 +1,6 @@
-alias d dired
-alias ff find-file
-alias lla ls -lhA
-alias ll ls -lh
-alias la ls -A
-alias l ls
+alias l ls $*
+alias la ls -A $*
+alias ll ls -lh $*
+alias lla ls -lhA $*
+alias ff find-file $1
+alias d dired $1
