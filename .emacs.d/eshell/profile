@@ -1,7 +1,1 @@
 setenv TERM eterm-color > /dev/null
-alias l ls
-alias la ls -A
-alias ll ls -lh
-alias lla ls -lhA
-alias ff find-file
-alias d dired

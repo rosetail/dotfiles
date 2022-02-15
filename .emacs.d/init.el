@@ -733,7 +733,8 @@ _m_: jump to mark _G_: git grep
             "<M-i>" 'eshell-forward-argument
             "M-e" 'eshell-previous-matching-input-from-input
             "M-n" 'eshell-next-matching-input-from-input
-            "C-a" 'eshell-kill-input)
+            "C-a" 'eshell-kill-input
+            "M-b" 'eshell-insert-buffer-name)
   (:keymaps 'eshell-mode-map :states '(normal emacs motion visual operater)
             "g e" 'eshell-previous-prompt
             "g n" 'eshell-next-prompt
@@ -751,6 +752,17 @@ _m_: jump to mark _G_: git grep
   :after eshell
   :config
   (add-hook 'eshell-mode-hook #'eshell-bookmark-setup))
+
+;; enable plan 9 smart shell
+;; TODO: review these variable settings
+(use-package em-smart
+  :straight nil
+  :after eshell
+  :init
+  (setq eshell-where-to-jump 'begin
+        eshell-review-quick-commands nil
+        eshell-smart-space-goes-to-end t)
+  :hook (eshell-mode . eshell-smart-initialize))
 
 (use-package dtache
   :straight (dtache :type git :host gitlab :repo "niklaseklund/dtache"
