@@ -1,3 +1,6 @@
-alias eix eix --color always
-alias emerge emerge --color y
+alias d dired
+alias ff find-file
+alias lla ls -lhA
+alias ll ls -lh
+alias la ls -A
 alias l ls

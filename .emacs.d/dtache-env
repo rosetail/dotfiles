@@ -2,7 +2,7 @@
 
 dtache_command="$*"
 
-if eval script --quiet -e -c "\"$dtache_command\"" /dev/null; then
+if eval script --quiet -f -e -c "\"$dtache_command\"" /dev/null; then
     echo -e "\nDtache session finished"
 else
     echo -e "\nDtache session exited abnormally with code $?"

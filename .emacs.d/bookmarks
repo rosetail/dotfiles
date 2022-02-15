@@ -36,12 +36,12 @@
  (position . 1))
 ("org-refile-last-stored"
  (filename . "~/org/agenda.org")
- (front-context-string . "*** DONE make gl")
- (rear-context-string . "2-11 Fri 14:07]\n")
- (position . 8293))
+ (front-context-string . "*** TODO check o")
+ (rear-context-string . "2-13 Sun 13:20]\n")
+ (position . 8467))
 ("org-capture-last-stored"
  (filename . "~/org/inbox.org")
- (front-context-string . "* TODO make glob")
- (rear-context-string . "FILETAGS: inbox\n")
- (position . 19))
+ (front-context-string . "* TODO check out")
+ (rear-context-string . "2-14 Mon 12:08]\n")
+ (position . 108))
 )

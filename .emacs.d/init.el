@@ -714,6 +714,8 @@ _m_: jump to mark _G_: git grep
 (use-package eshell
   :straight nil
   :defer t
+  :init
+  (setq eshell-banner-message "")
   :config
   ;; default eshell bookmark handler doesn't work so we have to rewrite it
   ;; this needs to be evaluated after eshell loads so it isn't overwritten
