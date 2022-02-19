@@ -129,7 +129,10 @@ scratchpads = [
     (className =? "ncmpcpp")
     (customFloating $ W.RationalRect (1/4) (1/3) (1/2) (1/3)),
 
-  NS "term" "alacritty --class scratchpad,scratchpad" (className =? "scratchpad")
+  -- NS "term" "alacritty --class scratchpad,scratchpad" (className =? "scratchpad")
+  --   (customFloating $ W.RationalRect (1/4) (1/3) (1/2) (1/3))
+
+  NS "term" "emacsclient -c -a \"\" -F \"'(name . \\\"scratchpad\\\")\" -e \"(my/eshell-scratchpad)\"" (title =? "scratchpad")
     (customFloating $ W.RationalRect (1/4) (1/3) (1/2) (1/3))
 
   -- NS "riot" "riot-web" (className =? "Riot") nonFloating
@@ -477,8 +480,9 @@ myKeys = [
   ("M-S-,",         shiftToPreviousChild),
   ("M-.",           switchToNextChild),
   ("M-S-.",         shiftToNextChild),
-  ("M-<Return>",    spawn "alacritty"),
-  ("M-S-<Return>",  spawnQutebrowserSession),
+  ("M-<Return>",    spawn "eshell"),
+  -- ("M-<Return>",    spawn "alacritty"),
+  -- ("M-S-<Return>",  spawnQutebrowserSession),
   ("M-f",           toggleFloat),
   ("M-o",           namedScratchpadAction scratchpads "term"),
   ("M-`",           namedScratchpadAction scratchpads "ncmpcpp"),
@@ -503,6 +507,7 @@ myKeys = [
   ("M-w",           spawn "rofi -show window -width 40"),
   ("M-q",           spawn "rofi -show session"), 
   ("M-x",           spawn "emacsclient -c -a \"\""),
+  ("M-S-x",         spawn "emacs"),
   ("M-p",           spawn "rofi-pass"),
   ("M-z",           spawn "xmonad --recompile; xmonad --restart"),
   ("M-<Up>",        spawn "change_volume + > /dev/null"),

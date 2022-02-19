@@ -249,6 +249,27 @@ my/add-to-global-hydra to add entries")
 (advice-add 'require :around #'sk-package-loading-notice)
 (advice-add 'find-file-noselect :around #'sk-package-loading-notice)
 
+(defun my/eshell-scratchpad ()
+  "This should be called from the command line to launch emacs with a scratchpad
+This sets the 'eshell-buffer' parameter so the buffer can be killed when the frame closes"
+  (eshell t)
+  ;; don't ever delete the first eshell buffer
+  (unless (string= eshell-buffer-name (buffer-name))
+    (set-frame-parameter nil 'eshell-buffer (current-buffer))))
+
+(defun my/close-eshell-scratchpad (&optional _frame)
+  "Closes the eshell scratchpad. To be run in 'delete-frame-functions'"
+  (let ((eshell-buffer (frame-parameter nil 'eshell-buffer)))
+    (when eshell-buffer
+      (kill-buffer eshell-buffer))))
+
+(defun eshell/saveterm ()
+  "Run this in an eshell scratchpad to stopp the the buffer from being killed
+when the windor exits"
+  (set-frame-parameter nil 'eshell-buffer nil))
+
+(add-hook 'delete-frame-functions 'my/close-eshell-scratchpad)
+
 (use-package general
   :config
   ;; create leader key
@@ -320,11 +341,13 @@ my/add-to-global-hydra to add entries")
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-slanted-constructs t
         modus-themes-region '(bg-only)
-        modus-themes-completions 'opinionated
+        modus-themes-completions 'moderate
+        modus-themes-prompts '(bold background)
         modus-themes-fringes 'intense
         modus-themes-org-blocks 'grayscale
         modus-themes-headings '((t . (rainbow)))
         modus-themes-bold-constructs nil
+        ;; modus-themes-mode-line '(moody)
         ;; modus-themes-hl-line '(intense)
         modus-themes-markup '(background intense))
   
@@ -577,11 +600,12 @@ _m_: jump to mark _G_: git grep
     ("G" consult-git-grep)
     ("y" consult-yank-from-kill-ring)
     ("Y" consult-yank-replace))
-    (my/add-to-global-hydra '("c" hydra-consult/body "Consult" :column "Misc"))
+  (my/add-to-global-hydra '("c" hydra-consult/body "Consult" :column "Misc"))
   :config
   (add-to-list 'consult-buffer-filter "magit.*")
   (add-to-list 'consult-buffer-filter "\\*forge.*")
   (add-to-list 'consult-buffer-filter "\\*straight.*")
+  (add-to-list 'consult-buffer-filter "\\*Native-compile-log\\*")
   (add-to-list 'consult-buffer-filter "\\*Async-native-compile-log\\*")
   
   (defun my/consult-dont-preview-portage-bookmark ()
@@ -599,23 +623,26 @@ _m_: jump to mark _G_: git grep
 
   (setq consult--source-bookmark
         (plist-put consult--source-bookmark :state #'my/consult-dont-preview-portage-bookmark))
-    :general
-    ("M-'" 'consult-line)
-    ("C-x b" 'consult-buffer)
-    (:keymaps 'consult-narrow-map
-              "<" 'consult-narrow-help))
+  :general
+  ("M-'" 'consult-line)
+  ("C-x b" 'consult-buffer)
+  (:keymaps 'consult-narrow-map
+            "<" 'consult-narrow-help))
 
-  (use-package consult-dir
-    :general ("C-x C-d" 'consult-dir)
-    (:keymaps 'vertico-map
-              "C-x C-d" 'consult-dir
-              "C-x C-a" 'consult-dir-jump-file))
+(use-package consult-dir
+  :general ("C-x C-d" 'consult-dir)
+  (:keymaps 'vertico-map
+            "C-x C-d" 'consult-dir
+            "C-x C-a" 'consult-dir-jump-file))
 
-  (use-package embark-consult
-    :demand t
-    :after (embark consult)
-    :hook
-    (embark-collect-mode . embark-consult-preview-minor-mode))
+(use-package embark-consult
+  :demand t
+  :after (embark consult)
+  :hook
+  (embark-collect-mode . embark-consult-preview-minor-mode))
+
+(use-package consult-yasnippet
+  :after consult)
 
 (use-package corfu
   :init
@@ -755,14 +782,14 @@ _m_: jump to mark _G_: git grep
 
 ;; enable plan 9 smart shell
 ;; TODO: review these variable settings
-(use-package em-smart
-  :straight nil
-  :after eshell
-  :init
-  (setq eshell-where-to-jump 'begin
-        eshell-review-quick-commands nil
-        eshell-smart-space-goes-to-end t)
-  :hook (eshell-mode . eshell-smart-initialize))
+;; (use-package em-smart
+;;   :straight nil
+;;   :after eshell
+;;   :init
+;;   (setq eshell-where-to-jump 'begin
+;;         eshell-review-quick-commands nil
+;;         eshell-smart-space-goes-to-end t)
+;;   :hook (eshell-mode . eshell-smart-initialize))
 
 (use-package dtache
   :straight (dtache :type git :host gitlab :repo "niklaseklund/dtache"
