@@ -327,3 +327,5 @@ net-im/discord-bin ~amd64
 =dev-libs/libffi-3.4.2-r1 ~amd64
 # required by olm (argument)
 =dev-libs/olm-3.2.9 ~amd64
+# required by tdlib (argument)
+=net-libs/tdlib-1.8.0 ~amd64

@@ -153,8 +153,7 @@
 (defun my/allow-C-m-binding (&optional frame)
   "Make frame- and/or terminal-local changes."
   (with-selected-frame (or frame (selected-frame))
-    (define-key input-decode-map [?\C-m] [C-m])
-    (define-key input-decode-map [?\M-i] [M-i])))
+    (define-key input-decode-map [?\C-m] [C-m])))
 
 ;; Run now, for non-daemon Emacs...
 (my/allow-C-m-binding)
@@ -347,8 +346,7 @@ when the windor exits"
         modus-themes-org-blocks 'grayscale
         modus-themes-headings '((t . (rainbow)))
         modus-themes-bold-constructs nil
-        ;; modus-themes-mode-line '(moody)
-        ;; modus-themes-hl-line '(intense)
+        modus-themes-hl-line '(accented intense)
         modus-themes-markup '(background intense))
   
   ;; don't make modeline be variable pitched
@@ -543,7 +541,7 @@ when the windor exits"
   :demand t
   :init
   (setq orderless-matching-styles '(orderless-initialism orderless-prefixes orderless-regexp)
-        orderless-component-separator " +\\|/")
+        orderless-component-separator " +\\|\\\\")
 
   :custom (completion-styles '(orderless)))
 
@@ -724,8 +722,6 @@ _m_: jump to mark _G_: git grep
   (:keymaps 'comint-mode-map
             "C-e" 'comint-previous-prompt
             "C-n" 'comint-next-prompt
-            ;; "M-h" 'comint-backward-argument
-            ;; "<M-i>" 'shell-forward-argument
             "M-e" 'comint-previous-matching-input-from-input
             "M-n" 'comint-next-matching-input-from-input
             "C-a" 'comint-kill-input)
@@ -757,8 +753,8 @@ _m_: jump to mark _G_: git grep
             "C-e" 'eshell-previous-prompt
             "C-n" 'eshell-next-prompt
             "M-h" 'eshell-backward-argument
-            "<M-i>" 'eshell-forward-argument
-            "M-e" 'eshell-previous-matching-input-from-input
+            "M-i" 'eshell-forward-argument
+            "M-e" 'eshell-previous-matching-input-from-input ;
             "M-n" 'eshell-next-matching-input-from-input
             "C-a" 'eshell-kill-input
             "M-b" 'eshell-insert-buffer-name)
@@ -797,6 +793,7 @@ _m_: jump to mark _G_: git grep
   :after hydra
   :init
   (setq dtache-detach-key (kbd "C-\\")
+        dtache-show-output-on-attach t
         ;; use custom env script with unbuffer
         dtache-env "~/.emacs.d/dtache-env")
   :config
