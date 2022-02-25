@@ -129,14 +129,7 @@
 ;; (global-set-key [remap eval-expression] 'pp-eval-expression)
 
 ;; install hydra first so it's available to other packages
-(use-package hydra
-  :custom-face 
-  ;; (hydra-face-red      ((t (:foreground "#f2777a"))))
-  ;; (hydra-face-blue     ((t (:foreground "#6699cc"))))
-  ;; (hydra-face-amaranth ((t (:foreground "#f99157"))))
-  ;; (hydra-face-teal     ((t (:foreground "#66cccc"))))
-  ;; (hydra-face-pink     ((t (:foreground "#cc99cc"))))
-  )
+(use-package hydra :demand t)
 
 ;; enable local vars for init file
 (setq safe-local-variable-values '((eval add-hook 'after-save-hook (lambda () ( org-babel-tangle)) nil t))
@@ -253,6 +246,7 @@ my/add-to-global-hydra to add entries")
 (advice-add 'find-file-noselect :around #'sk-package-loading-notice)
 
 (use-package general
+  :demand t
   :config
   ;; create leader key
   ;; bound to M-SPC in insert mode and SPC in all other modes
@@ -287,8 +281,7 @@ my/add-to-global-hydra to add entries")
   (general-define-key
    :states '(normal insert emacs motion visual operater)
    :keymaps 'override
-   "C-SPC" 'my/C-SPC)
-  :demand t)
+   "C-SPC" 'my/C-SPC))
 
 ;; don't confirm when running load-theme interactively
 (advice-add 'load-theme
@@ -298,6 +291,7 @@ my/add-to-global-hydra to add entries")
 
 ;; setup modeline
 (use-package doom-modeline
+  :demand t
   :init
   ;; show word count of region
   (setq doom-modeline-enable-word-count t)
@@ -319,11 +313,12 @@ my/add-to-global-hydra to add entries")
       scroll-preserve-screen-position t)
 
 (use-package modus-themes
+  :demand t
   :init
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-slanted-constructs t
         modus-themes-region '(bg-only)
-        modus-themes-completions 'moderate
+        modus-themes-completions '(moderate)
         modus-themes-prompts '(bold background)
         modus-themes-fringes 'intense
         modus-themes-org-blocks 'grayscale
@@ -413,6 +408,7 @@ my/add-to-global-hydra to add entries")
 
 ;; enable vim keybindings everywhere
 (use-package evil-collection
+  :demand t
   :after evil
   :init
   (setq evil-collection-setup-minibuffer nil)
@@ -440,11 +436,13 @@ my/add-to-global-hydra to add entries")
   (evil-collection-init))
 
 (use-package evil-surround
+  :demand t
   :config
   (global-evil-surround-mode 1))
 
 ; TODO: actually learn these keybindings
 (use-package evil-org
+  :demand t
   :after (:any (:all evil org) (:all evil org-agenda))
   :commands org-agenda
   :init
@@ -498,6 +496,7 @@ my/add-to-global-hydra to add entries")
             "U"   'org-agenda-clock-in))
 (use-package evil-org-agenda
   :straight nil ; don't ensure because it is built in to evil-org
+  :demand t
   :after (:or evil-org org-agenda)
   :config
   (evil-org-agenda-set-keys))
@@ -568,6 +567,7 @@ my/add-to-global-hydra to add entries")
 (use-package all-the-icons)
 
 (use-package all-the-icons-completion
+  :demand t
   :after marginalia
   :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
   :init
@@ -650,7 +650,6 @@ my/add-to-global-hydra to add entries")
 (use-package sudo-edit)
 
 (use-package consult
-  :defer t
   :init
   (defhydra hydra-consult (:color blue :hint nil)
     
@@ -712,8 +711,7 @@ _m_: jump to mark _G_: git grep
   :hook
   (embark-collect-mode . embark-consult-preview-minor-mode))
 
-(use-package consult-yasnippet
-  :after consult)
+(use-package consult-yasnippet)
 
 (use-package corfu
   :demand t
@@ -749,6 +747,8 @@ _m_: jump to mark _G_: git grep
 
 ;; add more capf functions
 (use-package cape
+  :demand t
+  :after corfu
   :init
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-file)
@@ -757,6 +757,7 @@ _m_: jump to mark _G_: git grep
 
 ;; show corfu icons
 (use-package kind-icon
+  :demand t
   :after corfu
   :custom
   (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
@@ -766,6 +767,8 @@ _m_: jump to mark _G_: git grep
 ;; show documentation
 (use-package corfu-doc
   :straight (corfu-doc :type git :host github :repo "galeo/corfu-doc")
+  :demand t
+  :after corfu
   :general (:keymaps 'corfu-map
                      "C-d" 'corfu-doc-toggle
                      ;; scroll-down and scroll-up are reversed for some reason here
@@ -774,6 +777,8 @@ _m_: jump to mark _G_: git grep
 
 ;; better eshell completion
 (use-package pcmpl-args
+  :demand t
+  :after eshell
   :init
   ;; corfu doc told me to add this part
   
@@ -782,13 +787,10 @@ _m_: jump to mark _G_: git grep
 
   ;; Ensure that pcomplete does not write to the buffer
   ;; and behaves as a pure `completion-at-point-function'.
-  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
-
-  :after eshell)
+  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify))
 
 (use-package comint
   :straight nil
-  :defer t
   :init
   ;; TODO: move this somewhere better
   (general-unbind '(insert normal motion visual operator) "C-a")
@@ -810,7 +812,6 @@ _m_: jump to mark _G_: git grep
 
 (use-package eshell
   :straight nil
-  :defer t
   :init
   (setq eshell-banner-message "")
   :config
@@ -841,19 +842,63 @@ _m_: jump to mark _G_: git grep
             "M-n" 'eshell-next-matching-input-from-input
             "C-a" 'eshell-kill-input))
 
+;; use vterm for visual commands
+(use-package eshell-vterm
+  :after eshell
+  :demand t
+  :config
+  (eshell-vterm-mode)
+  ;; use v command to exec command in vterm
+  (defalias 'eshell/v 'eshell-exec-visual))
+
+(use-package eshell-autojump
+  :demand t
+  :after eshell)
+
 (use-package fish-completion
+  :demand t
   :after pcomplete
   :config (global-fish-completion-mode))
 
-(use-package eshell-bookmark
-  :after eshell
+;; enable autosuggestions
+;; TODO: maybe disable this because it depends on company
+(use-package esh-autosuggest
+  :hook (eshell-mode . esh-autosuggest-mode)
+  :general
+  (:keymaps 'esh-autosuggest-active-map
+            "C-t" 'company-complete-selection))
+
+(use-package esh-help
+  :demand t
+  :after esh-mode
   :config
-  (add-hook 'eshell-mode-hook #'eshell-bookmark-setup))
+  (setup-esh-help-eldoc))
+
+(use-package eshell-syntax-highlighting
+  :demand t
+  :after esh-mode
+  :config
+  ;; Enable in all Eshell buffers.
+  (eshell-syntax-highlighting-global-mode +1))
+
+;; show last commands status in fringe
+(use-package eshell-fringe-status
+  :hook (eshell-mode . eshell-fringe-status-mode))
+
+;; (use-package eshell-fixed-prompt
+;;   :hook (eshell-mode . eshell-fixed-prompt-mode))
+
+;; (use-package eshell-bookmark
+;;   :demand t
+;;   :after eshell
+;;   :config
+;;   (add-hook 'eshell-mode-hook #'eshell-bookmark-setup))
 
 ;; enable plan 9 smart shell
 ;; TODO: review these variable settings
 ;; (use-package em-smart
 ;;   :straight nil
+;;   :demand t
 ;;   :after eshell
 ;;   :init
 ;;   (setq eshell-where-to-jump 'begin
@@ -885,7 +930,6 @@ when the windor exits"
 (use-package dtache
   :straight (dtache :type git :host gitlab :repo "niklaseklund/dtache"
                     :fork (:host gitlab :repo "rosetail/dtache"))
-  :after hydra
   :init
   (setq dtache-detach-key (kbd "C-\\")
         dtache-shell-command-initial-input nil
@@ -917,7 +961,6 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
 
 (use-package dtache-consult
   :straight nil
-  :after dtache ; included with dtache
   :bind ([remap dtache-open-session] . dtache-consult-session))
 
 ;; detatch commands run in eshell
@@ -927,7 +970,6 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
 
 (use-package dtache-shell
   :straight nil ; included with dtache
-  :after dtache
   :config (dtache-shell-setup))
 
 ;; enable detatching compile commands
@@ -1024,12 +1066,12 @@ _SPC_: Jump to heading"
   )
 
 (use-package org-appear
+  :demand t
   :after org
   :hook (org-mode . org-appear-mode))
 
 (use-package ox ; needed for org-export-filter-headline-function
   :straight nil
-  :defer t
   :config
   ;; use the soul and csquotes packages
   ;; TODO: see if this can be done with 1 call to add-to-list
@@ -1147,12 +1189,10 @@ _SPC_: Jump to heading"
                 "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js\"></script>\n"
                 "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js\"></script>\n"
                 "<style>pre.src{background:#ffffff;color:#000000;} </style>\n"
-                "<style>#postamble .date{color:#6f6f70;} </style>"))
-  :defer t)
+                "<style>#postamble .date{color:#6f6f70;} </style>")))
 
 (use-package org-agenda
   :straight nil
-  :defer t
   :init
   (setq org-directory "~/org"
         ;; inbox.org must be first here or refiletargets will break
@@ -1311,9 +1351,10 @@ _a_: Agenda, _c_: Capture"
   :config
   (global-flycheck-mode))
 
-(use-package vimish-fold)
+(use-package vimish-fold :demand t)
 
 (use-package evil-vimish-fold
+  :demand t
   :after vimish-fold
   :init
   ;; enable in all modes, not just prog-mode
@@ -1396,9 +1437,7 @@ _D_: edit dir-locals   ^^                     ^^^                     ^^        
                      "C-c p"  'projectile-command-map))
 
 (use-package popwin
-  ;; :after (general hydra)
   :demand t
-  :commands popwin:display-buffer-1
   :init
   (defun my/popwin-eshell ()
     (interactive)
@@ -1439,11 +1478,12 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :defer 5
   :config
   (yas-global-mode))
+
 (use-package yasnippet-snippets
+  :demand t
   :after yasnippet)
 
 (use-package lsp-mode
-  :defer t
   :custom
   (lsp-enable-on-type-formatting nil)
   (lsp-enable-indentation nil)
@@ -1452,7 +1492,6 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
    (c++-mode . lsp)))
 
 (use-package magit
-  :defer t
   :init
   ;; "n" binding gets overridden, so we have to rebind it every time we open magit
   (add-hook 'magit-mode-hook
@@ -1468,7 +1507,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
             "e" 'magit-section-backward))
 
 ;; add support for git forges
-(use-package forge :after magit)
+(use-package forge :demand t :after magit)
 
 (use-package auctex
   :after tex
@@ -1488,6 +1527,11 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
    '("Latexmk" "latexmk -pvc -interaction=nonstopmode %t" TeX-run-TeX nil t
      :help "Make pdf output using latexmk.")
    TeX-command-list))
+
+(use-package flyspell-correct
+  :general
+  (:keymaps 'flyspell-mode-map
+            "C-;" 'flyspell-correct-wrapper))
 
 (use-package telega
   :init
@@ -1509,18 +1553,6 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 
 (use-package package.use-mode
   :straight (package.use-mode :type git :host github :repo "C-xC-c/package.use-mode"))
-
-(use-package esh-help
-  :after esh-mode
-  :config
-  (setup-esh-help-eldoc))
-
-(use-package eshell-syntax-highlighting
-  :after esh-mode
-  :demand t
-  :config
-  ;; Enable in all Eshell buffers.
-  (eshell-syntax-highlighting-global-mode +1))
 
 (use-package rainbow-mode
   :init
@@ -1567,9 +1599,9 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
          (conf-mode . highlight-numbers-mode)))
 
 (use-package smart-compile
-  :defer t
   :init
-  (my/add-to-global-hydra '("b" smart-compile "Smart Compile" :column "Tools")))
+  ;; (my/add-to-global-hydra '("b" smart-compile "Smart Compile" :column "Tools"))
+  )
 
 (use-package undo-tree
   :demand t
@@ -1579,11 +1611,9 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (evil-undo-system 'undo-tree))
 
 (use-package minimap
-  :defer t
   :init (setq minimap-window-location 'right))
 
 (use-package vterm
-  :defer t
   :init (setq vterm-always-compile-module t))
 
 ;; reset file-name-handler-alist

@@ -41,7 +41,7 @@
  (position . 1641))
 ("org-capture-last-stored"
  (filename . "~/org/inbox.org")
- (front-context-string . "* TODO make dtac")
- (rear-context-string . "2-23 Wed 15:05]\n")
- (position . 209))
+ (front-context-string . "* TODO make eshe")
+ (rear-context-string . "2-23 Wed 17:38]\n")
+ (position . 315))
 )
