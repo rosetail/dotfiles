@@ -407,4 +407,36 @@ fi
 - basically just extends normal file permissions
 - lets you give permissions to multiple users or groups
   - these are called named users and named groups
--  
+- users with ~CAP_FOWNER~ capability can set ACL's on any file or dir
+- files inheret acls from parent dirs
+- filesystems need to be mounted with acl support, but usually they are automatically mounted that way
+- ~ls -l~ shows a + after permission string if there are ACLs
+  - group permission shows mask setting
+  - other permission should usually be none because only people with ACL permission should access them
+  - show full ACL settings with ~getfacl /file/~
+  - works on directory too
+    - comments start with #
+    - user format
+      - starts with user::<permission> for owner
+      - format is user:<username>:permissions
+      - ends in #effective:rw- if executable permissions are masked
+      - other::<permission> is default permission
+      - mask::<permission> shows maximum permissions for every possible user
+    - group permissions are the same but start with group instead of user
+    - standard acl entry:
+#+begin_example
+user::rwx
+user:consultant3:---
+user:1005:rwx
+group::rwx
+group:consultant1:r-x
+group:2210:rwx
+mask::rwx
+other::---
+#+end_example
+- default user entries
+  - default:user::<permission> is default acl owner permission
+  - default:user:<user>:permission is default for given user
+  - default:mask::rxw is default mask
+  - default:other::--- is default world permission
+- groups are the same but use group instead of user

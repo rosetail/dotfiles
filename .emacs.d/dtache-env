@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+TERM="eterm-color"
 dtache_command="$*"
 
 if eval script --quiet -f -e -c "\"$dtache_command\"" /dev/null; then

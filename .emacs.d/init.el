@@ -1,6 +1,5 @@
 ;;; -*- lexical-binding: t; -*-
 ;; lexical binding improves load time
-
 ;; measure startup time
 (add-hook 'emacs-startup-hook
           (lambda ()
@@ -35,6 +34,10 @@
 ;;       use-package-always-ensure t)
 
 ;; set up straight
+;; speed up init with this
+;; from https://www.reddit.com/r/emacs/comments/mtb05k/emacs_init_time_decreased_65_after_i_realized_the/
+(setq straight-check-for-modifications '(check-on-save find-when-checking))
+
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -51,7 +54,8 @@
 ;; set up use package
 (straight-use-package 'use-package)
 (setq use-package-compute-statistics t
-      straight-use-package-by-default t)
+      straight-use-package-by-default t
+      use-package-always-defer t)
 
 ;; indent with space, not tab
 (setq-default indent-tabs-mode nil)
@@ -247,27 +251,6 @@ my/add-to-global-hydra to add entries")
 
 (advice-add 'require :around #'sk-package-loading-notice)
 (advice-add 'find-file-noselect :around #'sk-package-loading-notice)
-
-(defun my/eshell-scratchpad ()
-  "This should be called from the command line to launch emacs with a scratchpad
-This sets the 'eshell-buffer' parameter so the buffer can be killed when the frame closes"
-  (eshell t)
-  ;; don't ever delete the first eshell buffer
-  (unless (string= eshell-buffer-name (buffer-name))
-    (set-frame-parameter nil 'eshell-buffer (current-buffer))))
-
-(defun my/close-eshell-scratchpad (&optional _frame)
-  "Closes the eshell scratchpad. To be run in 'delete-frame-functions'"
-  (let ((eshell-buffer (frame-parameter nil 'eshell-buffer)))
-    (when eshell-buffer
-      (kill-buffer eshell-buffer))))
-
-(defun eshell/saveterm ()
-  "Run this in an eshell scratchpad to stopp the the buffer from being killed
-when the windor exits"
-  (set-frame-parameter nil 'eshell-buffer nil))
-
-(add-hook 'delete-frame-functions 'my/close-eshell-scratchpad)
 
 (use-package general
   :config
@@ -530,20 +513,43 @@ when the windor exits"
   (ctrlf-mode))
 
 (use-package vertico
+  ;; Special recipe to load extensions conveniently
+  :straight (vertico :files (:defaults "extensions/*")
+                     :includes (vertico-indexed
+                                vertico-flat
+                                vertico-grid
+                                vertico-mouse
+                                vertico-quick
+                                vertico-buffer
+                                vertico-repeat
+                                vertico-reverse
+                                vertico-directory
+                                vertico-multiform
+                                vertico-unobtrusive))
   :demand t
   ;; TODO: move this to somewhere better
   :general ("C-x C-a" 'find-file)
+  (:keymaps 'vertico-map
+            "C-M-n" 'vertico-next-group
+            "C-M-e" 'vertico-previous-group
+            "C-q" 'vertico-quick-exit
+            "M-q" 'my/vertico-quick-embark
+            "DEL" 'vertico-directory-delete-char
+            "C-<backspace>" 'vertico-directory-delete-word)
+  :hook ((minibuffer-setup . vertico-repeat-save) ; Make sure vertico state is saved
+         (rfn-eshadow-update-overlay . vertico-directory-tidy)) ; this is for vertico-directory
+  
+  :init
+  ;; from https://kristofferbalintona.me/posts/vertico-marginalia-all-the-icons-completion-and-orderless/
+  (defun my/vertico-quick-embark (&optional arg)
+    "Embark on candidate using quick keys."
+    (interactive)
+    (when (vertico-quick-jump)
+      (embark-act arg)))
   :config
+
   (savehist-mode)
   (vertico-mode))
-
-(use-package orderless
-  :demand t
-  :init
-  (setq orderless-matching-styles '(orderless-initialism orderless-prefixes orderless-regexp)
-        orderless-component-separator " +\\|\\\\")
-
-  :custom (completion-styles '(orderless)))
 
 (use-package marginalia
   :demand t
@@ -558,6 +564,23 @@ when the windor exits"
   (add-to-list 'marginalia-annotator-registry
 	       '(symbol-help marginalia-annotate-variable)))
 
+;; show icons in completeion
+(use-package all-the-icons)
+
+(use-package all-the-icons-completion
+  :after marginalia
+  :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+  :init
+  (all-the-icons-completion-mode))
+
+(use-package orderless
+  :demand t
+  :init
+  (setq orderless-matching-styles '(orderless-initialism orderless-prefixes orderless-regexp)
+        orderless-component-separator " +\\|/")
+
+  :custom (completion-styles '(orderless)))
+
 (use-package embark
   :demand t
   :after which-key
@@ -569,12 +592,62 @@ when the windor exits"
   ;;         (which-key--show-keymap "Embark" map nil nil 'no-paging)
   ;;         #'which-key--hide-popup-ignore-command)
   ;;       embark-become-indicator embark-action-indicator)
+  :config
+  ;; from embark wiki
+  (embark-define-keymap embark-straight-map
+    "Keymap for straight commands"
+    ("v" straight-visit-package-website)
+    ("r" straight-get-recipe)
+    ("i" straight-use-package)
+    ("c" straight-check-package)
+    ("F" straight-pull-package)
+    ("f" straight-fetch-package)
+    ("p" straight-push-package)
+    ("n" straight-normalize-package)
+    ("m" straight-merge-package))
+
+  (add-to-list 'embark-keymap-alist '(straight . embark-straight-map))
+
+  (add-to-list 'marginalia-prompt-categories '("recipe\\|package" . straight))
+  
+  ;; show type of actions available in modeline
+  ;; also from embark wiki
+  (defvar embark--target-mode-timer nil)
+  (defvar embark--target-mode-string "")
+
+  (defun embark--target-mode-update ()
+    (setq embark--target-mode-string
+          (if-let (targets (embark--targets))
+              (format "[%s%s] "
+                      (propertize (symbol-name (plist-get (car targets) :type)) 'face 'bold)
+                      (mapconcat (lambda (x) (format ", %s" (plist-get x :type)))
+                                 (cdr targets)
+                                 ""))
+            "")))
+
+  (define-minor-mode embark-target-mode
+    "Shows the current targets in the modeline."
+    :global t
+    (setq mode-line-misc-info (assq-delete-all 'embark-target-mode mode-line-misc-info))
+    (when embark--target-mode-timer
+      (cancel-timer embark--target-mode-timer)
+      (setq embark--target-mode-timer nil))
+    (when embark-target-mode
+      (push '(embark-target-mode (:eval embark--target-mode-string)) mode-line-misc-info)
+      (setq embark--target-mode-timer
+            (run-with-idle-timer 0.1 t #'embark--target-mode-update))))
+
+  (embark-target-mode 1)
+
   :general
+  (:keymaps 'embark-file-map
+            "s" 'sudo-edit)
   (:keymaps 'override
             :states '(normal insert emacs motion visual operater)
             "C-." 'embark-act)
   (:keymaps 'vertico-map
             "C-." 'embark-act))
+(use-package sudo-edit)
 
 (use-package consult
   :defer t
@@ -643,6 +716,7 @@ _m_: jump to mark _G_: git grep
   :after consult)
 
 (use-package corfu
+  :demand t
   :init
   (setq tab-always-indent 'complete
         corfu-quit-no-match t
@@ -787,12 +861,34 @@ _m_: jump to mark _G_: git grep
 ;;         eshell-smart-space-goes-to-end t)
 ;;   :hook (eshell-mode . eshell-smart-initialize))
 
+(defun my/eshell-scratchpad ()
+  "This should be called from the command line to launch emacs with a scratchpad
+This sets the 'eshell-buffer' parameter so the buffer can be killed when the frame closes"
+  (eshell t)
+  ;; don't ever delete the first eshell buffer
+  (unless (string= eshell-buffer-name (buffer-name))
+    (set-frame-parameter nil 'eshell-buffer (current-buffer))))
+
+(defun my/close-eshell-scratchpad (&optional _frame)
+  "Closes the eshell scratchpad. To be run in 'delete-frame-functions'"
+  (let ((eshell-buffer (frame-parameter nil 'eshell-buffer)))
+    (when eshell-buffer
+      (kill-buffer eshell-buffer))))
+
+(add-hook 'delete-frame-functions 'my/close-eshell-scratchpad)
+
+(defun eshell/saveterm ()
+  "Run this in an eshell scratchpad to stopp the the buffer from being killed
+when the windor exits"
+  (set-frame-parameter nil 'eshell-buffer nil))
+
 (use-package dtache
   :straight (dtache :type git :host gitlab :repo "niklaseklund/dtache"
                     :fork (:host gitlab :repo "rosetail/dtache"))
   :after hydra
   :init
   (setq dtache-detach-key (kbd "C-\\")
+        dtache-shell-command-initial-input nil
         dtache-show-output-on-attach t
         ;; use custom env script with unbuffer
         dtache-env "~/.emacs.d/dtache-env")
@@ -817,8 +913,7 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
   (defvar embark-dtache-map (make-composed-keymap dtache-action-map embark-general-map))
   (add-to-list 'embark-keymap-alist '(dtache . embark-dtache-map))
   
-  :hook (after-init . dtache-setup)
-  :bind (([remap async-shell-command] . dtache-shell-command)))
+  :hook (after-init . dtache-setup))
 
 (use-package dtache-consult
   :straight nil
@@ -879,8 +974,8 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
         org-startup-folded t
         org-hide-emphasis-markers t
         org-catch-invisible-edits 'smart
-        org-ctrl-k-protect-subtree t
-        org-hide-leading-stars t)
+        org-ctrl-k-protect-subtree t)
+  ;; org-hide-leading-stars t
   ;; org-adapt-indentation nil
   ;; org-startup-indented t
 
@@ -1301,8 +1396,9 @@ _D_: edit dir-locals   ^^                     ^^^                     ^^        
                      "C-c p"  'projectile-command-map))
 
 (use-package popwin
-  :after (general hydra)
+  ;; :after (general hydra)
   :demand t
+  :commands popwin:display-buffer-1
   :init
   (defun my/popwin-eshell ()
     (interactive)
@@ -1392,6 +1488,10 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
    '("Latexmk" "latexmk -pvc -interaction=nonstopmode %t" TeX-run-TeX nil t
      :help "Make pdf output using latexmk.")
    TeX-command-list))
+
+(use-package telega
+  :init
+  (setq telega-old-date-format "%M.%D.%Y"))
 
 (use-package transmission
   :init
