@@ -283,6 +283,17 @@ my/add-to-global-hydra to add entries")
    :keymaps 'override
    "C-SPC" 'my/C-SPC))
 
+;; TODO put recentf in a use-package statement before here
+(use-package no-littering
+  :demand t
+  :after recentf
+  :init
+  :config
+  (add-to-list 'recentf-exclude no-littering-var-directory)
+  (add-to-list 'recentf-exclude no-littering-etc-directory)
+  ;; keep eshell aliases in var
+  (setq eshell-aliases-file "/home/rose/.emacs.d/var/eshell/alias"))
+
 ;; don't confirm when running load-theme interactively
 (advice-add 'load-theme
             :around (lambda

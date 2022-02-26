@@ -1,0 +1,9 @@
+echo $TERM
+alias foo bar
+j
+cd .emacsbackup
+ls
+cd eshell
+ls
+cat autojump
+cp autojump ~/.emacs.d/var/eshell/
