@@ -36,11 +36,13 @@
 ;; set up straight
 ;; speed up init with this
 ;; from https://www.reddit.com/r/emacs/comments/mtb05k/emacs_init_time_decreased_65_after_i_realized_the/
-(setq straight-check-for-modifications '(check-on-save find-when-checking))
+(setq straight-check-for-modifications '(check-on-save find-when-checking)
+      ;; make straight obey no-littering
+      straight-base-dir "~/.emacs.d/var")
 
 (defvar bootstrap-version)
 (let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+       (expand-file-name "var/straight/repos/straight.el/bootstrap.el" user-emacs-directory))
       (bootstrap-version 5))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
@@ -945,7 +947,9 @@ when the windor exits"
         dtache-shell-command-initial-input nil
         dtache-show-output-on-attach t
         ;; use custom env script with unbuffer
-        dtache-env "~/.emacs.d/dtache-env")
+        dtache-env "~/.emacs.d/var/dtache/dtache-env"
+        ;; obey no-littering
+        dtache-db-directory "~/.emacs.d/var/dtache")
   :config
   ;; create a hydra for all the common actions
   (defhydra hydra-dtache (:color blue :hint nil)

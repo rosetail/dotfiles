@@ -2,8 +2,13 @@
 ;;; This format is meant to be slightly human-readable;
 ;;; nevertheless, you probably don't want to edit it.
 ;;; -*- End Of Bookmark File Format Version Stamp -*-
-(("dtache"
- (filename . "~/.emacs.d/straight/repos/dtache/")
+(("init"
+ (filename . "~/.emacs.d/init.org")
+ (front-context-string . "* early-init.el\n")
+ (rear-context-string)
+ (position . 1))
+("dtache"
+ (filename . "~/.emacs.d/var/straight/repos/dtache/")
  (front-context-string . "CHANGELOG.org\n  ")
  (rear-context-string . "33 Feb 12 18:13 ")
  (position . 183))
@@ -29,9 +34,4 @@
  (front-context-string . "agenda.org\n  -rw")
  (rear-context-string . "53 Feb  9 21:26 ")
  (position . 153))
-("init"
- (filename . "~/.emacs.d/init.org")
- (front-context-string . "* early-init.el\n")
- (rear-context-string)
- (position . 1))
 )

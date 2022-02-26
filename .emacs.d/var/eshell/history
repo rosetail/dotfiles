@@ -7,3 +7,8 @@ cd eshell
 ls
 cat autojump
 cp autojump ~/.emacs.d/var/eshell/
+cd .emacs.d
+ls
+mv straight var
+killall emacs
+yadm status
