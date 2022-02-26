@@ -408,7 +408,7 @@ fi
 - lets you give permissions to multiple users or groups
   - these are called named users and named groups
 - users with ~CAP_FOWNER~ capability can set ACL's on any file or dir
-- files inheret acls from parent dirs
+- files inherit acls from parent dirs
 - filesystems need to be mounted with acl support, but usually they are automatically mounted that way
 - ~ls -l~ shows a + after permission string if there are ACLs
   - group permission shows mask setting
@@ -440,3 +440,21 @@ other::---
   - default:mask::rxw is default mask
   - default:other::--- is default world permission
 - groups are the same but use group instead of user
+- acl mask only works on named users/groups and group owner, not on owner and other
+- permission priority is owner > named user > group owner/named group > other
+- systemd uses acls on certain files
+- ~setfacl~ modifies acls
+  - uses standard rwx for permissions
+  - use X to give dirs +x but not files
+  - ~setfacl -m~ reads from stdin
+  - ~setfacl -m u:foo:rX~ sets permission for user foo
+  - ~setfacl -M /file/~ reads from file
+  - set multiple entries by separating them with a comma
+  - ~setfacl -m u::rwx,g:consultants:rX,o::- /file/~
+  - ~getfacl file-A | setfacl --set-file=- file-B~ to copy an acl to another file (the - means read file from stdin)
+  - use ~-R~ to recursively set acl
+  - ~setfacl -x u:foo~ to delete acl for user foo
+  - ~setfacl -b /file/~ to delete all acls for a file
+  
+
+#  LocalWords:  dirs rwx setfacl systemd acl rxw

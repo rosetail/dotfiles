@@ -598,7 +598,6 @@ my/add-to-global-hydra to add entries")
     "Keymap for straight commands"
     ("v" straight-visit-package-website)
     ("r" straight-get-recipe)
-    ("i" straight-use-package)
     ("c" straight-check-package)
     ("F" straight-pull-package)
     ("f" straight-fetch-package)
@@ -1191,10 +1190,19 @@ _SPC_: Jump to heading"
                 "<style>pre.src{background:#ffffff;color:#000000;} </style>\n"
                 "<style>#postamble .date{color:#6f6f70;} </style>")))
 
+;; enable org-checklist to uncheck boxes with habits
+(use-package org-contrib :demand t :after org)
+(use-package org-checklist :demand t :after org-contrib
+  :config
+  (add-to-list 'org-modules 'org-checklist t))
+
 (use-package org-agenda
   :straight nil
   :init
   (setq org-directory "~/org"
+        ;; set default priority to C and add D priority
+        org-priority-default 67
+        org-priority-lowest 68
         ;; inbox.org must be first here or refiletargets will break
         org-agenda-files (list "~/org/inbox.org"
                                "~/org/agenda.org")
@@ -1216,6 +1224,10 @@ _SPC_: Jump to heading"
         org-refile-use-outline-path 'file
         org-outline-path-complete-in-steps nil
 
+        ;; don't set bookmarks
+        org-capture-bookmark nil
+        org-bookmark-names-plist nil
+        
         org-log-done 'time ; record when tasks are completed so we can see what was done today
 
         org-capture-templates
@@ -1234,7 +1246,7 @@ _SPC_: Jump to heading"
   (defun my/org-agenda-skip-all-siblings-but-highest-priority ()
     "Skip all but the highest priority TODO entry that is unscheduled and has no deadline."
     (let ((should-skip-entry nil)
-          (priority (my/most-positive-fixnum-if-nil
+          (priority (my/return-67.5-if-nil
                      (org-element-property :priority (org-element-at-point)))))
       (unless (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
         (setq should-skip-entry t))
@@ -1252,7 +1264,7 @@ _SPC_: Jump to heading"
     "Return t if todo state of the element at point is \"TODO\", it is not scheduled,
 it has no deadline, and it's priority is >= PRIORITY"
     ;; it should be noted that in org, smallers numbers represent higher priorities
-    (let ((current-heading-priority (my/most-positive-fixnum-if-nil
+    (let ((current-heading-priority (my/return-67.5-if-nil
                                      (org-element-property :priority (org-element-at-point)))))
       (and (string= "TODO" (org-get-todo-state))
            (not (org-element-property :deadline (org-element-at-point)))
@@ -1263,21 +1275,26 @@ it has no deadline, and it's priority is >= PRIORITY"
     "Return t if the current heading has a sibling below it of a
 higher priority"
     (let ((return-val nil)
-          (priority (my/most-positive-fixnum-if-nil
+          (priority (my/return-67.5-if-nil
                      (org-element-property :priority (org-element-at-point)))))
       (save-excursion
         (while (org-goto-sibling)
           (when (and (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
-                     (> priority (my/most-positive-fixnum-if-nil
+                     (> priority (my/return-67.5-if-nil
                                   (org-element-property :priority (org-element-at-point)))))
             (setq return-val t))))
       return-val))
 
-  (defun my/most-positive-fixnum-if-nil (num)
-    "If NUM is nil, return most-positive-fixnum. Otherwise return NUM"
+  ;; TODO: see about returning org-priority-default instead
+  (defun my/return-67.5-if-nil (num)
+    "If NUM is nil, return 67.5 Otherwise return NUM.
+Org mode reads 67.5 as the priority between C and D. This
+function is meant to be called with the priority of an org
+heading, and if the priority is not set it will assume it's
+between C and D."
     (if num
         num
-      most-positive-fixnum))
+      67.5))
 
   (defun my/org-print-parent-heading ()
     "Print the name of the parent of the org element at point
@@ -1339,9 +1356,18 @@ _a_: Agenda, _c_: Capture"
 
   (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc"))
   
+  ;; mark task as done when all checkboxes marked
+  ;; from org wiki
+  ;; (defun org-summary-todo (n-done n-not-done)
+  ;;   "Switch entry to DONE when all subentries are done, to TODO otherwise."
+  ;;   (let (org-log-done org-log-states)   ; turn off logging
+  ;;     (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+
+
   ;; start with cursor on first item
   ;; :hook 
-  ;; (org-agenda-mode . my/disable-cursor)
+  ;; ;; (org-agenda-mode . my/disable-cursor)
+  ;; (org-after-todo-statistics . org-summary-todo)
   )
 
 (use-package flycheck
