@@ -4,7 +4,7 @@
 ;;; -*- End Of Bookmark File Format Version Stamp -*-
 (("init"
  (filename . "~/.emacs.d/init.org")
- (front-context-string . "* early-init.el\n")
+ (front-context-string . "* setup\n** early")
  (rear-context-string)
  (position . 1))
 ("dtache"

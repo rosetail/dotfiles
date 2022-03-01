@@ -1,7 +1,0 @@
-alias l ls $*
-alias la ls -A $*
-alias ll ls -lh $*
-alias lla ls -lhA $*
-alias ff find-file $1
-alias d dired $1
-alias c call-interactively {intern $1}

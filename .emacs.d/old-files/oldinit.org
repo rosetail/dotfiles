@@ -1,0 +1,2099 @@
+* early-init.el
+#+begin_src emacs-lisp :tangle early-init.el
+;;; -*- lexical-binding: t; -*-
+;; taken from doom emacs
+
+;; file-name-handler-alist is consulted a lot so disable it during startup
+(defvar my/file-name-handler-alist file-name-handler-alist)
+(setq file-name-handler-alist nil)
+;; Defer garbage collection further back in the startup process
+(setq gc-cons-threshold most-positive-fixnum)
+
+;; Resizing the Emacs frame can be a terribly expensive part of changing the
+;; font. By inhibiting this, we easily halve startup times with fonts that are
+;; larger than the system default.
+(setq frame-inhibit-implied-resize t)
+
+;; Prevent the glimpse of un-styled Emacs by disabling these UI elements early.
+(push '(menu-bar-lines . 0) default-frame-alist)
+(push '(tool-bar-lines . 0) default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
+(push '(font . "monospace-10") default-frame-alist)
+
+;; Prevent unwanted runtime builds in gccemacs (native-comp); packages are
+;; compiled ahead-of-time when they are installed and site files are compiled
+;; when gccemacs is installed.
+;; (setq comp-deferred-compilation t)
+
+;; make compile cache obey no-littering
+(when (fboundp 'startup-redirect-eln-cache)
+  (startup-redirect-eln-cache
+   (convert-standard-filename
+    (expand-file-name  "var/eln-cache/" user-emacs-directory))))
+
+
+;; don't enable package.el so we can use straight
+(setq package-enable-at-startup nil)
+#+end_src
+
+* initial setup
+#+begin_src emacs-lisp :tangle yes
+;;; -*- lexical-binding: t; -*-
+;; lexical binding improves load time
+;; measure startup time
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "Emacs ready in %s with %d garbage collections."
+                     (format "%.2f seconds"
+                             (float-time
+                              (time-subtract after-init-time before-init-time)))
+                     gcs-done)))
+
+;; re-enable garbage collection after everything is done
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold 16777216 ; 16mb
+                  gc-cons-percentage 0.1)))
+
+;; intialize packages and add repositories
+;; (require 'package)
+;; (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/"))
+;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;; (package-initialize)
+;; (setq package-archive-priorities
+;;       '(("melpa" . 2)
+;;         ("melpa-stable" . 1)
+;;         ("gnu" . 0)))
+
+;; (unless (package-installed-p 'use-package)
+;;   (package-refresh-contents)
+;;   (package-install 'use-package))
+;; set up use-package
+;; (require 'use-package)
+;; (setq use-package-compute-statistics t
+;;       use-package-always-ensure t)
+
+;; set up straight
+;; speed up init with this
+;; from https://www.reddit.com/r/emacs/comments/mtb05k/emacs_init_time_decreased_65_after_i_realized_the/
+(setq straight-check-for-modifications '(check-on-save find-when-checking)
+      ;; make straight obey no-littering
+      straight-base-dir "~/.emacs.d/var")
+
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "var/straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;; set up use package
+(straight-use-package 'use-package)
+(setq use-package-compute-statistics t
+      straight-use-package-by-default t
+      use-package-always-defer t)
+
+;; indent with space, not tab
+(setq-default indent-tabs-mode nil)
+
+;; enable eldoc
+(global-eldoc-mode 1)
+
+;; enable recentf-mode
+;; (recentf-mode 1)
+
+;; stop putting backup files everywhere
+(setq version-control t       ;; Use version numbers for backups.
+      kept-new-versions 10    ;; Number of newest versions to keep.
+      kept-old-versions 0     ;; Number of oldest versions to keep.
+      delete-old-versions t   ;; Don't ask to delete excess backup versions.
+      backup-by-copying t     ;; Copy all files, don't rename them.
+      vc-make-backup-files t)  ;; also backup files under version control
+
+;; set up indentation
+(setq-default c-basic-offset 4
+              cperl-indent-level 4)
+
+;; https://stackoverflow.com/questions/14668744/emacs-indent-for-c-class-method
+(add-hook 'c++-mode-hook
+          (lambda ()
+            (c-set-offset 'access-label -2)
+            (c-set-offset 'inline-open 0)))
+
+
+(setq tab-width 4
+      c-default-style '((java-mode . "java")
+                        (awk-mode . "awk")
+                        (other . "k&r")))
+
+
+;; don't ask to save files when compiling
+(setq compilation-ask-about-save nil
+      compilation-save-buffers-predicate '(lambda () nil))
+
+;; Make the compilation window automatically disappear - from enberg on #emacs
+(setq compilation-finish-functions
+      (lambda (buf str)
+        (if (null (string-match ".*exited abnormally.*" str))
+            ;; no errors, make the compilation window go away in a few seconds
+            (progn
+	      (run-at-time
+	       "1 sec" nil 'delete-windows-on
+	       (get-buffer-create "*compilation*"))
+	      (message "No Compilation Errors!")))))
+
+;; make yes or no prompts faster
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+;; don't show nativecomp warnings
+(setq warning-suppress-log-types '((comp)))
+
+;; make middle click paste not move the cursor
+(setq mouse-yank-at-point t)
+
+;; use electric pair mode
+(electric-pair-mode)
+;; disable <> pair
+(setq electric-pair-inhibit-predicate
+      `(lambda (c)
+         (if (char-equal c ?\<) t (,electric-pair-inhibit-predicate c))))
+
+;; use pp-eval-last-sexp instead of eval-last-sexp
+;; TODO: put this in the use-package emacs declaration next refactor
+;; (global-set-key [remap eval-last-sexp] 'pp-eval-last-sexp)
+;; (global-set-key [remap eval-expression] 'pp-eval-expression)
+
+;; install hydra first so it's available to other packages
+(use-package hydra :demand t)
+
+;; enable local vars for init file
+(setq safe-local-variable-values '((eval add-hook 'after-save-hook (lambda () ( org-babel-tangle)) nil t))
+      ;; this is for the dtache repo
+      ignored-local-variable-values '((magit-todos-exclude-globs))
+      warning-suppress-types '((org-element-cache)))
+
+(recentf-mode 1)
+
+;; always save bookmarks
+(setq bookmark-save-flag 1)
+
+
+;; allow C-m and M-i binding
+;; TODO: rename this
+;; from https://emacs.stackexchange.com/questions/20240/how-to-distinguish-c-m-from-return
+;; also from https://emacs.stackexchange.com/questions/31348/local-function-key-map-gets-overwritten-by-emacsclient/31359#31359
+(defun my/allow-C-m-binding (&optional frame)
+  "Make frame- and/or terminal-local changes."
+  (with-selected-frame (or frame (selected-frame))
+    (define-key input-decode-map [?\C-m] [C-m])))
+
+;; Run now, for non-daemon Emacs...
+(my/allow-C-m-binding)
+;; ...and later, for new frames / emacsclient
+(add-hook 'after-make-frame-functions 'my/allow-C-m-binding)
+
+#+end_src
+
+* functions
+** replace cursor with hl-line
+#+begin_src elisp :tangle yes
+(defun my/disable-cursor ()
+  (interactive)
+  (hl-line-mode)
+  ;; hide the cursor
+  ;; idk what this does but it works
+  (setq-local evil-default-cursor '(ignore))
+  (setq-local cursor-type nil))
+#+end_src
+
+** global hydra
+#+begin_src emacs-lisp :tangle yes
+(defvar my/global-hydra-heads-list '()
+  "List of hydra heads to be used by global-hydra. Use
+my/add-to-global-hydra to add entries")
+
+(defun my/add-to-global-hydra (head)
+  "add HEAD to my/global-hydra-heads-list"
+  ;; don't ever add SPC or ESC to GLOBAL-HYDRA
+  (catch 'invalid-head
+    (when (or (string= (car head) "ESC") (string= (car head) "SPC"))
+      (throw 'invalid-head "Can't add ESC or SPC to GLOBAL-HYDRA"))
+    ;; if there is already a head with the same keybinding, remove it
+    (let ((current-head nil))
+      (dolist (current-head my/global-hydra-heads-list)
+        (when (string= (car head) (car current-head))
+          (setq my/global-hydra-heads-list ; for some reason this doesn't work unless we use setq
+                (delete current-head my/global-hydra-heads-list)))))
+    ;; add the new head to the hydra
+    (add-to-list 'my/global-hydra-heads-list head)))
+
+(defun my/global-hydra ()
+  "Global hydra that functions like a leader key. Add heads with `my/add-to-global-hydra`"
+  (interactive)
+  (call-interactively
+   (eval `(defhydra my-hydra (:hint nil :color blue)
+            ,@my/global-hydra-heads-list))))
+
+;; start by adding TAB
+(my/add-to-global-hydra '("TAB"
+                          (lambda ()
+                            (interactive)
+                            (save-excursion
+                              (mark-whole-buffer)
+                              (indent-for-tab-command)))
+                          "Indent Buffer" :column "Editing"))
+
+#+end_src
+
+** major mode hydra
+#+begin_src emacs-lisp :tangle yes
+(defun my/major-mode-hydra ()
+  "Call `<major-mode>-hydra/body` if it is defined"
+  (interactive)
+  (let ((hydra-name (intern (concat (symbol-name major-mode) "-hydra/body"))))
+    (if (fboundp hydra-name)
+        (call-interactively hydra-name)
+      (message (concat "No hydra defined for " (symbol-name major-mode))))))
+
+(my/add-to-global-hydra '("m" my/major-mode-hydra "Major Mode" :column "Tools"))
+#+end_src
+
+** package loading notice
+#+begin_src emacs-lisp :tangle yes
+;; from https://gist.github.com/tttuuu888/267a8a56c207d725ea999e353646eec9
+(defvar sk-pacakge-loading-notice-list '(yasnippet))
+;; (defvar sk-pacakge-loading-notice-list '(org yasnippet))
+
+(defun sk-package-loading-notice (old &rest r)
+  (let* ((elt (car r))
+         (mode
+          (when (stringp elt)
+            (let ((ret (assoc-default elt auto-mode-alist 'string-match)))
+              (and (symbolp ret) (symbol-name ret)))))
+         (pkg
+          (cond ((symbolp elt) elt)
+                ((stringp mode) (intern (string-remove-suffix "-mode" mode)))
+                (t nil))))
+    (if (not (member pkg sk-pacakge-loading-notice-list))
+        (apply old r)
+      (let ((msg (capitalize (format " %s loading ..." pkg)))
+            (ovr (make-overlay (point) (point))))
+        (when (fboundp 'company-cancel) (company-cancel))
+        (setq sk-pacakge-loading-notice-list
+              (delq pkg sk-pacakge-loading-notice-list))
+        (unless sk-pacakge-loading-notice-list
+          (advice-remove 'require #'sk-package-loading-notice)
+          (advice-remove 'find-file #'sk-package-loading-notice))
+        (message msg)
+        (overlay-put ovr 'after-string
+                     (propertize msg 'face '(:inverse-video t :weight bold)))
+        (redisplay)
+        (let ((ret (apply old r)))
+          (delete-overlay ovr)
+          ret)))))
+
+(advice-add 'require :around #'sk-package-loading-notice)
+(advice-add 'find-file-noselect :around #'sk-package-loading-notice)
+#+end_src
+
+* general
+#+begin_src emacs-lisp :tangle yes
+(use-package general
+  :demand t
+  :config
+  ;; create leader key
+  ;; bound to M-SPC in insert mode and SPC in all other modes
+  ;; this has now been replaced with my/global-hydra
+  ;; (general-create-definer leader-def
+  ;;   :states '(normal insert emacs motion visual operater)
+  ;;   :keymaps 'override
+  ;;   :prefix "SPC"
+  ;;   :non-normal-prefix "C-SPC"
+  ;;   :prefix-map 'leader-prefix-map)
+
+  ;; ;; global leader keys
+  ;; (leader-def
+  ;;   ;; indent whole buffer
+  ;;   "TAB" (lambda ()
+  ;;           (interactive)
+  ;;           (save-excursion
+  ;;             (mark-whole-buffer)
+  ;;             (indent-for-tab-command))))
+  ;; we have to demand general to global leader keys get bound during init
+  (general-define-key
+   :states '(normal motion visual operater)
+   :keymaps 'override
+   "SPC" 'my/global-hydra)
+
+  (defun my/C-SPC (arg)
+    "Call set-mark-command if there's a prefix arg, otherwise call my/global-hydra"
+    (interactive "P")
+    (if arg
+        (set-mark-command arg)
+      (call-interactively #'my/global-hydra)))
+  (general-define-key
+   :states '(normal insert emacs motion visual operater)
+   :keymaps 'override
+   "C-SPC" 'my/C-SPC))
+#+end_src
+
+* no-littering
+#+begin_src emacs-lisp :tangle yes
+;; TODO put recentf in a use-package statement before here
+(use-package no-littering
+  :demand t
+  :after recentf
+  :init
+  :config
+  (add-to-list 'recentf-exclude no-littering-var-directory)
+  (add-to-list 'recentf-exclude no-littering-etc-directory)
+  ;; keep eshell aliases in var
+  (setq eshell-aliases-file "/home/rose/.emacs.d/var/eshell/alias")
+  ;; put autosaves in var
+  auto-save-file-name-transforms
+  `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+#+end_src
+
+* visual customization
+#+begin_src emacs-lisp :tangle yes
+;; don't confirm when running load-theme interactively
+(advice-add 'load-theme
+            :around (lambda
+                      (fn theme &optional no-confirm no-enable)
+                      (funcall fn theme t)))
+
+;; setup modeline
+(use-package doom-modeline
+  :demand t
+  :init
+  ;; show word count of region
+  (setq doom-modeline-enable-word-count t)
+  (doom-modeline-mode))
+
+;; show line numbers in fringe, but only in programming modes
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
+(add-hook 'conf-mode-hook 'display-line-numbers-mode)
+
+;; enable word wrapping in modes deriving from text-mode
+(add-hook 'text-mode-hook 'visual-line-mode)
+
+;; show column number in modeline
+(column-number-mode 1)
+
+;; make scrolling more like vim
+(setq scroll-margin 2
+      scroll-conservatively 10000
+      scroll-preserve-screen-position t)
+#+end_src
+
+** theme
+*** COMMENT kaolin
+#+begin_src emacs-lisp :tangle yes
+(use-package kaolin-themes
+  :init
+  (setq kaolin-themes-italic-comments t
+        kaolin-themes-org-scale-headings nil
+        kaolin-themes-distinct-company-scrollbar t
+        kaolin-ocean-alt-bg t)
+  (load-theme 'kaolin-shiva t)
+  (set-face-attribute 'region nil :foreground 'unspecified) ;; make region face respect foreground
+
+  :custom
+  ;; skip startup screen and go to scratch buffer
+  ;; TODO: see about using general-custom
+  (inhibit-startup-screen t)
+  :custom-face
+  (font-lock-comment-delimiter-face ((t (:slant italic)))))
+#+end_src
+
+*** COMMENT doom
+#+begin_src emacs-lisp :tangle yes
+(use-package doom-themes
+  :init (load-theme 'doom-dracula t)
+  :custom
+  ;; skip startup screen and go to scratch buffer
+  ;; TODO: see about using general-custom
+  (inhibit-startup-screen t)
+  :custom-face
+  (org-block ((t (:foreground "#f8f8f2"))))
+  (font-lock-comment-face ((t (:slant italic))))
+  (font-lock-comment-delimiter-face ((t (:slant italic)))))
+#+end_src
+
+*** COMMENT sanityinc tomorrow
+#+begin_src emacs-lisp :tangle yes
+(use-package color-theme-sanityinc-tomorrow
+  :init (load-theme 'sanityinc-tomorrow-eighties t)
+  :custom
+  ;; skip startup screen and go to scratch buffer
+  ;; TODO: see about using general-custom
+  (inhibit-startup-screen t)
+  :custom-face
+  (font-lock-comment-face ((t (:slant italic))))
+  (font-lock-comment-delimiter-face ((t (:slant italic)))))
+#+end_src
+
+*** COMMENT sanityinc solarized
+#+begin_src emacs-lisp :tangle yes
+(use-package color-theme-sanityinc-solarized
+  :init (load-theme 'sanityinc-solarized-dark t)
+  :custom
+  ;; skip startup screen and go to scratch buffer
+  ;; TODO: see about using general-custom
+  (inhibit-startup-screen t)
+  :custom-face
+  (font-lock-comment-face ((t (:slant italic))))
+  (font-lock-comment-delimiter-face ((t (:slant italic)))))
+#+end_src
+
+*** COMMENT base16
+#+begin_src emacs-lisp :tangle yes
+(use-package base16-theme
+  :init (load-theme 'base16-lesbo t)
+  :custom
+  ;; skip startup screen and go to scratch buffer
+  ;; TODO: see about using general-custom
+  (inhibit-startup-screen t)
+  :custom-face
+  (font-lock-comment-face ((t (:slant italic))))
+  (font-lock-comment-delimiter-face ((t (:slant italic)))))
+#+end_src
+
+*** COMMENT dracula
+#+begin_src emacs-lisp :tangle yes
+(use-package dracula-theme
+  :init
+  (setq dracula-enlarge-headings nil)
+  (load-theme 'dracula t)
+  :custom
+  ;; skip startup screen and go to scratch buffer
+  ;; TODO: see about using general-custom
+  (inhibit-startup-screen t)
+  :custom-face
+  (font-lock-comment-face ((t (:slant italic))))
+  (font-lock-comment-delimiter-face ((t (:slant italic))))
+  ;; (match ((t (:foreground nil :distant-foreground "#f8f8f2" :background "#373844"))))
+  )
+#+end_src
+
+*** COMMENT nord
+#+begin_src emacs-lisp :tangle yes
+(use-package nord-theme
+  :init
+  (load-theme 'nord t)
+  :custom
+  ;; skip startup screen and go to scratch buffer
+  ;; TODO: see about using general-custom
+  (inhibit-startup-screen t)
+  :custom-face
+  (font-lock-comment-face ((t (:slant italic))))
+  (font-lock-comment-delimiter-face ((t (:slant italic)))))
+#+end_src
+
+*** modus
+#+begin_src emacs-lisp :tangle yes
+(use-package modus-themes
+  :demand t
+  :init
+  ;; Add all your customizations prior to loading the themes
+  (setq modus-themes-slanted-constructs t
+        modus-themes-region '(bg-only)
+        modus-themes-completions '(moderate)
+        modus-themes-prompts '(bold background)
+        modus-themes-fringes 'intense
+        modus-themes-org-blocks 'grayscale
+        modus-themes-headings '((t . (rainbow)))
+        modus-themes-bold-constructs nil
+        modus-themes-hl-line '(accented intense)
+        modus-themes-markup '(background intense))
+  
+  ;; don't make modeline be variable pitched
+  (set-face-attribute 'mode-line-active nil :inherit 'mode-line)
+
+  ;; Load the theme files before enabling a theme
+  (modus-themes-load-themes)
+  :config
+  ;; Load the theme of your choice:
+  (modus-themes-load-vivendi) ;; OR (modus-themes-load-vivendi)
+  :custom
+  ;; skip startup screen and go to scratch buffer
+  ;; TODO: see about using general-custom
+  ;; TODO: add this to a (use-package emacs...) declaration
+  (inhibit-startup-screen t)
+  :general ("<f5>" 'modus-themes-toggle))
+#+end_src
+
+* evil
+#+begin_src emacs-lisp :tangle yes
+(use-package evil
+  :demand t
+  :init
+  (setq-default cursor-in-non-selected-windows nil)
+  (setq evil-want-keybinding nil
+        ;; make ctrlf integration work
+        evil-search-module 'evil-search)
+  :general
+  ;; alias C-e and M-e to C-p and M-p so scrolling with vim navigation keys works
+  ;; this leaves us unable to access anything bound to C-e or M-e, but I don't really use thse keys
+  ("C-e" (general-key "C-p")
+   "M-e" (general-key "M-p")
+   ;; use M-/ to unhighlight search
+   "M-/" 'evil-ex-nohighlight)
+  ;; modify basic evil keybindings
+  (:keymaps 'global-map
+            :states '(motion normal visual operator)
+            ;; make evil obey visual-line-mode
+            "n"      'evil-next-visual-line
+            "e"      'evil-previous-visual-line
+            [escape] 'keyboard-quit
+            "TAB"    'indent-for-tab-command)
+  ;; make text ojects work properly in colemak
+  (:keymaps 'override
+            :states '(visual operator)
+            "u"      evil-inner-text-objects-map
+            "i"      'evil-forward-char)
+  :custom
+  (evil-ex-search-persistent-highlight nil)
+  (evil-ex-search-highlight-all t)
+  :config
+  ;; translate keybindings for colemak
+  (general-translate-key nil '(motion normal visual operator)
+    ;; change hjkl to hnei
+    "n" "j"
+    "e" "k"
+    "i" "l"
+    "N" "J"
+    "E" "K"
+    "I" "L"
+
+    ;; rotate j t and f so j -> t -> f -> e
+    "j" "t"
+    "t" "f"
+    "f" "e"
+    "J" "T"
+    "T" "F"
+    "F" "E"
+
+    ;; make k function as n so as not to disrupt muscle memory when searching
+    "k" "n"
+    "K" "N"
+
+    ;; rotate u i and l so u -> i -> l -> u
+    "u" "i"
+    "i" "l"
+    "l" "u"
+    "U" "I"
+    "I" "L"
+    "L" "U")
+
+  ;; enable evil mode
+  (evil-mode 1))
+
+;; enable vim keybindings everywhere
+(use-package evil-collection
+  :demand t
+  :after evil
+  :init
+  (setq evil-collection-setup-minibuffer nil)
+  ;; (defun my-hjkl-rotation (_mode mode-keymaps &rest _rest)
+  ;;   (evil-collection-translate-key 'normal mode-keymaps
+  ;;     "n" "j"
+  ;;     "e" "k"
+  ;;     "i" "l"
+  ;;     "j" "e"
+  ;;     "k" "n"
+  ;;     "l" "i"))
+
+  (defun my-hjkl-rotation (_mode mode-keymaps &rest _rest)
+    (evil-collection-translate-key 'normal mode-keymaps
+      (kbd "C-n") (kbd "C-j")
+      (kbd "C-e") (kbd "C-k")))
+
+  ;; called after evil-collection makes its keybindings
+  ;; TODO: switch this to :hook
+  (add-hook 'evil-collection-setup-hook #'my-hjkl-rotation)
+
+  (evil-collection-init)
+  :custom (evil-collection-company-use-tng nil) ; make company behave like emacs, not vim
+  :config
+  (evil-collection-init))
+
+(use-package evil-surround
+  :demand t
+  :config
+  (global-evil-surround-mode 1))
+#+end_src
+
+** evil org
+#+begin_src emacs-lisp :tangle yes
+; TODO: actually learn these keybindings
+(use-package evil-org
+  :demand t
+  :after (:any (:all evil org) (:all evil org-agenda))
+  :commands org-agenda
+  :init
+  ;; make keybindings work in insert mode
+  (setq evil-org-use-additional-insert t
+        ;; use colemak movement
+        evil-org-movement-bindings '((up . "e") (down . "n") (left . "h") (right . "i"))
+
+        ;; add keybindings for more things
+        evil-org-key-theme '(navigation
+                             insert
+                             textobjects
+                             additional
+                             todo
+                             heading
+                             calendar))
+  
+  :hook ((org-mode . evil-org-mode)
+         (evil-org-mode . evil-org-set-key-theme))
+  :general
+  ;; bind RET here so it doesn't clobber corfu
+  (:keymaps 'org-mode-map "RET" 'evil-org-return)
+  (:keymaps 'evil-org-mode-map 
+            :states '(motion normal visual operator)
+            "g i" 'org-down-element
+            "U"   'evil-org-insert-line)
+  ;; evil-org doesn't bind textobjects properly so we have manually redefine them
+  (:keymaps 'evil-inner-text-objects-map
+            "e" 'evil-org-inner-object
+            "E" 'evil-org-inner-element
+            "r" 'evil-org-inner-greater-element
+            "R" 'evil-org-inner-subtree)
+  (:keymaps 'org-agenda-mode-map
+            :states '(motion normal visual operator)
+            "n"   'org-agenda-next-item
+            "e"   'org-agenda-previous-item
+            "gn"  'org-agenda-next-item
+            "ge"  'org-agenda-previous-item
+            "gI"  'evil-window-bottom
+            "C-n" 'org-agenda-next-line
+            "C-e" 'org-agenda-previous-line
+            "b"   'org-agenda-tree-to-indirect-buffer
+            "N"   'org-agenda-priority-down
+            "E"   'org-agenda-priority-up
+            "I"   'org-agenda-do-date-later
+            "M-n" 'org-agenda-drag-line-forward
+            "M-e" 'org-agenda-drag-line-backward
+            "C-S-i" 'org-agenda-todo-nextset ; Original binding "C-S-<right>"
+            "l"   'org-agenda-undo
+            "u"   'org-agenda-diary-entry
+            "U"   'org-agenda-clock-in))
+(use-package evil-org-agenda
+  :straight nil ; don't ensure because it is built in to evil-org
+  :demand t
+  :after (:or evil-org org-agenda)
+  :config
+  (evil-org-agenda-set-keys))
+#+end_src
+
+* ctrlf
+#+begin_src emacs-lisp :tangle yes
+(use-package ctrlf
+  :demand t
+  :general
+  (:states
+   '(motion normal visual operator)
+   "/" 'ctrlf-forward-regexp
+   "?" 'ctrlf-backward-regexp)
+  :config
+  (ctrlf-mode))
+#+end_src
+
+* minibuffer completion
+** vertico
+#+begin_src emacs-lisp :tangle yes
+(use-package vertico
+  ;; Special recipe to load extensions conveniently
+  :straight (vertico :files (:defaults "extensions/*")
+                     :includes (vertico-indexed
+                                vertico-flat
+                                vertico-grid
+                                vertico-mouse
+                                vertico-quick
+                                vertico-buffer
+                                vertico-repeat
+                                vertico-reverse
+                                vertico-directory
+                                vertico-multiform
+                                vertico-unobtrusive))
+  :demand t
+  ;; TODO: move this to somewhere better
+  :general ("C-x C-a" 'find-file)
+  (:keymaps 'vertico-map
+            "C-M-n" 'vertico-next-group
+            "C-M-e" 'vertico-previous-group
+            "C-q" 'vertico-quick-exit
+            "M-q" 'my/vertico-quick-embark
+            "DEL" 'vertico-directory-delete-char
+            "C-<backspace>" 'vertico-directory-delete-word)
+  :hook ((minibuffer-setup . vertico-repeat-save) ; Make sure vertico state is saved
+         (rfn-eshadow-update-overlay . vertico-directory-tidy)) ; this is for vertico-directory
+  
+  :init
+  ;; from https://kristofferbalintona.me/posts/vertico-marginalia-all-the-icons-completion-and-orderless/
+  (defun my/vertico-quick-embark (&optional arg)
+    "Embark on candidate using quick keys."
+    (interactive)
+    (when (vertico-quick-jump)
+      (embark-act arg)))
+  :config
+
+  (savehist-mode)
+  (vertico-mode))
+#+end_src
+
+** marginalia
+#+begin_src emacs-lisp :tangle yes
+(use-package marginalia
+  :demand t
+  :init
+  ;; TODO: figure out what happened to this variable
+  ;; (setq marginalia-annotators
+  ;;       '(marginalia-annotators-heavy
+  ;;         marginalia-annotators-light))
+  :config
+  (marginalia-mode)
+  ;; this fixes the annotations for describe variable/functions
+  (add-to-list 'marginalia-annotator-registry
+	       '(symbol-help marginalia-annotate-variable)))
+
+;; show icons in completeion
+(use-package svg-lib
+  :config
+  (setq svg-lib-icons-dir "~/.emacs.d/var/svg-lib"))
+(use-package all-the-icons)
+
+(use-package all-the-icons-completion
+  :demand t
+  :after marginalia
+  :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+  :init
+  (all-the-icons-completion-mode))
+#+end_src
+
+** orderless
+#+begin_src emacs-lisp :tangle yes
+(use-package orderless
+  :demand t
+  :init
+  (setq orderless-matching-styles '(orderless-initialism orderless-prefixes orderless-regexp)
+        orderless-component-separator " +\\|/")
+
+  :custom (completion-styles '(orderless)))
+#+end_src
+
+** embark
+#+begin_src emacs-lisp :tangle yes
+(use-package embark
+  :demand t
+  :after which-key
+  :init
+  (setq embark-indicators #'embark-minimal-indicator)
+  ;; disable which-key in favor of using C-h
+  ;; (setq embark-action-indicator
+  ;;       (lambda (map)
+  ;;         (which-key--show-keymap "Embark" map nil nil 'no-paging)
+  ;;         #'which-key--hide-popup-ignore-command)
+  ;;       embark-become-indicator embark-action-indicator)
+  :config
+  ;; from embark wiki
+  (embark-define-keymap embark-straight-map
+    "Keymap for straight commands"
+    ("v" straight-visit-package-website)
+    ("r" straight-get-recipe)
+    ("c" straight-check-package)
+    ("F" straight-pull-package)
+    ("f" straight-fetch-package)
+    ("p" straight-push-package)
+    ("n" straight-normalize-package)
+    ("m" straight-merge-package))
+
+  (add-to-list 'embark-keymap-alist '(straight . embark-straight-map))
+
+  (add-to-list 'marginalia-prompt-categories '("recipe\\|package" . straight))
+  
+  ;; show type of actions available in modeline
+  ;; also from embark wiki
+  (defvar embark--target-mode-timer nil)
+  (defvar embark--target-mode-string "")
+
+  (defun embark--target-mode-update ()
+    (setq embark--target-mode-string
+          (if-let (targets (embark--targets))
+              (format "[%s%s] "
+                      (propertize (symbol-name (plist-get (car targets) :type)) 'face 'bold)
+                      (mapconcat (lambda (x) (format ", %s" (plist-get x :type)))
+                                 (cdr targets)
+                                 ""))
+            "")))
+
+  (define-minor-mode embark-target-mode
+    "Shows the current targets in the modeline."
+    :global t
+    (setq mode-line-misc-info (assq-delete-all 'embark-target-mode mode-line-misc-info))
+    (when embark--target-mode-timer
+      (cancel-timer embark--target-mode-timer)
+      (setq embark--target-mode-timer nil))
+    (when embark-target-mode
+      (push '(embark-target-mode (:eval embark--target-mode-string)) mode-line-misc-info)
+      (setq embark--target-mode-timer
+            (run-with-idle-timer 0.1 t #'embark--target-mode-update))))
+
+  (embark-target-mode 1)
+
+  :general
+  (:keymaps 'embark-file-map
+            "s" 'sudo-edit)
+  (:keymaps 'override
+            :states '(normal insert emacs motion visual operater)
+            "C-." 'embark-act)
+  (:keymaps 'vertico-map
+            "C-." 'embark-act))
+(use-package sudo-edit)
+#+end_src
+
+** consult
+#+begin_src emacs-lisp :tangle yes
+(use-package consult
+  :init
+  (defhydra hydra-consult (:color blue :hint nil)
+    
+    "
+_b_: bookmarks    _r_: ripgrep        ^^_y_: yank
+_i_: imenu        _f_/_l_: find/locate  _Y_: yank replace
+_I_: imenu multi  _g_: grep
+_m_: jump to mark _G_: git grep
+"
+    ("b" consult-bookmark)
+    ("i" consult-imenu)
+    ("I" consult-imenu-multi)
+    ("m" consult-global-mark)
+    ("r" consult-ripgrep)
+    ("f" consult-find)
+    ("l" consult-locate)
+    ("g" consult-grep)
+    ("G" consult-git-grep)
+    ("y" consult-yank-from-kill-ring)
+    ("Y" consult-yank-replace))
+  (my/add-to-global-hydra '("c" hydra-consult/body "Consult" :column "Misc"))
+  :config
+  (add-to-list 'consult-buffer-filter "magit.*")
+  (add-to-list 'consult-buffer-filter "\\*forge.*")
+  (add-to-list 'consult-buffer-filter "\\*straight.*")
+  (add-to-list 'consult-buffer-filter "\\*Native-compile-log\\*")
+  (add-to-list 'consult-buffer-filter "\\*Async-native-compile-log\\*")
+  
+  (defun my/consult-dont-preview-portage-bookmark ()
+    "Buffer state function that doesn't preview Tramp buffers."
+    (let ((orig-state (consult--bookmark-state))
+          ;; TODO: maybe make this work for all tramp buffers
+          ;; TODO: also maybe have this work for recentf too
+          (filter (lambda (cand restore)
+                    (if (or restore
+                            (string= "portage" cand))
+                        nil
+                      cand))))
+      (lambda (cand restore)
+        (funcall orig-state (funcall filter cand restore) restore))))
+
+  (setq consult--source-bookmark
+        (plist-put consult--source-bookmark :state #'my/consult-dont-preview-portage-bookmark))
+  :general
+  ("M-'" 'consult-line)
+  ("C-x b" 'consult-buffer)
+  (:keymaps 'consult-narrow-map
+            "<" 'consult-narrow-help))
+
+(use-package consult-dir
+  :general ("C-x C-d" 'consult-dir)
+  (:keymaps 'vertico-map
+            "C-x C-d" 'consult-dir
+            "C-x C-a" 'consult-dir-jump-file))
+
+(use-package embark-consult
+  :demand t
+  :after (embark consult)
+  :hook
+  (embark-collect-mode . embark-consult-preview-minor-mode))
+
+(use-package consult-yasnippet)
+#+end_src
+
+* corfu
+#+begin_src elisp :tangle yes
+(use-package corfu
+  :demand t
+  :init
+  (setq tab-always-indent 'complete
+        corfu-quit-no-match t
+        corfu-preview-current nil
+        corfu-quit-at-boundary t
+        corfu-auto t)
+  
+  (corfu-global-mode)
+  
+  (defun corfu-move-to-minibuffer ()
+    "Transfer the current completion session to the minibuffer"
+    (interactive)
+    (let ((completion-extra-properties corfu--extra)
+          completion-cycle-threshold completion-cycling)
+      (apply #'consult-completion-in-region completion-in-region--data)))
+
+  ;; stop C-n and C-e from being overridden
+  (general-unbind '(insert normal motion visual operator) "C-n" "C-e" "C-d" "C-p")
+  :general
+  ("C-<tab>" 'completion-at-point)
+  (:keymaps 'corfu-map
+            "<C-m>" 'corfu-move-to-minibuffer
+            "C-n" 'corfu-next
+            "C-e" 'corfu-previous)
+  :hook
+  (eshell-mode . (lambda ()
+                   (setq-local corfu-quit-at-boundary t
+                               corfu-auto nil)
+                   (corfu-mode))))
+
+;; add more capf functions
+(use-package cape
+  :demand t
+  :after corfu
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  (add-to-list 'completion-at-point-functions #'cape-ispell))
+
+;; show corfu icons
+(use-package kind-icon
+  :demand t
+  :after corfu
+  :custom
+  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
+;; show documentation
+(use-package corfu-doc
+  :straight (corfu-doc :type git :host github :repo "galeo/corfu-doc")
+  :demand t
+  :after corfu
+  :general (:keymaps 'corfu-map
+                     "C-d" 'corfu-doc-toggle
+                     ;; scroll-down and scroll-up are reversed for some reason here
+                     "M-e" 'corfu-doc-scroll-down
+                     "M-n" 'corfu-doc-scroll-up))
+
+;; better eshell completion
+(use-package pcmpl-args
+  :demand t
+  :after eshell
+  :init
+  ;; corfu doc told me to add this part
+  
+  ;; Silence the pcomplete capf, no errors or messages!
+  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
+
+  ;; Ensure that pcomplete does not write to the buffer
+  ;; and behaves as a pure `completion-at-point-function'.
+  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify))
+
+#+end_src
+
+* comint
+#+begin_src emacs-lisp :tangle yes
+(use-package comint
+  :straight nil
+  :init
+  ;; TODO: move this somewhere better
+  (general-unbind '(insert normal motion visual operator) "C-a")
+  :general
+  (:keymaps 'comint-mode-map
+            "C-e" 'comint-previous-prompt
+            "C-n" 'comint-next-prompt
+            "M-e" 'comint-previous-matching-input-from-input
+            "M-n" 'comint-next-matching-input-from-input
+            "C-a" 'comint-kill-input)
+  (:keymaps 'shell-mode-map :states '(normal emacs motion visual operater)
+            "g e" 'comint-previous-prompt
+            "g n" 'comint-next-prompt
+            ;; "B"   'comint-backward-argument
+            ;; "W"   'comint-forward-argument
+            "M-e" 'comint-previous-matching-input-from-input
+            "M-n" 'comint-next-matching-input-from-input
+            "C-a" 'comint-kill-input))
+#+end_src
+
+* eshell
+#+begin_src emacs-lisp :tangle yes
+(use-package eshell
+  :straight nil
+  :init
+  (setq eshell-banner-message "")
+  :config
+  ;; default eshell bookmark handler doesn't work so we have to rewrite it
+  ;; this needs to be evaluated after eshell loads so it isn't overwritten
+  (defun eshell-bookmark-jump (bookmark)
+    "Default bookmark handler for Eshell buffers."
+    (eshell)
+    (setq-local default-directory (bookmark-prop-get bookmark 'location))
+    (eshell-reset))
+  
+  :general
+  (:keymaps 'eshell-mode-map
+            "C-e" 'eshell-previous-prompt
+            "C-n" 'eshell-next-prompt
+            "M-h" 'eshell-backward-argument
+            "M-i" 'eshell-forward-argument
+            "M-e" 'eshell-previous-matching-input-from-input ;
+            "M-n" 'eshell-next-matching-input-from-input
+            "C-a" 'eshell-kill-input
+            "M-b" 'eshell-insert-buffer-name)
+  (:keymaps 'eshell-mode-map :states '(normal emacs motion visual operater)
+            "g e" 'eshell-previous-prompt
+            "g n" 'eshell-next-prompt
+            "B"   'eshell-backward-argument
+            "W"   'eshell-forward-argument
+            "M-e" 'eshell-previous-matching-input-from-input
+            "M-n" 'eshell-next-matching-input-from-input
+            "C-a" 'eshell-kill-input))
+
+;; use vterm for visual commands
+(use-package eshell-vterm
+  :after eshell
+  :demand t
+  :config
+  (eshell-vterm-mode)
+  ;; use v command to exec command in vterm
+  (defalias 'eshell/v 'eshell-exec-visual))
+
+(use-package eshell-autojump
+  :demand t
+  :after eshell)
+
+(use-package fish-completion
+  :demand t
+  :after pcomplete
+  :config (global-fish-completion-mode))
+
+;; enable autosuggestions
+;; TODO: maybe disable this because it depends on company
+(use-package esh-autosuggest
+  :hook (eshell-mode . esh-autosuggest-mode)
+  :general
+  (:keymaps 'esh-autosuggest-active-map
+            "C-t" 'company-complete-selection))
+
+(use-package esh-help
+  :demand t
+  :after esh-mode
+  :config
+  (setup-esh-help-eldoc))
+
+(use-package eshell-syntax-highlighting
+  :demand t
+  :after esh-mode
+  :config
+  ;; Enable in all Eshell buffers.
+  (eshell-syntax-highlighting-global-mode +1))
+
+;; show last commands status in fringe
+(use-package eshell-fringe-status
+  :hook (eshell-mode . eshell-fringe-status-mode))
+
+;; (use-package eshell-fixed-prompt
+;;   :hook (eshell-mode . eshell-fixed-prompt-mode))
+
+;; (use-package eshell-bookmark
+;;   :demand t
+;;   :after eshell
+;;   :config
+;;   (add-hook 'eshell-mode-hook #'eshell-bookmark-setup))
+
+;; enable plan 9 smart shell
+;; TODO: review these variable settings
+;; (use-package em-smart
+;;   :straight nil
+;;   :demand t
+;;   :after eshell
+;;   :init
+;;   (setq eshell-where-to-jump 'begin
+;;         eshell-review-quick-commands nil
+;;         eshell-smart-space-goes-to-end t)
+;;   :hook (eshell-mode . eshell-smart-initialize))
+#+end_src
+
+** eshell scratchpad
+#+begin_src emacs-lisp :tangle yes
+(defun my/eshell-scratchpad ()
+  "This should be called from the command line to launch emacs with a scratchpad
+This sets the 'eshell-buffer' parameter so the buffer can be killed when the frame closes"
+  (eshell t)
+  ;; don't ever delete the first eshell buffer
+  (unless (string= eshell-buffer-name (buffer-name))
+    (set-frame-parameter nil 'eshell-buffer (current-buffer))))
+
+(defun my/close-eshell-scratchpad (&optional _frame)
+  "Closes the eshell scratchpad. To be run in 'delete-frame-functions'"
+  (let ((eshell-buffer (frame-parameter nil 'eshell-buffer)))
+    (when eshell-buffer
+      (kill-buffer eshell-buffer))))
+
+(add-hook 'delete-frame-functions 'my/close-eshell-scratchpad)
+
+(defun eshell/saveterm ()
+  "Run this in an eshell scratchpad to stopp the the buffer from being killed
+when the windor exits"
+  (set-frame-parameter nil 'eshell-buffer nil))
+
+#+end_src
+
+* dtache
+#+begin_src emacs-lisp :tangle yes
+(use-package dtache
+  :straight (dtache :type git :host gitlab :repo "niklaseklund/dtache"
+                    :fork (:host gitlab :repo "rosetail/dtache"))
+  :init
+  (setq dtache-detach-key (kbd "C-\\")
+        dtache-shell-command-initial-input nil
+        dtache-show-output-on-attach t
+        ;; use custom env script with unbuffer
+        dtache-env "~/.emacs.d/var/dtache/dtache-env"
+        ;; obey no-littering
+        dtache-db-directory "~/.emacs.d/var/dtache")
+  :config
+  ;; create a hydra for all the common actions
+  (defhydra hydra-dtache (:color blue :hint nil)
+    "
+_SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy output, _k_: kill, _d_: delete"
+    ("SPC" dtache-shell-command)
+    ("a" dtache-attach-session)
+    ("=" dtache-diff-session)
+    ("r" dtache-rerun-session)
+    ("w" dtache-copy-session-command)
+    ("W" dtache-copy-session)
+    ("k" dtache-kill-session)
+    ("d" dtache-delete-session)
+    ("o" dtache-consult-session))
+  
+  (my/add-to-global-hydra '("d" hydra-dtache/body "Dtache" :column "Tools"))
+  
+  ;; add embark actions to dtache-open-session
+  (defvar embark-dtache-map (make-composed-keymap dtache-action-map embark-general-map))
+  (add-to-list 'embark-keymap-alist '(dtache . embark-dtache-map))
+  
+  :hook (after-init . dtache-setup))
+
+(use-package dtache-consult
+  :straight nil
+  :bind ([remap dtache-open-session] . dtache-consult-session))
+
+;; detatch commands run in eshell
+(use-package dtache-eshell
+  :straight nil ; included with dtache
+  :hook (eshell-mode . dtache-eshell-mode))
+
+(use-package dtache-shell
+  :straight nil ; included with dtache
+  :config (dtache-shell-setup))
+
+;; enable detatching compile commands
+(use-package dtache-compile
+  :straight nil
+  :hook (after-init . dtache-compile-setup)
+  :bind (([remap compile] . dtache-compile)
+         ([remap recompile] . dtache-compile-recompile)))
+#+end_src
+
+* org mode
+** overall settings
+#+begin_src emacs-lisp :tangle yes
+;; TODO: refactor this whole section
+(use-package org
+  :demand t
+  :init
+  (setq ;; let emphasis markers be nested
+   org-emphasis-regexp-components '("-[:space:]('\"{*/=~_" "-[:space:].,*/=~_:!?;'\")}\\[" "[:space:]" "." 1)
+   ;; start in org-mode with a source block for lisp evaluation
+   initial-major-mode #'org-mode
+   initial-scratch-message "#+begin_src emacs-lisp\n;; This block is for text that is not saved, and for Lisp evaluation.\n;; To create a file, visit it with \\[find-file] and enter text in its buffer.\n\n#+end_src\n\n")
+
+
+  
+  (add-hook 'org-mode-hook #'flyspell-mode)
+  ;; override C-RET
+  ;; (add-hook 'org-mode-hook
+  ;;           (lambda ()
+  ;;             (general-define-key
+  ;;              :keymaps 'local
+  ;;              :states '(motion normal visual operator insert)
+  ;;              "C-return" 'company-complete)))
+
+  ;; (add-hook 'org-mode-hook #'flyspell-buffer)
+  (setq org-ellipsis " ▼"
+        ;; make all images 600px wide
+        org-image-actual-width 600
+        ;; use smart quotes when exporting
+        org-export-with-smart-quotes t
+        ;; make checkbox counters recursive
+        org-checkbox-hierarchical-statistics nil)
+
+  (setq org-tags-column 0
+        org-edit-src-content-indentation 0
+        org-src-tab-acts-natively t
+        org-src-window-setup 'current-window
+        org-startup-folded t
+        org-hide-emphasis-markers t
+        org-catch-invisible-edits 'smart
+        org-ctrl-k-protect-subtree t)
+  ;; org-hide-leading-stars t
+  ;; org-adapt-indentation nil
+  ;; org-startup-indented t
+
+  ;; align tags to the right regardless of window size
+  (defun org-keep-tags-to-right ()
+    (interactive)
+    (let ((buffer-modified (buffer-modified-p))
+	  (inhibit-message t)) ;; don't say the new column with every time
+      (when (and (equal major-mode 'org-mode)
+		 (org-get-buffer-tags))
+	(setq org-tags-column (- 3 (window-body-width)))
+	(org-align-tags t)
+	(when (not buffer-modified)
+	  (set-buffer-modified-p nil)))))
+  
+  ;; TODO: switch to :hook
+  ;; (add-hook 'window-configuration-change-hook 'org-keep-tags-to-right)
+  ;; (add-hook 'focus-in-hook 'org-keep-tags-to-right)
+  ;; (add-hook 'focus-out-hook 'org-keep-tags-to-right)
+  
+  (defhydra org-mode-hydra (:color blue :hint nil)
+    "
+_SPC_: Jump to heading"
+    ("SPC" consult-org-heading)) 
+
+  :general (:keymaps 'org-mode-map :states '(normal insert) "M-n" nil)
+  :config
+  ;; TODO: switch this to custom-face
+  ;; (set-face-attribute 'org-block-begin-line nil :background 'unspecified)
+  ;; (set-face-attribute 'org-block-end-line nil :background 'unspecified)
+  (set-face-attribute 'org-block nil :extend t)
+  ;; :general
+  ;; (:keymaps 'org-mode-map
+  ;;           :states 'insert
+  ;;           "C-<return>" 'company-complete)
+  :custom-face
+  ;; make default face in org src block look right
+  ;; (org-block ((t (:foreground "#cbced0" :background "#232530" :extend t))))
+  ;; (org-block ((t (:foreground "#cbced0"))))
+  ;; highlight beginning and end of block
+  ;; (org-block-begin-line ((t (:background "#2e303e" :extend t))))
+  ;; (org-block-end-line ((t (:background "#2e303e" :extend t))))
+  ;; switch outline-4 and outline-4 so I don't see comment face as much
+  ;; (outline-4 ((t (:foreground "#efaf8e"))))
+  ;; (outline-8 ((t (:foreground "#6f6f70"))))
+  )
+
+(use-package org-appear
+  :demand t
+  :after org
+  :hook (org-mode . org-appear-mode))
+#+end_src
+
+** org export
+*** Latex
+#+begin_src emacs-lisp :tangle yes
+(use-package ox ; needed for org-export-filter-headline-function
+  :straight nil
+  :config
+  ;; use the soul and csquotes packages
+  ;; TODO: see if this can be done with 1 call to add-to-list
+  (add-to-list 'org-latex-packages-alist '("" "soul"))
+  (add-to-list 'org-latex-packages-alist '("" "csquotes"))
+  ;; define a general purpose assignment class and make it the default
+  (add-to-list 'org-latex-classes
+               '("assignment"
+                 "\\documentclass[11pt]{article}
+\\usepackage[margin=1in]{geometry}
+\\usepackage[doublespacing]{setspace}
+\\setlength{\\parskip}{1em}
+[DEFAULT-PACKAGES]
+[PACKAGES]
+\\usepackage{titlesec}
+\\titleformat*{\\section}{\\Large\\bfseries}
+\\titleformat*{\\subsection}{\\large\\bfseries}
+\\titleformat*{\\subsubsection}{\\bfseries}
+\\titleformat*{\\paragraph}{\\bfseries}
+\\titleformat*{\\subparagraph}{\\bfseries}
+\\titlespacing\\section{0pt}{-10pt}{-10pt}
+\\titlespacing\\subsection{0pt}{-10pt}{-10pt}
+\\titlespacing\\subsubsection{0pt}{-10pt}{-10pt}
+\\setlength{\\parindent}{4em}
+
+\\setcounter{secnumdepth}{0}
+[EXTRA]
+
+\\makeatletter
+\\renewcommand\\maketitle{
+\\begin{flushright}
+  \\@author\\\\
+  \\@date
+\\end{flushright}
+\\begin{center}
+  \\Large{\\@title}
+\\end{center}
+}
+\\makeatother
+"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%}")))
+  (setq org-latex-default-class "assignment")
+
+  ;; don't ever switch to enumerate for headlines
+  (setq org-export-headline-levels -1
+        ;; org-latex-pdf-process '("latexmk -pvc -cd -interaction=nonstopmode %f")
+        TeX-auto-local ".build"
+        org-export-with-toc nil
+        org-export-with-tags nil)
+  ;; dont add \label when exporting
+  ;; from https://stackoverflow.com/questions/18076328/org-mode-export-to-latex-suppress-generation-of-labels
+  (defun rm-org-latex-labels (text backend _info)
+    "Remove labels auto-generated by `org-mode' export to LaTeX."
+    (when (eq backend 'latex)
+      (replace-regexp-in-string "\\\\label{sec:org[a-f0-9]+}\n" "" text)))
+
+  (add-to-list #'org-export-filter-headline-functions
+               #'rm-org-latex-labels)
+  ;; add ignore tag that will make org-export ignore the headline but keep the body
+  ;; (defun org-ignore-headline (contents backend info)
+  ;;   "Ignore headlines with tag `ignore'."
+  ;;   (when (and (org-export-derived-backend-p backend 'latex 'html 'ascii)
+  ;;              (string-match "\\`.*ignore.*\n"
+  ;;                            (downcase contents)))
+  ;;     (replace-match "" nil nil contents)))
+
+  ;; (add-to-list 'org-export-filter-headline-functions 'org-ignore-headline)
+
+
+  ;; ignore tags without the noignore headline in latex export
+  (defun org-noignore-headline (contents backend info)
+    "Ignore headlines without tag `noignore'."
+    (unless (string-match "\\`.*noignore.*\n" (downcase contents))
+      (when (and (org-export-derived-backend-p backend 'latex)
+                 (string-match "\\`.*\n"
+                               (downcase contents)))
+        (replace-match "" nil nil contents))))
+
+  (add-to-list 'org-export-filter-headline-functions 'org-noignore-headline)
+  
+  
+(defun my/toggle-org-latex-export-on-save ()
+  "Toggle auto export to latex when saving an org buffer"
+  (interactive)
+  (if (memq 'org-latex-export-to-latex after-save-hook)
+      (progn
+        (org-latex-export-to-latex t)
+        (remove-hook 'after-save-hook 'org-latex-export-to-latex t)
+        (message "Disabled org latex export on save for current buffer..."))
+    (add-hook 'after-save-hook 'org-latex-export-to-latex nil t)
+    (message "Enabled org latex export on save for current buffer..."))))
+#+end_src
+
+*** HTML
+#+begin_src emacs-lisp :tangle yes
+(use-package htmlize
+  :init
+  ;; use readthedocs stylesheet for html export
+  ;; from fniessen.github.org/org-html-themes
+  (setq org-html-head
+        (concat "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css\"/>\n"
+                "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css\"/>\n"
+                "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js\"></script>\n"
+                "<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js\"></script>\n"
+                "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js\"></script>\n"
+                "<script type=\"text/javascript\" src=\"https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js\"></script>\n"
+                "<style>pre.src{background:#ffffff;color:#000000;} </style>\n"
+                "<style>#postamble .date{color:#6f6f70;} </style>")))
+#+end_src
+
+** org agenda
+#+begin_src emacs-lisp :tangle yes
+;; enable org-checklist to uncheck boxes with habits
+(use-package org-contrib :demand t :after org)
+(use-package org-checklist :demand t :after org-contrib
+  :config
+  (add-to-list 'org-modules 'org-checklist t))
+
+(use-package org-agenda
+  :straight nil
+  :init
+  (setq org-directory "~/org"
+        ;; set default priority to C and add D priority
+        org-priority-default 67
+        org-priority-lowest 68
+        ;; inbox.org must be first here or refiletargets will break
+        org-agenda-files (list "~/org/inbox.org"
+                               "~/org/agenda.org")
+        org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "HOLD(h)" "|" "DONE(d)" "CANCELLED(c)"))
+        ;; org-agenda-window-setup 'current-frame ; make agenda buffer only use the current frame
+        org-use-fast-todo-selection 'expert
+
+        
+        
+        org-agenda-prefix-format
+        '((agenda . "  %i %-12:c%?-12t% s")
+          (todo   . "  ")
+          (tags   . "  %(my/org-print-parent-heading)")
+          (search . "  %i %-12:c"))
+        
+        ;; org-agenda-hide-tags-regexp "inbox\\|school\\|computer\\|emacs"
+        org-agenda-hide-tags-regexp ".*"
+        org-refile-targets `((,(cdr org-agenda-files) :maxlevel . 9))
+        org-refile-use-outline-path 'file
+        org-outline-path-complete-in-steps nil
+
+        ;; don't set bookmarks
+        org-capture-bookmark nil
+        org-bookmark-names-plist nil
+        
+        org-log-done 'time ; record when tasks are completed so we can see what was done today
+
+        org-capture-templates
+        `(("i" "Inbox" entry  (file "inbox.org")
+           "* TODO %?\n/Entered on/ %U")))
+  
+  (add-to-list 'org-modules 'org-habit t)
+  ;; save agenda buffers before quitting and after reloading
+  ;; from https://emacs.stackexchange.com/questions/477/how-do-i-automatically-save-org-mode-buffers
+  (advice-add 'org-agenda-quit :before 'org-save-all-org-buffers)
+  (advice-add 'org-agenda-redo :after 'org-save-all-org-buffers)
+  
+  ;; helper functions for org-agenda-custom-commands
+  ;; from https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html
+  ;; modified to also skip entries that are scheaduled or have a deadline
+  (defun my/org-agenda-skip-all-siblings-but-highest-priority ()
+    "Skip all but the highest priority TODO entry that is unscheduled and has no deadline."
+    (let ((should-skip-entry nil)
+          (priority (my/return-67.5-if-nil
+                     (org-element-property :priority (org-element-at-point)))))
+      (unless (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
+        (setq should-skip-entry t))
+      (when (my/org-agenda-scan-for-higher-priority-siblings-below)
+        (setq should-skip-entry t))
+      (save-excursion
+        (while (and (not should-skip-entry) (org-goto-sibling t))
+          (when (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
+            (setq should-skip-entry t))))
+      (when should-skip-entry
+        (or (outline-next-heading)
+            (goto-char (point-max))))))
+
+  (defun my/org-agenda-is-heading-valid-for-unscheduled-tasks (priority)
+    "Return t if todo state of the element at point is \"TODO\", it is not scheduled,
+it has no deadline, and it's priority is >= PRIORITY"
+    ;; it should be noted that in org, smallers numbers represent higher priorities
+    (let ((current-heading-priority (my/return-67.5-if-nil
+                                     (org-element-property :priority (org-element-at-point)))))
+      (and (string= "TODO" (org-get-todo-state))
+           (not (org-element-property :deadline (org-element-at-point)))
+           (not (org-element-property :scheduled (org-element-at-point)))
+           (<= current-heading-priority priority))))
+
+  (defun my/org-agenda-scan-for-higher-priority-siblings-below ()
+    "Return t if the current heading has a sibling below it of a
+higher priority"
+    (let ((return-val nil)
+          (priority (my/return-67.5-if-nil
+                     (org-element-property :priority (org-element-at-point)))))
+      (save-excursion
+        (while (org-goto-sibling)
+          (when (and (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
+                     (> priority (my/return-67.5-if-nil
+                                  (org-element-property :priority (org-element-at-point)))))
+            (setq return-val t))))
+      return-val))
+
+  ;; TODO: see about returning org-priority-default instead
+  (defun my/return-67.5-if-nil (num)
+    "If NUM is nil, return 67.5 Otherwise return NUM.
+Org mode reads 67.5 as the priority between C and D. This
+function is meant to be called with the priority of an org
+heading, and if the priority is not set it will assume it's
+between C and D."
+    (if num
+        num
+      67.5))
+
+  (defun my/org-print-parent-heading ()
+    "Print the name of the parent of the org element at point
+The name is formatted to end in a colon and take up 24 characters
+If the element has no header, return an empty string
+If the parent heading has the tag \"printParentHeadingRecurse\", go up a level"
+    (save-excursion
+      (if (org-up-heading-safe)
+          (if (member "printParentHeadingRecurse" (org-get-local-tags))
+              (my/org-print-parent-heading)
+            (format "%-24s" 
+                    ;; (concat
+                    (org-element-property :title (org-element-at-point))
+                    ;; ":")
+                    ))
+        "")))
+  
+  (setq org-agenda-custom-commands
+        '((" " "Agenda"
+           ;; weekly agenda
+           ((agenda "" ((org-agenda-span 7)
+                        ;; don't wark about deadlines because they will be displayed below
+                        (org-deadline-warning-days 0)))
+
+            ;; tasks to refile
+            (tags "inbox"
+                  ((org-agenda-overriding-header "\nInbox")))
+
+            ;; next tasks
+            (todo "NEXT"
+                  ((org-agenda-overriding-header "\nNext Tasks")))
+
+            ;; all tasks with a deadline
+            (todo 'todo
+                  ((org-agenda-skip-function
+                    '(org-agenda-skip-entry-if 'notdeadline))
+                   (org-agenda-sorting-strategy '(deadline-up))
+                   (org-agenda-overriding-header "\nDeadlines")))
+
+            ;; the first TODO item that isn't NEXT and has no deadline or schedule from each heading
+            ;; this shows things that would otherwise get list
+            (tags "-inbox"
+                  ((org-agenda-skip-function #'my/org-agenda-skip-all-siblings-but-highest-priority)
+                   (org-agenda-sorting-strategy '(priority-down))
+                   (org-agenda-overriding-header "\nUndated Tasks")))
+
+            ;; tasks that were completed today
+            ;; from https://www.labri.fr/perso/nrougier/GTD/index.html
+            (tags "CLOSED>=\"<today>\""
+                  ((org-agenda-overriding-header "\nCompleted Today"))))
+
+           ((org-agenda-compact-blocks t)))))
+
+  (defhydra hydra-org (:color blue :hint nil)
+    "
+_a_: Agenda, _c_: Capture"
+    ("a" org-agenda)
+    ("c" org-capture))
+
+  (my/add-to-global-hydra '("o" hydra-org/body "Org" :column "Misc"))
+  
+  ;; mark task as done when all checkboxes marked
+  ;; from org wiki
+  ;; (defun org-summary-todo (n-done n-not-done)
+  ;;   "Switch entry to DONE when all subentries are done, to TODO otherwise."
+  ;;   (let (org-log-done org-log-states)   ; turn off logging
+  ;;     (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+
+
+  ;; start with cursor on first item
+  ;; :hook 
+  ;; ;; (org-agenda-mode . my/disable-cursor)
+  ;; (org-after-todo-statistics . org-summary-todo)
+  )
+#+end_src
+
+* flycheck
+#+begin_src emacs-lisp :tangle yes
+(use-package flycheck
+  :defer 1
+  :init
+  (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+  :config
+  (global-flycheck-mode))
+#+end_src
+
+* folding
+#+begin_src emacs-lisp :tangle yes
+(use-package vimish-fold :demand t)
+
+(use-package evil-vimish-fold
+  :demand t
+  :after vimish-fold
+  :init
+  ;; enable in all modes, not just prog-mode
+  (setq evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
+  (global-evil-vimish-fold-mode)
+  :general
+  (:states
+   '(motion normal visual)
+   "z SPC" 'evil-toggle-fold
+   "za" 'vimish-fold-avy
+   "zn" ' evil-vimish-fold/next-fold
+   "ze" ' evil-vimish-fold/previous-fold))
+#+end_src
+
+* projectile
+#+begin_src emacs-lisp :tangle yes
+(use-package projectile
+  :defer 0.5
+  :after (hydra)
+  :init
+  (setq projectile-project-search-path '("~/")
+        ;; projectile-project-search-path '("~/" "~/code")
+        projectile-indexing-method 'hybrid ;; needed to make sorting work
+        projectile-sort-order 'default)
+  
+  (defun my/projectile-find-org-file ()
+    "call projectile-find-file-dwim but pretend the current dir is ~/org"
+    (interactive)
+    (let ((default-directory "~/org/"))
+      (call-interactively 'projectile-find-file-dwim)))
+
+  (defun my/projectile-popwin-eshell ()
+    (interactive)
+    (popwin:display-buffer-1
+     (save-window-excursion
+       (call-interactively 'projectile-run-eshell))))
+
+  (defhydra hydra-projectile (:color blue :hint nil)
+    "
+^Projectile
+^Find File^            ^Navigate Files^       ^^Buffers^              ^Search/Tags^          ^^^Exec^
+^^---------------------^^---------------------^^^---------------------^^---------------------^^^^----------------
+_f_: find file         _p_: switch project    ^_b_: list buffers      _r_: ripgrep           ^^_x_: run
+_a_: all known files   _e_: toggle extensions _\%_: query replace     _O_: multi occur       ^^_c_: compile
+_d_: find dir          _T_: switch to test    ^_S_: save buffers      _g_: find tag          ^^_C_: configure
+_o_: file in ~/org     _s_: eshell            ^_k_: kill buffers      _G_: regenerate tags   ^^_t_: test
+_D_: edit dir-locals   ^^                     ^^^                     ^^                   _!_/_&_: shell command
+"
+    ("f" projectile-find-file-dwim)
+    ("a" projectile-find-file-in-known-projects)
+    ("d" projectile-find-dir)
+    ("o" my/projectile-find-org-file)
+
+    ("p" projectile-switch-project)
+    ("e" projectile-find-other-file)
+    ("T" projectile-toggle-between-implementation-and-test)
+    ("s" my/projectile-popwin-eshell)
+
+    ("b" projectile-switch-to-buffer)
+    ("%" projectile-replace)
+    ("S" projectile-save-project-buffers)
+    ("k" projectile-kill-buffers)
+
+    ("r" projectile-rg)
+    ("O" projectile-multi-occur)
+    ("g" projectile-find-tag)
+    ("G" projectile-regenerate-tags)
+
+    ("x" projectile-run-project) 
+    ("c" projectile-compile-project)
+    ("C" projectile-configure-project)
+    ("t" projectile-test-project)
+
+    ("D" projectile-edit-dir-locals)
+    ("!" projectile-run-shell-command-in-root)
+    ("&" projectile-run-async-shell-command-in-root))
+
+  (my/add-to-global-hydra '("p" hydra-projectile/body "Projectile" :column "Tools"))
+  :config
+  (projectile-mode 1)
+
+  :general (:keymaps 'projectile-mode-map
+                     "C-c p"  'projectile-command-map))
+
+#+end_src
+
+* popwin
+#+begin_src emacs-lisp :tangle yes
+(use-package popwin
+  :demand t
+  :init
+  (defun my/popwin-eshell ()
+    (interactive)
+    (popwin:display-buffer-1
+     (or (get-buffer "*eshell*")
+         (save-window-excursion
+           (call-interactively 'eshell)))))
+
+
+  (defhydra hydra-popwin (:color blue :hint nil :idle 0.1)
+    "
+  ^Buffers^             ^Window Placement^      ^Misc^
+--^^--------------------^^----------------------^^-------------------
+  _b_: show buffer      _c_: close popup        _m_: display messages
+  _l_: show last buffer _f_: maximize popup     _o_: open file
+_SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
+
+"
+    ("b"   popwin:popup-buffer)
+    ("l"   popwin:popup-last-buffer)
+    ("SPC" popwin:select-popup-window)
+
+    ("c"   popwin:close-popup-window)
+    ("f"   popwin:one-window)
+    ("S"   popwin:stick-popup-window)
+
+    ("m"   popwin:messages)
+    ("o"   popwin:find-file)
+    ("s"   my/popwin-eshell))
+
+  (my/add-to-global-hydra '("t" hydra-popwin/body "Popwin" :column "Misc"))
+  :config
+  (push '("\\*dtache.*" :regexp t) popwin:special-display-config)
+  (push '("\\*vterm\\*" :regexp t) popwin:special-display-config)
+  (popwin-mode 1))
+#+end_src
+
+* yasnippet
+#+begin_src emacs-lisp :tangle yes
+(use-package yasnippet
+  :defer 5
+  :config
+  (yas-global-mode))
+
+(use-package yasnippet-snippets
+  :demand t
+  :after yasnippet)
+#+end_src
+
+* lsp
+#+begin_src emacs-lisp :tangle yes
+(use-package lsp-mode
+  :custom
+  (lsp-enable-on-type-formatting nil)
+  (lsp-enable-indentation nil)
+  :hook
+  ((before-save . (lambda () (when (bound-and-true-p lsp-mode) (lsp-format-buffer))))
+   (c++-mode . lsp)))
+
+#+end_src
+
+* magit
+#+begin_src emacs-lisp :tangle yes
+(use-package magit
+  :init
+  ;; "n" binding gets overridden, so we have to rebind it every time we open magit
+  (add-hook 'magit-mode-hook
+            (lambda ()
+              (general-define-key
+               :keymaps 'local
+               :states '(motion normal visual operator)
+               "n" 'magit-section-forward))) 
+  :general
+  (:keymaps 'magit-mode-map
+            :states '(motion normal visual operator)
+            "TAB" 'magit-section-cycle
+            "e" 'magit-section-backward))
+
+;; add support for git forges
+(use-package forge :demand t :after magit)
+#+end_src
+
+* latex
+#+begin_src emacs-lisp :tangle yes
+(use-package auctex
+  :after tex
+  :no-require t
+  :init
+  ;; compile with latexmk
+  (setq-default TeX-command-default "Latexmk")
+
+  ;; parse on save
+  (setq TeX-auto-save t
+        ;; parse on load
+        TeX-parse-self t
+        TeX-master nil)
+  :hook (LaTeX-mode . (lambda () (setq TeX-command-default "Latexmk")))
+  :config
+  (push 
+   '("Latexmk" "latexmk -pvc -interaction=nonstopmode %t" TeX-run-TeX nil t
+     :help "Make pdf output using latexmk.")
+   TeX-command-list))
+#+end_src
+
+* other packages
+#+begin_src emacs-lisp :tangle yes
+(use-package flyspell-correct
+  :general
+  (:keymaps 'flyspell-mode-map
+            "C-;" 'flyspell-correct-wrapper))
+
+(use-package telega
+  :init
+  (setq telega-old-date-format "%M.%D.%Y"))
+
+(use-package transmission
+  :init
+  (setq transmission-refresh-modes
+        '(transmission-mode transmission-files-mode transmission-info-mode transmission-peers-mode))
+  :hook ((transmission-mode .       my/disable-cursor)
+         (transmission-files-mode . my/disable-cursor)
+         (transmission-info-mode .  my/disable-cursor)
+         (transmission-peers-mode . my/disable-cursor)))
+
+;; TODO: see if this is actually the package I should be using
+(use-package haskell-mode)
+
+(use-package ebuild-mode)
+
+(use-package package.use-mode
+  :straight (package.use-mode :type git :host github :repo "C-xC-c/package.use-mode"))
+
+(use-package rainbow-mode
+  :init
+  (setq rainbow-html-colors nil
+        rainbow-r-colors nil
+        rainbow-x-colors nil)
+  :hook (prog-mode . rainbow-mode))
+
+(use-package avy
+  :init 
+  (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o))
+  (my/add-to-global-hydra '("a" avy-goto-subword-1 "Avy" :column "Editing"))
+  :commands avy-goto-subword-1)
+
+(use-package iedit
+  :init 
+  (my/add-to-global-hydra '("i" iedit-mode "Iedit" :column "Editing")))
+
+(use-package comment-dwim-2
+  :general
+  ("M-;" 'comment-dwim-2)
+  (:keymaps 'org-mode-map "M-;" 'org-comment-dwim-2))
+
+(use-package aggressive-indent
+  :demand t
+  :config
+  (global-aggressive-indent-mode 1)
+  ;; don't enable in html mode
+  (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
+
+  ;; stop indenting the next line in c-like modes if ; is not entered yet
+  (add-to-list
+   'aggressive-indent-dont-indent-if
+   '(and (derived-mode-p 'c++-mode)
+         (null (string-match "\\([;{}]\\|\\b\\(if\\|for\\|while\\)\\b\\)"
+                             (thing-at-point 'line))))))
+(use-package which-key
+  :demand t
+  :config (which-key-mode 1))
+
+(use-package highlight-numbers
+  ;; enable in programming modes
+  :hook ((prog-mode . highlight-numbers-mode)
+         (conf-mode . highlight-numbers-mode)))
+
+(use-package smart-compile
+  :init
+  ;; (my/add-to-global-hydra '("b" smart-compile "Smart Compile" :column "Tools"))
+  )
+
+(use-package undo-tree
+  :demand t
+  :config
+  (global-undo-tree-mode)
+  :custom
+  (evil-undo-system 'undo-tree))
+
+(use-package minimap
+  :init (setq minimap-window-location 'right))
+
+(use-package vterm
+  :init (setq vterm-always-compile-module t))
+#+end_src
+
+* final cleanup
+#+begin_src emacs-lisp :tangle yes
+;; reset file-name-handler-alist
+(when (boundp 'my/file-name-handler-alist)
+      (setq file-name-handler-alist my/file-name-handler-alist))
+#+end_src
+
+* COMMENT archive
+** company
+#+begin_src emacs-lisp :tangle yes
+(use-package company
+  :defer 0.75
+  :config (global-company-mode)
+  :general
+  ("C-<return>" 'company-complete)
+  (:keymaps 'company-posframe-active-map
+            "C-n" 'next-line
+            "C-e" 'next-line))
+
+(use-package company-posframe
+  :after company
+  :init
+  (setq company-posframe-show-indicator nil
+        company-posframe-show-metadata nil)
+  :config (company-posframe-mode t))
+#+end_src
+
+** ivy
+#+begin_src emacs-lisp :tangle yes
+;; make sure we have flx so ivy does better fuzzy matching
+(use-package flx :defer t)
+;; not having ivy-hydra breaks some things
+(use-package ivy-hydra :defer t)
+
+(use-package ivy
+  :init
+  ;; use fuzzy search everywhere except swiper
+  (setq ivy-re-builders-alist
+        '((swiper . ivy--regex-plus)
+          (t      . ivy--regex-fuzzy)))
+
+  :general
+  ;; C-x C-a is much more comfortable on colemak than C-x C-f
+  ("C-x C-a" 'counsel-find-file
+   ;; use counsel to insert unicode characters
+   "C-x 8 RET" 'counsel-unicode-char
+   ;; replace isearch with swiper
+   "C-s" 'swiper)
+  (:keymaps 'ivy-minibuffer-map
+            ;; make enter descend into directory instead of opening dired
+            "RET" 'ivy-alt-done
+            ;; make C-j open dired instead
+            "C-j" 'ivy-immediate-done)
+  :diminish ivy-mode
+  :config
+  (ivy-mode 1)
+  :demand t)
+
+(use-package counsel
+  :after ivy
+  :general
+  (:keymaps 'swiper-map
+            "ESC" 'minibuffer-keyboard-quit)
+  :config
+  (counsel-mode))
+
+;; improve projectile integration
+(use-package counsel-projectile
+  :after (counsel projectile)
+  :config (counsel-projectile-mode 1))
+#+end_src
+
+** quickrun
+#+begin_src emacs-lisp :tangle yes
+(use-package quickrun
+  :after hydra
+  :defer t
+  :init
+  (defhydra hydra-quickrun (:color blue :hint nil)
+    "
+_c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
+    ("c" quickrun-compile-only)
+    ("r" quickrun)
+    ("s" quickrun-shell)
+    ("a" quickrun-with-arg)
+    ("R" quickrun-region))
+  (my/add-to-global-hydra '("r" hydra-quickrun/body "Quickrun" :column "Tools"))
+#+end_src
+
+** smartparens
+#+begin_src emacs-lisp :tangle yes
+(use-package smartparens
+  :demand t
+  :init
+  ;; bind <leader>-s to smartparens hydra
+  (my/add-to-global-hydra '("s" hydra-smartparens/body "Smartparens" :column "Editing"))
+  
+  :config
+  (smartparens-global-strict-mode 1)
+  ;; highlight matching delimiter
+  (show-smartparens-global-mode 1)
+
+  ;; hydra for most smartparens actions
+  (defhydra hydra-smartparens (:hint nil)
+    "
+ Moving^^^^                       Slurp & Barf^^   Wrapping^^            Sexp juggling^^^^               Destructive
+------------------------------------------------------------------------------------------------------------------------
+ [_a_] beginning  [_n_] down      [_h_] bw slurp   [_R_]   rewrap        [_S_] split   [_t_] transpose   [_c_] change inner  [_w_] copy
+ [_e_] end        [_N_] bw down   [_H_] bw barf    [_u_]   unwrap        [_s_] splice  [_A_] absorb      [_C_] change outer
+ [_f_] forward    [_p_] up        [_l_] slurp      [_U_]   bw unwrap     [_r_] raise   [_E_] emit        [_k_] kill          [_g_] quit
+ [_b_] backward   [_P_] bw up     [_L_] barf       [_(__{__[_] wrap (){}[]   [_j_] join    [_o_] convolute   [_K_] bw kill       [_q_] quit"
+    ;; Moving
+    ("a" sp-beginning-of-sexp)
+    ("e" sp-end-of-sexp)
+    ("f" sp-forward-sexp)
+    ("b" sp-backward-sexp)
+    ("n" sp-down-sexp)
+    ("N" sp-backward-down-sexp)
+    ("p" sp-up-sexp)
+    ("P" sp-backward-up-sexp)
+    
+    ;; Slurping & barfing
+    ("h" sp-backward-slurp-sexp)
+    ("H" sp-backward-barf-sexp)
+    ("l" sp-forward-slurp-sexp)
+    ("L" sp-forward-barf-sexp)
+    
+    ;; Wrapping
+    ("R" sp-rewrap-sexp)
+    ("u" sp-unwrap-sexp)
+    ("U" sp-backward-unwrap-sexp)
+    ("(" sp-wrap-round)
+    ("{" sp-wrap-curly)
+    ("[" sp-wrap-square)
+    
+    ;; Sexp juggling
+    ("S" sp-split-sexp)
+    ("s" sp-splice-sexp)
+    ("r" sp-raise-sexp)
+    ("j" sp-join-sexp)
+    ("t" sp-transpose-sexp)
+    ("A" sp-absorb-sexp)
+    ("E" sp-emit-sexp)
+    ("o" sp-convolute-sexp)
+    
+    ;; Destructive editing
+    ("c" sp-change-inner :exit t)
+    ("C" sp-change-enclosing :exit t)
+    ("k" sp-kill-sexp)
+    ("K" sp-backward-kill-sexp)
+    ("w" sp-copy-sexp)
+
+    ("q" nil)
+    ("g" nil)))
+
+;; enable default smartparens config
+(use-package smartparens-config
+  ;; don't ensure because this is built in to smartparent
+  :straight nil
+  :demand t
+  :after smartparens)
+
+
+
+(use-package evil-smartparens
+  :demand t
+  :after smartparens-config
+  :hook (smartparens-enabled . evil-smartparens-mode))
+
+
+#+end_src
+
+** local vars
+# eval: (call-interactively #'consult-org-heading)
+# Local Variables: 
+# eval: (add-hook 'after-save-hook (lambda ()( org-babel-tangle)) nil t)
+# End:
+
