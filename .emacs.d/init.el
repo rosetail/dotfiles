@@ -1534,7 +1534,10 @@ _SPC_: Jump to heading"
   (:keymaps 'magit-mode-map
             :states '(motion normal visual operator)
             "TAB" 'magit-section-cycle
-            "e" 'magit-section-backward)
+            "e" 'magit-section-backward
+            ;; usc C-n/C-e for scrolling lines
+            "C-n" 'magit-next-line
+            "C-e" 'magit-previous-line)
   ;; "n" binding gets overridden, so we have to rebind it every time we open magit
   :hook (magit-mode
          . (lambda ()
