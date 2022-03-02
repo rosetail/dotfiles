@@ -455,6 +455,7 @@ other::---
   - use ~-R~ to recursively set acl
   - ~setfacl -x u:foo~ to delete acl for user foo
   - ~setfacl -b /file/~ to delete all acls for a file
+* SELinux 
   
 
 #  LocalWords:  dirs rwx setfacl systemd acl rxw

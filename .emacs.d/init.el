@@ -211,22 +211,28 @@ my/add-to-global-hydra to add entries")
   (setq evil-want-keybinding nil) ; evil collection needs this to be nil
   (setq evil-search-module 'evil-search) ; make ctrlf integration work
   :general
+  ;; TODO: see if following setting was necessary
   ;; alias C-e and M-e to C-p and M-p so scrolling with vim navigation keys works
   ;; this leaves us unable to access anything bound to C-e or M-e, but I don't really use thse keys
-  ("C-e" (general-key "C-p")
-   "M-e" (general-key "M-p")
-   ;; use M-/ to unhighlight search
-   "M-/" 'evil-ex-nohighlight)
+                                        ;"C-e" (general-key "C-p")
+                                        ;"M-e" (general-key "M-p")
+  ;; use M-/ to unhighlight search
+  
+  ("M-/" 'evil-ex-nohighlight)
   ;; modify basic evil keybindings
-  (:keymaps 'global-map
-            :states '(motion normal visual operator)
-            ;; make evil use visual lines
-            "n"      'evil-next-visual-line
-            "e"      'evil-previous-visual-line
-            ;; use escape as C-g
-            ;; TODO: this was disabled. See if it was useful
-            ;; [escape] 'keyboard-quit
-            "TAB"    'indent-for-tab-command)
+  (:states '(motion normal visual operator)
+           ;; make evil use visual lines
+           "n"      'evil-next-visual-line
+           "e"      'evil-previous-visual-line
+           ;; use escape as C-g
+           ;; TODO: this was disabled. See if it was useful
+           ;; [escape] 'keyboard-quit
+           "TAB"    'indent-for-tab-command)
+  
+  ;; scroll with C-n and C-e
+  (:states '(motion normal visual operator insert)
+           "C-n" 'evil-scroll-down
+           "C-e" 'evil-scroll-up)
   ;; make text objects work properly in colemak
   (:keymaps 'override
             :states '(visual operator)
@@ -450,11 +456,11 @@ _m_: jump to mark _G_: git grep
   ("i" consult-imenu)
   ("I" consult-imenu-multi)
   ("m" consult-global-mark)
-  ("r" consult-ripgrep)
-  ("f" consult-find)
-  ("l" consult-locate)
-  ("g" consult-grep)
-  ("G" consult-git-grep)
+  ("r" (lambda () (interactive) (consult-ripgrep default-directory)))
+  ("f" (lambda () (interactive) (message default-directory) (consult-find default-directory)))
+  ("l" 'consult-locate)
+  ("g" (lambda () (interactive) (consult-grep default-directory)))
+  ("G" (lambda () (interactive) (consult-git-grep default-directory)))
   ("y" consult-yank-from-kill-ring)
   ("Y" consult-yank-replace)
   ("s" consult-yasnippet))
@@ -744,7 +750,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
         modus-themes-prompts '(bold background)
         modus-themes-fringes 'intense
         modus-themes-org-blocks 'grayscale ;
-        modus-themes-headings '((t . (1.1 overline rainbow)))
+        modus-themes-headings '((t . (1.1 overline)))
         modus-themes-bold-constructs nil
         modus-themes-hl-line '(accented intense)
         modus-themes-markup '(background intense))
@@ -780,6 +786,8 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :init
   (setq eshell-banner-message "")
   :config
+  (evil-make-overriding-map eshell-mode-map) ; don't let eshell bindings be overridden by evil
+  
   ;; default eshell bookmark handler doesn't work so we have to rewrite it
   ;; this needs to be evaluated after eshell loads so it isn't overwritten
   (defun eshell-bookmark-jump (bookmark)
@@ -791,27 +799,23 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :general
   (:keymaps 'eshell-hist-mode-map
             "M-r" 'prot-eshell-complete-history)
-  (:keymaps 'eshell-mode-map :states 'insert
-            "C-a" 'eshell-kill-input)
   (:keymaps 'eshell-mode-map
+            "C-a" 'eshell-kill-input
             "C-e" 'eshell-previous-prompt
             "C-n" 'eshell-next-prompt
             "M-h" 'eshell-backward-argument
             "M-i" 'eshell-forward-argument
             "M-e" 'eshell-previous-matching-input-from-input ;
             "M-n" 'eshell-next-matching-input-from-input
-            "M-b" 'eshell-insert-buffer-name)
-  (:keymaps 'eshell-mode-map :states '(normal emacs motion visual operater)
+            "M-b" 'eshell-insert-buffer-name
+            "M-." (lambda () (interactive) (insert "$_")))
+  (:keymaps 'eshell-mode-map :states '(normal motion visual operater)
             "g e" 'eshell-previous-prompt
             "g n" 'eshell-next-prompt
             "B"   'eshell-backward-argument
             "W"   'eshell-forward-argument
             "M-e" 'eshell-previous-matching-input-from-input
             "M-n" 'eshell-next-matching-input-from-input))
-
-(use-package eshell-autojump
-  :demand t
-  :after eshell)
 
 ;; enable autosuggestions
 ;; TODO: maybe disable this because it depends on company
@@ -820,26 +824,6 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :general
   (:keymaps 'esh-autosuggest-active-map
             "C-t" 'company-complete-selection))
-
-;; directly from Prot's eshell config
-(defvar prot-eshell--complete-history-prompt-history '()
-  "History of `prot-eshell-narrow-output-highlight-regexp'.")
-
-(defun prot-eshell--complete-history-prompt ()
-  "Prompt with completion for history element.
-Helper function for `prot-eshell-complete-history'."
-  (if-let ((hist (ring-elements eshell-history-ring)))
-      (completing-read "Input from history: "
-                       hist nil t nil
-                       'prot-eshell--complete-history-prompt-history)
-    (user-error "There is no Eshell history")))
-
-;;;###autoload
-(defun prot-eshell-complete-history (elt)
-  "Insert ELT from Eshell history using completion."
-  (interactive
-   (list (prot-eshell--complete-history-prompt)))
-  (insert elt))
 
 (use-package fish-completion
   :demand t
@@ -891,6 +875,65 @@ when the window exits"
   (eshell-vterm-mode)
   ;; use v command to exec command in vterm
   (defalias 'eshell/v 'eshell-exec-visual))
+
+;; directly from Prot's eshell config
+(defvar prot-eshell--complete-history-prompt-history '()
+  "History of `prot-eshell-narrow-output-highlight-regexp'.")
+
+(defun prot-eshell--complete-history-prompt ()
+  "Prompt with completion for history element.
+Helper function for `prot-eshell-complete-history'."
+  (if-let ((hist (ring-elements eshell-history-ring)))
+      (completing-read "Input from history: "
+                       hist nil t nil
+                       'prot-eshell--complete-history-prompt-history)
+    (user-error "There is no Eshell history")))
+
+;;;###autoload
+(defun prot-eshell-complete-history (elt)
+  "Insert ELT from Eshell history using completion."
+  (interactive
+   (list (prot-eshell--complete-history-prompt)))
+  (insert elt))
+
+;; copied from Prot, who mostly copied from Sean Whitton
+
+;; Copied on 2022-01-04 10:32 +0200 from Sean Whitton's `spw/eshell-cd'.
+;; I had to change the symbol to use the prot-eshell prefix for lexical
+;; binding.  Sean's dotfiles: <https://git.spwhitton.name/dotfiles>.
+(defun my/eshell-cd (dir)
+  "Routine to cd into DIR."
+  (delete-region eshell-last-output-end (point-max))
+  (when (> eshell-last-output-end (point))
+    (goto-char eshell-last-output-end))
+  (insert-and-inherit "cd " (eshell-quote-argument dir))
+  (eshell-send-input))
+
+
+(defun my/eshell-complete-recent-dir (dir &optional arg)
+  "Switch to a recent Eshell directory.
+
+When called interactively, DIR is selected with completion from
+the elements of `eshell-last-dir-ring'.
+
+With optional ARG prefix argument (\\[universal-argument]) also
+open the directory in a `dired' buffer."
+  (interactive
+   (list
+    (if-let ((dirs (ring-elements eshell-last-dir-ring)))
+        (completing-read "Switch to recent dir: " dirs nil t)
+      (user-error "There is no Eshell history for recent directories"))
+    current-prefix-arg))
+  (my/eshell-cd dir)
+  ;; UPDATE 2022-01-04 10:48 +0200: The idea for `dired-other-window'
+  ;; was taken from Sean Whitton's `spw/eshell-cd-recent-dir'.  Check
+  ;; Sean's dotfiles: <https://git.spwhitton.name/dotfiles>.
+  (when arg
+    (dired-other-window dir)))
+
+;; add an eshell function to call this interactively
+(defun eshell/z ()
+  (call-interactively #'my/eshell-complete-recent-dir))
 
 (use-package vterm
   :init (setq vterm-always-compile-module t))
