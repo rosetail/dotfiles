@@ -356,6 +356,7 @@ my/add-to-global-hydra to add entries")
   :demand t
   :after evil
   :init
+  (setq evil-collection-company-use-tng nil) ; make company behave like emacs, not vim
   ;; TODO: see if this is a good setting
   (setq evil-collection-setup-minibuffer t)
   ;; TODO: I disabled the hook. see if this was doing anything
@@ -369,7 +370,6 @@ my/add-to-global-hydra to add entries")
   ;; :hook
   ;; (evil-collection-setup-hook . my-hjkl-rotation)
 
-  :custom (evil-collection-company-use-tng nil) ; make company behave like emacs, not vim
   :config
   (evil-collection-init))
 #+end_src
@@ -666,8 +666,8 @@ _m_: jump to mark _G_: git grep
 (use-package kind-icon
   :demand t
   :after corfu
-  :custom
-  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+  :init
+  (setq kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
   #+end_src
@@ -1120,6 +1120,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
             "M-e" 'eshell-previous-matching-input-from-input ;
             "M-n" 'eshell-next-matching-input-from-input
             "M-b" 'eshell-insert-buffer-name
+            "C-c d" 'my/eshell-complete-recent-dir
             "M-." (lambda () (interactive) (insert "$_")))
   (:keymaps 'eshell-mode-map :states '(normal motion visual operater)
             "g e" 'eshell-previous-prompt
@@ -1135,6 +1136,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 #+begin_src fundamental :tangle ./var/eshell/alias
 alias c call-interactively {intern $1}
 alias d dired $1
+alias D dired-other-window $1
 alias ff find-file $1
 alias lla ls -lhA $*
 alias ll ls -lh $*
@@ -1148,6 +1150,13 @@ setenv TERM eterm-color > /dev/null
 #+end_src
 
 *** extensions
+**** autojump
+#+begin_src emacs-lisp :tangle yes
+(use-package eshell-autojump
+  :demand t
+  :after eshell)
+#+end_src
+
 **** autosuggestions
 #+begin_src emacs-lisp :tangle yes
 ;; enable autosuggestions
@@ -1174,30 +1183,6 @@ setenv TERM eterm-color > /dev/null
   :after esh-mode
   :config
   (setup-esh-help-eldoc))
-#+end_src
-
-**** scratchpad
-#+begin_src emacs-lisp :tangle yes
-(defun my/eshell-scratchpad ()
-  "This should be called from the command line to launch emacs with a scratchpad
-This sets the 'eshell-buffer' parameter so the buffer can be killed when the frame closes"
-  (eshell t)
-  ;; don't ever delete the first eshell buffer
-  (unless (string= eshell-buffer-name (buffer-name))
-    (set-frame-parameter nil 'eshell-buffer (current-buffer))))
-
-(defun my/close-eshell-scratchpad (&optional _frame)
-  "Closes the eshell scratchpad. To be run in 'delete-frame-functions'"
-  (let ((eshell-buffer (frame-parameter nil 'eshell-buffer)))
-    (when eshell-buffer
-      (kill-buffer eshell-buffer))))
-
-(add-hook 'delete-frame-functions 'my/close-eshell-scratchpad)
-
-(defun eshell/saveterm ()
-  "Run this in an eshell scratchpad to stopp the the buffer from being killed
-when the window exits"
-  (set-frame-parameter nil 'eshell-buffer nil))
 #+end_src
 
 **** status in fringe
@@ -1228,14 +1213,6 @@ when the window exits"
   (defalias 'eshell/v 'eshell-exec-visual))
 #+end_src
 
-**** COMMENT autojump
-#+begin_src emacs-lisp :tangle yes
-;; currently disabled in favor of prot-eshell--cd
-(use-package eshell-autojump
-  :demand t
-  :after eshell)
-#+end_src
-
 **** COMMENT smart shell
 #+begin_src emacs-lisp :tangle yes
 ;; enable plan 9 smart shell
@@ -1254,8 +1231,6 @@ when the window exits"
 **** complete history with competing-read
 #+begin_src emacs-lisp :tangle yes
 ;; directly from Prot's eshell config
-(defvar prot-eshell--complete-history-prompt-history '()
-  "History of `prot-eshell-narrow-output-highlight-regexp'.")
 
 (defun prot-eshell--complete-history-prompt ()
   "Prompt with completion for history element.
@@ -1276,7 +1251,8 @@ Helper function for `prot-eshell-complete-history'."
 
 **** eshell-cd
 #+begin_src emacs-lisp :tangle yes
-;; copied from Prot, who mostly copied from Sean Whitton
+;; copied from Prot's dotfiles, but this part was mostly copied from Sea Whitton
+;; modified to save selection history for savehist-mode
 
 ;; Copied on 2022-01-04 10:32 +0200 from Sean Whitton's `spw/eshell-cd'.
 ;; I had to change the symbol to use the prot-eshell prefix for lexical
@@ -1290,6 +1266,10 @@ Helper function for `prot-eshell-complete-history'."
   (eshell-send-input))
 
 
+(defvar my/eshell--complete-recent-dir-history '()
+  "History of `my/eshell-complete-recent-dir'.")
+
+;;;###autoload
 (defun my/eshell-complete-recent-dir (dir &optional arg)
   "Switch to a recent Eshell directory.
 
@@ -1301,7 +1281,7 @@ open the directory in a `dired' buffer."
   (interactive
    (list
     (if-let ((dirs (ring-elements eshell-last-dir-ring)))
-        (completing-read "Switch to recent dir: " dirs nil t)
+        (completing-read "Switch to recent dir: " dirs nil t nil 'my/eshell--complete-recent-dir-history)
       (user-error "There is no Eshell history for recent directories"))
     current-prefix-arg))
   (my/eshell-cd dir)
@@ -1310,21 +1290,76 @@ open the directory in a `dired' buffer."
   ;; Sean's dotfiles: <https://git.spwhitton.name/dotfiles>.
   (when arg
     (dired-other-window dir)))
+#+end_src
 
-;; add an eshell function to call this interactively
-(defun eshell/z ()
-  (call-interactively #'my/eshell-complete-recent-dir))
+**** scratchpad
+#+begin_src emacs-lisp :tangle yes
+(defun my/eshell-scratchpad ()
+  "This should be called from the command line to launch emacs with a scratchpad
+This sets the 'eshell-buffer' parameter so the buffer can be killed when the frame closes"
+  (eshell t)
+  ;; don't ever delete the first eshell buffer
+  (unless (string= eshell-buffer-name (buffer-name))
+    (set-frame-parameter nil 'eshell-buffer (current-buffer))))
+
+(defun my/close-eshell-scratchpad (&optional _frame)
+  "Closes the eshell scratchpad. To be run in 'delete-frame-functions'"
+  (let ((eshell-buffer (frame-parameter nil 'eshell-buffer)))
+    (when eshell-buffer
+      (kill-buffer eshell-buffer))))
+
+(add-hook 'delete-frame-functions 'my/close-eshell-scratchpad)
+
+(defun eshell/saveterm ()
+  "Run this in an eshell scratchpad to stopp the the buffer from being killed
+when the window exits"
+  (set-frame-parameter nil 'eshell-buffer nil))
+#+end_src
+
+**** COMMENT eshell-consult-dir
+#+begin_src emacs-lisp :tangle yes
+;; originally copied from Prot, who mostly copied from Sean Whitton
+;; modified to insert dir with ARG instead of opening dired
+;; this also selects DIR with consult-dir instead of cd history
+
+(defun my/eshell-cd (dir &optional insert)
+  "Routine to cd into DIR. If INSERT is non-nil, just insert the dir"
+  (if insert
+      (progn
+        (goto-char (point-max))
+        (insert dir))
+    (delete-region eshell-last-output-end (point-max))
+    (when (> eshell-last-output-end (point))
+      (goto-char eshell-last-output-end))
+    (insert-and-inherit "cd " (eshell-quote-argument dir))
+    (eshell-send-input)))
+
+
+(defun my/eshell-complete-recent-dir (&optional arg)
+  "Switch to a recent Eshell directory.
+
+When called interactively, DIR is selected with completion from
+the elements of `eshell-last-dir-ring'.
+
+With optional ARG prefix argument (\\[universal-argument]) also
+open the directory in a `dired' buffer."
+  (interactive "P")
+  (unless (fboundp 'consult-dir--pick)
+    (require 'consult-dir))
+  (let ((dir (consult-dir--pick)))
+    (if arg
+        (my/eshell-cd dir t)
+      (my/eshell-cd dir))))
 #+end_src
 
 ** vterm
 #+begin_src emacs-lisp :tangle yes
 (use-package vterm
   :init (setq vterm-always-compile-module t))
-#+end_src
+ #+end_src
 
 ** dtache
-*** dtache
-#+begin_src emacs-lisp :tangle yes
+ #+begin_src emacs-lisp :tangle yes
 (use-package dtache
   :straight (dtache :type git :host gitlab :repo "niklaseklund/dtache"
                     :fork (:host gitlab :repo "rosetail/dtache" :branch "personal"))
@@ -1364,7 +1399,7 @@ fi
   :hook (eshell-mode . dtache-eshell-mode))
 #+end_src
 
-**** shell
+***** shell
 #+begin_src emacs-lisp :tangle yes
 (use-package dtache-shell
   :straight nil
@@ -1916,8 +1951,8 @@ _SPC_: Jump to heading"
 #+begin_src emacs-lisp :tangle yes
 (use-package undo-tree
   :init
-  (setq evil-undo-system 'undo-tree)
-  (global-undo-tree-mode))
+  (global-undo-tree-mode)
+  :custom (evil-undo-system 'undo-tree))
 #+end_src
 
 *** yasnippet
@@ -2024,9 +2059,9 @@ _SPC_: Jump to heading"
 *** lsp
 #+begin_src emacs-lisp :tangle yes
 (use-package lsp-mode
-  :custom
-  (lsp-enable-on-type-formatting nil)
-  (lsp-enable-indentation nil)
+  :init
+  (setq lsp-enable-on-type-formatting nil
+        lsp-enable-indentation nil)
   :hook
   ((before-save . (lambda () (when (bound-and-true-p lsp-mode) (lsp-format-buffer))))
    (c++-mode . lsp)))

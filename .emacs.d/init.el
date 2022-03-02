@@ -279,6 +279,7 @@ my/add-to-global-hydra to add entries")
   :demand t
   :after evil
   :init
+  (setq evil-collection-company-use-tng nil) ; make company behave like emacs, not vim
   ;; TODO: see if this is a good setting
   (setq evil-collection-setup-minibuffer t)
   ;; TODO: I disabled the hook. see if this was doing anything
@@ -292,7 +293,6 @@ my/add-to-global-hydra to add entries")
   ;; :hook
   ;; (evil-collection-setup-hook . my-hjkl-rotation)
 
-  :custom (evil-collection-company-use-tng nil) ; make company behave like emacs, not vim
   :config
   (evil-collection-init))
 
@@ -542,8 +542,8 @@ _m_: jump to mark _G_: git grep
 (use-package kind-icon
   :demand t
   :after corfu
-  :custom
-  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+  :init
+  (setq kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
@@ -808,6 +808,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
             "M-e" 'eshell-previous-matching-input-from-input ;
             "M-n" 'eshell-next-matching-input-from-input
             "M-b" 'eshell-insert-buffer-name
+            "C-c d" 'my/eshell-complete-recent-dir
             "M-." (lambda () (interactive) (insert "$_")))
   (:keymaps 'eshell-mode-map :states '(normal motion visual operater)
             "g e" 'eshell-previous-prompt
@@ -816,6 +817,10 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
             "W"   'eshell-forward-argument
             "M-e" 'eshell-previous-matching-input-from-input
             "M-n" 'eshell-next-matching-input-from-input))
+
+(use-package eshell-autojump
+  :demand t
+  :after eshell)
 
 ;; enable autosuggestions
 ;; TODO: maybe disable this because it depends on company
@@ -835,27 +840,6 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   :after esh-mode
   :config
   (setup-esh-help-eldoc))
-
-(defun my/eshell-scratchpad ()
-  "This should be called from the command line to launch emacs with a scratchpad
-This sets the 'eshell-buffer' parameter so the buffer can be killed when the frame closes"
-  (eshell t)
-  ;; don't ever delete the first eshell buffer
-  (unless (string= eshell-buffer-name (buffer-name))
-    (set-frame-parameter nil 'eshell-buffer (current-buffer))))
-
-(defun my/close-eshell-scratchpad (&optional _frame)
-  "Closes the eshell scratchpad. To be run in 'delete-frame-functions'"
-  (let ((eshell-buffer (frame-parameter nil 'eshell-buffer)))
-    (when eshell-buffer
-      (kill-buffer eshell-buffer))))
-
-(add-hook 'delete-frame-functions 'my/close-eshell-scratchpad)
-
-(defun eshell/saveterm ()
-  "Run this in an eshell scratchpad to stopp the the buffer from being killed
-when the window exits"
-  (set-frame-parameter nil 'eshell-buffer nil))
 
 ;; show last commands status in fringe
 (use-package eshell-fringe-status
@@ -877,8 +861,6 @@ when the window exits"
   (defalias 'eshell/v 'eshell-exec-visual))
 
 ;; directly from Prot's eshell config
-(defvar prot-eshell--complete-history-prompt-history '()
-  "History of `prot-eshell-narrow-output-highlight-regexp'.")
 
 (defun prot-eshell--complete-history-prompt ()
   "Prompt with completion for history element.
@@ -896,7 +878,8 @@ Helper function for `prot-eshell-complete-history'."
    (list (prot-eshell--complete-history-prompt)))
   (insert elt))
 
-;; copied from Prot, who mostly copied from Sean Whitton
+;; copied from Prot's dotfiles, but this part was mostly copied from Sea Whitton
+;; modified to save selection history for savehist-mode
 
 ;; Copied on 2022-01-04 10:32 +0200 from Sean Whitton's `spw/eshell-cd'.
 ;; I had to change the symbol to use the prot-eshell prefix for lexical
@@ -910,6 +893,10 @@ Helper function for `prot-eshell-complete-history'."
   (eshell-send-input))
 
 
+(defvar my/eshell--complete-recent-dir-history '()
+  "History of `my/eshell-complete-recent-dir'.")
+
+;;;###autoload
 (defun my/eshell-complete-recent-dir (dir &optional arg)
   "Switch to a recent Eshell directory.
 
@@ -921,7 +908,7 @@ open the directory in a `dired' buffer."
   (interactive
    (list
     (if-let ((dirs (ring-elements eshell-last-dir-ring)))
-        (completing-read "Switch to recent dir: " dirs nil t)
+        (completing-read "Switch to recent dir: " dirs nil t nil 'my/eshell--complete-recent-dir-history)
       (user-error "There is no Eshell history for recent directories"))
     current-prefix-arg))
   (my/eshell-cd dir)
@@ -931,9 +918,26 @@ open the directory in a `dired' buffer."
   (when arg
     (dired-other-window dir)))
 
-;; add an eshell function to call this interactively
-(defun eshell/z ()
-  (call-interactively #'my/eshell-complete-recent-dir))
+(defun my/eshell-scratchpad ()
+  "This should be called from the command line to launch emacs with a scratchpad
+This sets the 'eshell-buffer' parameter so the buffer can be killed when the frame closes"
+  (eshell t)
+  ;; don't ever delete the first eshell buffer
+  (unless (string= eshell-buffer-name (buffer-name))
+    (set-frame-parameter nil 'eshell-buffer (current-buffer))))
+
+(defun my/close-eshell-scratchpad (&optional _frame)
+  "Closes the eshell scratchpad. To be run in 'delete-frame-functions'"
+  (let ((eshell-buffer (frame-parameter nil 'eshell-buffer)))
+    (when eshell-buffer
+      (kill-buffer eshell-buffer))))
+
+(add-hook 'delete-frame-functions 'my/close-eshell-scratchpad)
+
+(defun eshell/saveterm ()
+  "Run this in an eshell scratchpad to stopp the the buffer from being killed
+when the window exits"
+  (set-frame-parameter nil 'eshell-buffer nil))
 
 (use-package vterm
   :init (setq vterm-always-compile-module t))
@@ -1406,8 +1410,8 @@ _SPC_: Jump to heading"
 
 (use-package undo-tree
   :init
-  (setq evil-undo-system 'undo-tree)
-  (global-undo-tree-mode))
+  (global-undo-tree-mode)
+  :custom (evil-undo-system 'undo-tree))
 
 (use-package yasnippet
   :defer 5
@@ -1488,9 +1492,9 @@ _SPC_: Jump to heading"
             "C-;" 'flyspell-correct-wrapper))
 
 (use-package lsp-mode
-  :custom
-  (lsp-enable-on-type-formatting nil)
-  (lsp-enable-indentation nil)
+  :init
+  (setq lsp-enable-on-type-formatting nil
+        lsp-enable-indentation nil)
   :hook
   ((before-save . (lambda () (when (bound-and-true-p lsp-mode) (lsp-format-buffer))))
    (c++-mode . lsp)))
