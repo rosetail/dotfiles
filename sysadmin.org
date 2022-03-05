@@ -456,6 +456,79 @@ other::---
   - ~setfacl -x u:foo~ to delete acl for user foo
   - ~setfacl -b /file/~ to delete all acls for a file
 * SELinux 
+** intro
+- mostly controls access to files and resources
+- controls permission for programs, not just users (i.e. can be opened by a text editor, but only written by a daemon)
+- mostly is a containment system
+- 3 modes:
+  - enforcing: on
+  - permissive: doesn't do anything but warns for violations. Used for testing and stuff
+  - disabled: fully off
+- if someone hijacks ssh or something, they can access everything the ~apache~ user can, which is a lot
+- rules are called ~contexts~. They determine which processes can access a file, dir, or port
+  - default context is always no
+  - ~targed~ policy (redhat default) bases rules off of types
+- policy anatomy:
+  - ~unconfined_u:object_r:httpd_sys_content_t:s0/var/www/html/file2~
+    1. SELinux User context
+    2. role context
+    3. type context
+    4. s0 = sensitivity context
+    5. rest is file
+  - this lets anything with ~httpd_t~ type access ~file2~. This would allow webservers to access file2, but not anything else
+- type usually ends in ~_t~
+- most file commands use ~-Z~ to show SELinux contexts
+- ~getenforce~ shows permission mode, and ~setenforce~ sets it
+- change mode at boot time with ~enforcing=<1 || 0>~ kernel parameter
+- conf file is ~/etc/selinux/config~
   
+** managing contexts
+- every process and file has a label
+- all labels together make the context
+- files inherit context from parent dir
+- context won't reinherit from parent dir when a files is moved (use ~cp~ instead)
+- ~cp -a~ can mess up selinux's idea of where the file is
+- change context with ~chcon~
+  - new files have type ~default_t~
+  - ~chcon -t httpd_sys_content_t /file/~ to change it to httpd type
+- ~restorecon /file/~ resets context to default (~-R~ for recursive)
+- ~semanage fcontext -t /type/~ changes rules for restorecon to reset to
+  - ~-a~ for add, ~-d~ for delete, and ~-l~ for list
+  - uses extended regex for files
+    - use ~(/.*)?~ instead of just ~*~
+- looks like ~semanage~ and then ~restorecon~ is the best way to add new rules ~chcon~ is best for one-off tests?????
+  
+** booleans
+- many large programs have SELinux policies
+- man pages ending in ~_selinux~ have info on policies
+  - find them with ~man -k _selinux~
+- manage with ~getsebool~ and ~setsebool~
+- ~getsebool~ format for setting is ~(/current setting/, /default setting/)~
+- ~getsebool -a~ shows all bools
+- ~setsebool -P~ makes setting persistent
+- ~semanage boolean -l~ says whether setting is persistent or not
+- ~semanage boolean -l -C~ to see all bools that are different from default state
 
+** troubleshooting
+- for denying access too much:
+  - most common issue is incorrect file context, usually because of moving
+    - fix it with ~restorecon~
+  - then try looking at booleans
+- monitoring violations:
+  - install ~setroubleshoot-server~ to send violations to ~/var/log/messages~ instead of just ~/var/log/audit/audit.log~
 #  LocalWords:  dirs rwx setfacl systemd acl rxw
+
+* storage/permission
+- gpt also backs up partition info at end of disk
+  - also uses checksums
+- ~mount~ with no options shows currently mounted devices
+- ~systemctl daemon-reload~ will mount new ~fstab~ entries
+- fstab format:
+  - device mountpoint filesystem option1,option2... dump? fsck?
+    - fsck options > 1 will be run in order
+    - use 1 for ext4 root and 2 for all other ext4 file systems
+- mount swap space with flag ~pri=/N/~ to dictate which should be use first
+  - higher priorities are used first, and default is -2
+  - ~swapon --show~ shows priorities
+
+* LVM

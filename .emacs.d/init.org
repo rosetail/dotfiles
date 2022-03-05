@@ -285,14 +285,12 @@ my/add-to-global-hydra to add entries")
   (setq evil-want-keybinding nil) ; evil collection needs this to be nil
   (setq evil-search-module 'evil-search) ; make ctrlf integration work
   :general
-  ;; TODO: see if following setting was necessary
   ;; alias C-e and M-e to C-p and M-p so scrolling with vim navigation keys works
-  ;; this leaves us unable to access anything bound to C-e or M-e, but I don't really use thse keys
-                                        ;"C-e" (general-key "C-p")
-                                        ;"M-e" (general-key "M-p")
-  ;; use M-/ to unhighlight search
-  
-  ("M-/" 'evil-ex-nohighlight)
+  ;; this leaves us unable to access anything bound to C-e or M-e in global map but we can still use those keys in local maps
+  ("C-e" (general-key "C-p")
+   "M-e" (general-key "M-p")
+   ;; use M-/ to unhighlight search
+   "M-/" 'evil-ex-nohighlight)
   ;; modify basic evil keybindings
   (:states '(motion normal visual operator)
            ;; make evil use visual lines
@@ -550,6 +548,20 @@ my/add-to-global-hydra to add entries")
 (use-package consult-yasnippet)
 #+end_src
 
+***** affe
+#+begin_src emacs-lisp :tangle yes
+(use-package affe
+  :init
+  (defun affe-orderless-regexp-compiler (input _type _ignorecase)
+    (setq input (orderless-pattern-compiler input))
+    (cons input (lambda (str) (orderless--highlight input str)))) 
+  (setq affe-regexp-compiler #'affe-orderless-regexp-compiler)
+  
+  :config
+  ;; Manual preview key for `affe-grep'
+  (consult-customize affe-grep :preview-key (kbd "M-.")))
+#+end_src
+
 **** hydra
 #+begin_src emacs-lisp :tangle yes
 (defhydra hydra-consult (:color blue :hint nil)
@@ -558,7 +570,10 @@ _b_: bookmarks    _r_: ripgrep        ^^_y_: yank
 _i_: imenu        _f_/_l_: find/locate  _Y_: yank replace
 _I_: imenu multi  _g_: grep           ^^_s_: insert snippet
 _m_: jump to mark _G_: git grep
+^^                _a_/_A_: affe find/grep
 "
+  ("a" (lambda () (interactive) (affe-find default-directory)))
+  ("A" (lambda () (interactive) (affe-grep default-directory)))
   ("b" consult-bookmark)
   ("i" consult-imenu)
   ("I" consult-imenu-multi)
@@ -584,7 +599,7 @@ _m_: jump to mark _G_: git grep
         corfu-quit-no-match t
         corfu-preview-current nil
         corfu-quit-at-boundary t
-        corfu-auto t)
+        corfu-auto nil) ; TODO: was t, see if this was the right setting
   (defun corfu-move-to-minibuffer ()
     "Transfer the current completion session to the minibuffer"
     (interactive)
@@ -723,7 +738,8 @@ _m_: jump to mark _G_: git grep
       (push '(embark-target-mode (:eval embark--target-mode-string)) mode-line-misc-info)
       (setq embark--target-mode-timer
             (run-with-idle-timer 0.1 t #'embark--target-mode-update))))
-  (embark-target-mode 1)
+  ;; disabled for now
+  ;; (embark-target-mode 1)
   
   :general
   (:keymaps 'override
@@ -924,6 +940,7 @@ _m_: jump to mark _G_: git grep
   :config
   (add-to-list 'popwin:special-display-config '("\\*dtache.*" :regexp t))
   (add-to-list 'popwin:special-display-config '("\\*vterm\\*" :regexp t))
+  (add-to-list 'popwin:special-display-config '("\\*transmission\\*" :regexp t))
   (popwin-mode 1))
 #+end_src
 
@@ -1123,6 +1140,8 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
             "C-c d" 'my/eshell-complete-recent-dir
             "M-." (lambda () (interactive) (insert "$_")))
   (:keymaps 'eshell-mode-map :states '(normal motion visual operater)
+            "C-e" 'eshell-previous-prompt
+            "C-n" 'eshell-next-prompt
             "g e" 'eshell-previous-prompt
             "g n" 'eshell-next-prompt
             "B"   'eshell-backward-argument
@@ -1185,13 +1204,6 @@ setenv TERM eterm-color > /dev/null
   (setup-esh-help-eldoc))
 #+end_src
 
-**** status in fringe
-#+begin_src emacs-lisp :tangle yes
-;; show last commands status in fringe
-(use-package eshell-fringe-status
-  :hook (eshell-mode . eshell-fringe-status-mode))
-#+end_src
-
 **** syntax highlighting
 #+begin_src emacs-lisp :tangle yes
 (use-package eshell-syntax-highlighting
@@ -1225,6 +1237,13 @@ setenv TERM eterm-color > /dev/null
         eshell-review-quick-commands nil
         eshell-smart-space-goes-to-end t)
   :hook (eshell-mode . eshell-smart-initialize))
+#+end_src
+
+**** COMMENT status in fringe
+#+begin_src emacs-lisp :tangle yes
+;; show last commands status in fringe
+(use-package eshell-fringe-status
+  :hook (eshell-mode . eshell-fringe-status-mode))
 #+end_src
 
 *** functions
@@ -1499,6 +1518,7 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
 *** overall settings
 #+begin_src emacs-lisp :tangle yes
 (use-package org
+  :straight nil
   :init
   ;; let emphasis markers be nested
   (setq org-emphasis-regexp-components '("-[:space:]('\"{*/=~_" "-[:space:].,*/=~_:!?;'\")}\\[" "[:space:]" "." 1))
@@ -1531,6 +1551,7 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
 #+end_src
 
 *** agenda
+**** agenda
 #+begin_src emacs-lisp :tangle yes
 (use-package org-agenda
   :straight nil
@@ -1605,6 +1626,160 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
   ;; from https://emacs.stackexchange.com/questions/477/how-do-i-automatically-save-org-mode-buffers
   (advice-add 'org-agenda-quit :before 'org-save-all-org-buffers)
   (advice-add 'org-agenda-redo :after 'org-save-all-org-buffers)) ; redo actually just refreshes
+#+end_src
+
+***** functions
+****** print parent heading
+#+begin_src emacs-lisp :tangle yes
+(defun my/org-print-parent-heading ()
+  "Print the name of the parent of the org element at point
+The name is formatted to end in a colon and take up 24 characters
+If the element has no header, return an empty string
+If the parent heading has the tag \"printParentHeadingRecurse\", go up a level"
+  (save-excursion
+    (if (org-up-heading-safe)
+        (if (member "printParentHeadingRecurse" (org-get-local-tags))
+            (my/org-print-parent-heading)
+          (format "%-24s" 
+                  ;; (concat
+                  (org-element-property :title (org-element-at-point))
+                  ;; ":")
+                  ))
+      "")))
+#+end_src
+
+****** skip all siblings but highest priority
+#+begin_src emacs-lisp :tangle yes
+;; helper functions for org-agenda-custom-commands
+;; from https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html
+;; modified to also skip entries that are scheaduled or have a deadline
+(defun my/org-agenda-skip-all-siblings-but-highest-priority ()
+  "Skip all but the highest priority TODO entry that is unscheduled and has no deadline."
+  (let ((should-skip-entry nil)
+        (priority (my/return-67.5-if-nil
+                   (org-element-property :priority (org-element-at-point)))))
+    (unless (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
+      (setq should-skip-entry t))
+    (when (my/org-agenda-scan-for-higher-priority-siblings-below)
+      (setq should-skip-entry t))
+    (save-excursion
+      (while (and (not should-skip-entry) (org-goto-sibling t))
+        (when (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
+          (setq should-skip-entry t))))
+    (when should-skip-entry
+      (or (outline-next-heading)
+          (goto-char (point-max))))))
+
+(defun my/org-agenda-is-heading-valid-for-unscheduled-tasks (priority)
+  "Return t if todo state of the element at point is \"TODO\", it is not scheduled,
+it has no deadline, and it's priority is >= PRIORITY"
+  ;; it should be noted that in org, smallers numbers represent higher priorities
+  (let ((current-heading-priority (my/return-67.5-if-nil
+                                   (org-element-property :priority (org-element-at-point)))))
+    (and (string= "TODO" (org-get-todo-state))
+         (not (org-element-property :deadline (org-element-at-point)))
+         (not (org-element-property :scheduled (org-element-at-point)))
+         (<= current-heading-priority priority))))
+
+(defun my/org-agenda-scan-for-higher-priority-siblings-below ()
+  "Return t if the current heading has a sibling below it of a
+higher priority"
+  (let ((return-val nil)
+        (priority (my/return-67.5-if-nil
+                   (org-element-property :priority (org-element-at-point)))))
+    (save-excursion
+      (while (org-goto-sibling)
+        (when (and (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
+                   (> priority (my/return-67.5-if-nil
+                                (org-element-property :priority (org-element-at-point)))))
+          (setq return-val t))))
+    return-val))
+
+;; TODO: see about returning org-priority-default instead
+(defun my/return-67.5-if-nil (num)
+  "If NUM is nil, return 67.5 Otherwise return NUM.
+Org mode reads 67.5 as the priority between C and D. This
+function is meant to be called with the priority of an org
+heading, and if the priority is not set it will assume it's
+between C and D."
+  (if num
+      num
+    67.5))
+#+end_src
+
+**** pomodoro
+***** pomodoro
+#+begin_src emacs-lisp :tangle yes
+(use-package org-pomodoro
+  :init
+  ;; times
+  (setq org-pomodoro-length 15
+        org-pomodoro-short-break-length 5)
+  ;; formatting
+  (setq org-pomodoro-format "Work: %s"
+        org-pomodoro-short-break-format "Break: %s"
+        org-pomodoro-long-break--format "Long Break: %s")
+  
+  ;; show notifications with libnotify
+  ;; from https://colekillian.com/posts/org-pomodoro-and-polybar/
+  (setq alert-user-configuration (quote ((((:category . "org-pomodoro")) libnotify nil))))
+  :general
+  (:keymaps 'org-agenda-mode-map
+            "C-c p" 'my/org-pomodoro-clock-in))
+#+end_src
+
+***** extensions
+****** prompt for time
+#+begin_src emacs-lisp :tangle yes
+;; TODO: this doesn't actually set the break length due to psuedo-async stuff
+;; maybe drop support for break lentgh
+;; or fix by making a global var to store real default length so you can globally set the length
+;; use hooks to reset after done, removing them after
+;; you can try tick hook for resetting just after break starts
+(defvar my/org-pomodoro-last-length (list org-pomodoro-length org-pomodoro-short-break-length)
+  "Variable to store the most recent work/break lengths for org-pomodoro")
+
+(defun my/org-pomodoro-clock-in (&optional length)
+  "Start a pomodoro session but get the work/break lengths from the user
+If no length is entered, default to the values `org-pomodoro-length' and
+`org-pomodoro-short-break-length'.
+
+When called non-interactively, LENGTH should be a string of the form
+\"work length/break length\". If no argument is given, use the default
+values
+
+This also inhibits the `org-clock' modeline segment"
+  (interactive
+   (list
+    (read-string (format "Pomodoro length (default %s/%s): " org-pomodoro-length org-pomodoro-short-break-length))))
+  (require 'org-pomodoro)
+  (setq my/org-pomodoro-last-length length)
+  (let ((org-clock-clocked-in-display nil) ; don't show org clock stuff
+        ;; split length into individual values or set it to nil if it's an empty string
+        (length (if (and length (not (string-empty-p length)))
+                    (split-string length "/")
+                  nil)))
+    
+    (if length
+        (let ((org-pomodoro-length (string-to-number (car length)))
+              (org-pomodoro-short-break-length (string-to-number (cadr length))))
+          (progn
+            (org-pomodoro)
+            (message org-pomodoro-short-break-length)))
+      (org-pomodoro))))
+#+end_src
+
+****** auto-restart
+#+begin_src emacs-lisp :tangle yes
+(defun my/org-pomodoro-restart ()
+  (interactive)
+  (let ((use-dialog-box nil))
+    (when (y-or-n-p "Start a new pomodoro?")
+      (save-window-excursion
+        (org-clock-goto)
+        (my/org-pomodoro-clock-in my/org-pomodoro-last-length)))))
+
+(add-hook 'org-pomodoro-break-finished-hook 'my/org-pomodoro-restart)
 #+end_src
 
 *** export
@@ -1777,85 +1952,6 @@ _SPC_: new, _a_: attach, _=_: diff, _r_: rerun, _w_: copy command, _W_: copy out
 #+end_src
 
 *** functions
-**** agenda helpers
-***** print parent heading
-#+begin_src emacs-lisp :tangle yes
-(defun my/org-print-parent-heading ()
-  "Print the name of the parent of the org element at point
-The name is formatted to end in a colon and take up 24 characters
-If the element has no header, return an empty string
-If the parent heading has the tag \"printParentHeadingRecurse\", go up a level"
-  (save-excursion
-    (if (org-up-heading-safe)
-        (if (member "printParentHeadingRecurse" (org-get-local-tags))
-            (my/org-print-parent-heading)
-          (format "%-24s" 
-                  ;; (concat
-                  (org-element-property :title (org-element-at-point))
-                  ;; ":")
-                  ))
-      "")))
-#+end_src
-
-***** skip all siblings but highest priority
-#+begin_src emacs-lisp :tangle yes
-;; helper functions for org-agenda-custom-commands
-;; from https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html
-;; modified to also skip entries that are scheaduled or have a deadline
-(defun my/org-agenda-skip-all-siblings-but-highest-priority ()
-  "Skip all but the highest priority TODO entry that is unscheduled and has no deadline."
-  (let ((should-skip-entry nil)
-        (priority (my/return-67.5-if-nil
-                   (org-element-property :priority (org-element-at-point)))))
-    (unless (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
-      (setq should-skip-entry t))
-    (when (my/org-agenda-scan-for-higher-priority-siblings-below)
-      (setq should-skip-entry t))
-    (save-excursion
-      (while (and (not should-skip-entry) (org-goto-sibling t))
-        (when (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
-          (setq should-skip-entry t))))
-    (when should-skip-entry
-      (or (outline-next-heading)
-          (goto-char (point-max))))))
-
-(defun my/org-agenda-is-heading-valid-for-unscheduled-tasks (priority)
-  "Return t if todo state of the element at point is \"TODO\", it is not scheduled,
-it has no deadline, and it's priority is >= PRIORITY"
-  ;; it should be noted that in org, smallers numbers represent higher priorities
-  (let ((current-heading-priority (my/return-67.5-if-nil
-                                   (org-element-property :priority (org-element-at-point)))))
-    (and (string= "TODO" (org-get-todo-state))
-         (not (org-element-property :deadline (org-element-at-point)))
-         (not (org-element-property :scheduled (org-element-at-point)))
-         (<= current-heading-priority priority))))
-
-(defun my/org-agenda-scan-for-higher-priority-siblings-below ()
-  "Return t if the current heading has a sibling below it of a
-higher priority"
-  (let ((return-val nil)
-        (priority (my/return-67.5-if-nil
-                   (org-element-property :priority (org-element-at-point)))))
-    (save-excursion
-      (while (org-goto-sibling)
-        (when (and (my/org-agenda-is-heading-valid-for-unscheduled-tasks priority)
-                   (> priority (my/return-67.5-if-nil
-                                (org-element-property :priority (org-element-at-point)))))
-          (setq return-val t))))
-    return-val))
-
-;; TODO: see about returning org-priority-default instead
-(defun my/return-67.5-if-nil (num)
-  "If NUM is nil, return 67.5 Otherwise return NUM.
-Org mode reads 67.5 as the priority between C and D. This
-function is meant to be called with the priority of an org
-heading, and if the priority is not set it will assume it's
-between C and D."
-  (if num
-      num
-    67.5))
-#+end_src
-
 **** keep tags to right
 #+begin_src emacs-lisp :tangle yes
 ;; align tags to the right regardless of window size
