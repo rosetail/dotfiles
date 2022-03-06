@@ -144,57 +144,6 @@
   (setq-local cursor-type nil))
 #+end_src
 
-** global hydra
-#+begin_src emacs-lisp :tangle yes
-(defvar my/global-hydra-heads-list '()
-  "List of hydra heads to be used by global-hydra. Use
-my/add-to-global-hydra to add entries")
-
-(defun my/add-to-global-hydra (head)
-  "add HEAD to my/global-hydra-heads-list"
-  ;; don't ever add SPC or ESC to GLOBAL-HYDRA
-  (catch 'invalid-head
-    (when (or (string= (car head) "ESC") (string= (car head) "SPC"))
-      (throw 'invalid-head "Can't add ESC or SPC to GLOBAL-HYDRA"))
-    ;; if there is already a head with the same keybinding, remove it
-    (let ((current-head nil))
-      (dolist (current-head my/global-hydra-heads-list)
-        (when (string= (car head) (car current-head))
-          (setq my/global-hydra-heads-list ; for some reason this doesn't work unless we use setq
-                (delete current-head my/global-hydra-heads-list)))))
-    ;; add the new head to the hydra
-    (add-to-list 'my/global-hydra-heads-list head)))
-
-(defun my/global-hydra ()
-  "Global hydra that functions like a leader key. Add heads with `my/add-to-global-hydra`"
-  (interactive)
-  (call-interactively
-   (eval `(defhydra my-hydra (:hint nil :color blue)
-            ,@my/global-hydra-heads-list))))
-
-;; start by adding TAB
-(my/add-to-global-hydra '("TAB"
-                          (lambda ()
-                            (interactive)
-                            (save-excursion
-                              (mark-whole-buffer)
-                              (indent-for-tab-command)))
-                          "Indent Buffer" :column "Editing"))
-#+end_src
-
-** major mode hydra
-#+begin_src emacs-lisp :tangle yes
-(defun my/major-mode-hydra ()
-  "Call `<major-mode>-hydra/body` if it is defined"
-  (interactive)
-  (let ((hydra-name (intern (concat (symbol-name major-mode) "-hydra/body"))))
-    (if (fboundp hydra-name)
-        (call-interactively hydra-name)
-      (message (concat "No hydra defined for " (symbol-name major-mode))))))
-
-(my/add-to-global-hydra '("m" my/major-mode-hydra "Major Mode" :column "Tools"))
-#+end_src
-
 ** package loading notice
 #+begin_src emacs-lisp :tangle yes
 ;; from https://gist.github.com/tttuuu888/267a8a56c207d725ea999e353646eec9
@@ -294,8 +243,8 @@ my/add-to-global-hydra to add entries")
   ;; modify basic evil keybindings
   (:states '(motion normal visual operator)
            ;; make evil use visual lines
-           "n"      'evil-next-visual-line
-           "e"      'evil-previous-visual-line
+           ;; "n"      'evil-next-visual-line
+           ;; "e"      'evil-previous-visual-line
            ;; use escape as C-g
            ;; TODO: this was disabled. See if it was useful
            ;; [escape] 'keyboard-quit
@@ -323,13 +272,6 @@ my/add-to-global-hydra to add entries")
     "N" "J"
     "E" "K"
     "I" "L"
-    ;; ;; rotate j t and f so j -> t -> f -> e
-    ;; "j" "t"
-    ;; "t" "f"
-    ;; "f" "e"
-    ;; "J" "T"
-    ;; "T" "F"
-    ;; "F" "E"
     ;; rotate j t and f so j -> f -> e
     "j" "f"
     "f" "e"
@@ -355,19 +297,41 @@ my/add-to-global-hydra to add entries")
   :after evil
   :init
   (setq evil-collection-company-use-tng nil) ; make company behave like emacs, not vim
-  ;; TODO: see if this is a good setting
   (setq evil-collection-setup-minibuffer t)
-  ;; TODO: I disabled the hook. see if this was doing anything
-  ;; remap C-{j,k} to C-{n,e} for colemak
   (defun my-hjkl-rotation (_mode mode-keymaps &rest _rest)
     (evil-collection-translate-key 'normal mode-keymaps
-      (kbd "C-n") (kbd "C-j")
-      (kbd "C-e") (kbd "C-k")))
+      ;; change hjkl to hnei
+      "n" "j"
+      "e" "k"
+      "i" "l"
+      ;; rotate j t and f so j -> f -> e
+      "j" "J" ; make j be J for convenience
+      "J" "f" ; then we need to have J for f
+      "f" "e"
+      ;; make k function as n so as not to disrupt muscle memory when searching
+      "k" "n"
+      "K" "N"
+      ;; rotate u i and l so u -> i -> l -> u
+      "u" "i"
+      "i" "l"
+      "l" "u"
 
-  (evil-collection-init)
-  ;; :hook
-  ;; (evil-collection-setup-hook . my-hjkl-rotation)
+      ;; do this all over again for g-hnei and whatever
+      "gn" "gj"
+      "ge" "gk"
+      "gi" "gl"
+      "gj" "gf"
+      "gf" "ge"
+      "gk" "gn"
+      "gK" "gN"
+      "gu" "gi"
+      "gi" "gl"
+      "gl" "gu"))
 
+
+  ;; for some reason :hook doesn't work for this
+  (add-hook 'evil-collection-setup-hook #'my-hjkl-rotation)
+  
   :config
   (evil-collection-init))
 #+end_src
@@ -455,6 +419,7 @@ my/add-to-global-hydra to add entries")
 #+end_src
 
 ** hydra
+*** hydra
 #+begin_src emacs-lisp :tangle yes
 ;; TODO: maybe move my/global-hydre here
 (use-package hydra
@@ -474,6 +439,58 @@ my/add-to-global-hydra to add entries")
   (:keymaps 'override
             :states '(normal insert emacs motion visual operater)
             "C-SPC" 'my/C-SPC))
+#+end_src
+
+*** functions
+*** global hydra
+#+begin_src emacs-lisp :tangle yes
+(defvar my/global-hydra-heads-list '()
+  "List of hydra heads to be used by global-hydra. Use
+my/add-to-global-hydra to add entries")
+
+(defun my/add-to-global-hydra (head)
+  "add HEAD to my/global-hydra-heads-list"
+  ;; don't ever add SPC or ESC to GLOBAL-HYDRA
+  (catch 'invalid-head
+    (when (or (string= (car head) "ESC") (string= (car head) "SPC"))
+      (throw 'invalid-head "Can't add ESC or SPC to GLOBAL-HYDRA"))
+    ;; if there is already a head with the same keybinding, remove it
+    (let ((current-head nil))
+      (dolist (current-head my/global-hydra-heads-list)
+        (when (string= (car head) (car current-head))
+          (setq my/global-hydra-heads-list ; for some reason this doesn't work unless we use setq
+                (delete current-head my/global-hydra-heads-list)))))
+    ;; add the new head to the hydra
+    (add-to-list 'my/global-hydra-heads-list head)))
+
+(defun my/global-hydra ()
+  "Global hydra that functions like a leader key. Add heads with `my/add-to-global-hydra`"
+  (interactive)
+  (call-interactively
+   (eval `(defhydra my-hydra (:hint nil :color blue)
+            ,@my/global-hydra-heads-list))))
+
+;; start by adding TAB
+(my/add-to-global-hydra '("TAB"
+                          (lambda ()
+                            (interactive)
+                            (save-excursion
+                              (mark-whole-buffer)
+                              (indent-for-tab-command)))
+                          "Indent Buffer" :column "Editing"))
+#+end_src
+
+*** major mode hydra
+#+begin_src emacs-lisp :tangle yes
+(defun my/major-mode-hydra ()
+  "Call `<major-mode>-hydra/body` if it is defined"
+  (interactive)
+  (let ((hydra-name (intern (concat (symbol-name major-mode) "-hydra/body"))))
+    (if (fboundp hydra-name)
+        (call-interactively hydra-name)
+      (message (concat "No hydra defined for " (symbol-name major-mode))))))
+
+(my/add-to-global-hydra '("m" my/major-mode-hydra "Major Mode" :column "Tools"))
 #+end_src
 
 ** minibuffer and completion

@@ -532,3 +532,8 @@ other::---
   - ~swapon --show~ shows priorities
 
 * LVM
+- physical devices are what they seem like
+- physical volumes (pv) are devices which have been initialized into the lvm system
+- volume groups (vg) are a pool of pvs
+  - it is the lvm equivalent of an entire disk
+- logical volumes (lv) are the lvm equivalent of partitions
