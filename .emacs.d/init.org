@@ -243,8 +243,8 @@
   ;; modify basic evil keybindings
   (:states '(motion normal visual operator)
            ;; make evil use visual lines
-           ;; "n"      'evil-next-visual-line
-           ;; "e"      'evil-previous-visual-line
+           "n"      'evil-next-visual-line
+           "e"      'evil-previous-visual-line
            ;; use escape as C-g
            ;; TODO: this was disabled. See if it was useful
            ;; [escape] 'keyboard-quit
@@ -2417,24 +2417,26 @@ _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
 ** magit
 #+begin_src emacs-lisp :tangle yes
 (use-package magit
+  :config (evil-make-overriding-map magit-mode-map)
   :general
   (:keymaps 'magit-mode-map
             :states '(motion normal visual operator)
             "TAB" 'magit-section-cycle
-            "e" 'magit-section-backward
             ;; usc C-n/C-e for scrolling lines
             "C-n" 'magit-next-line
             "C-e" 'magit-previous-line)
-  ;; "n" binding gets overridden, so we have to rebind it every time we open magit
+  ;; "e" binding gets overridden, so we have to rebind it every time we open magit
   :hook (magit-mode
          . (lambda ()
            (general-define-key
             :keymaps 'local
             :states '(motion normal visual operator)
-            "n" 'magit-section-forward))))
+            "e" 'magit-section-backward))))
 
 ;; add support for github and gitlab and stuff
-(use-package forge :demand t :after magit)
+(use-package forge :demand t :after magit
+  ;; prevent warning from evil-colection
+  :init (setq forge-add-default-bindings nil))
 #+end_src
 
 ** telega
