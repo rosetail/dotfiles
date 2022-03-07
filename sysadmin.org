@@ -533,7 +533,11 @@ other::---
 
 * LVM
 - physical devices are what they seem like
-- physical volumes (pv) are devices which have been initialized into the lvm system
+- physical volumes (pv) are devices or partitions which have been initialized into the lvm system
 - volume groups (vg) are a pool of pvs
   - it is the lvm equivalent of an entire disk
 - logical volumes (lv) are the lvm equivalent of partitions
+- you can make partitions for lvm or you can use an entire disk
+- ~pvcreate /partition1/ partition2/ ...~ to prep devices for lvm
+  - this turns them into pvs
+- 

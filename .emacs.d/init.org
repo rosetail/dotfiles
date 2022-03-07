@@ -300,6 +300,8 @@
   (setq evil-collection-setup-minibuffer t)
   (defun my-hjkl-rotation (_mode mode-keymaps &rest _rest)
     (evil-collection-translate-key 'normal mode-keymaps
+      (kbd "C-n") (kbd "C-j")
+      (kbd "C-e") (kbd "C-k")
       ;; change hjkl to hnei
       "n" "j"
       "e" "k"
@@ -1113,13 +1115,6 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (:keymaps 'comint-mode-map :states 'insert
             "C-a" 'comint-kill-input)
   (:keymaps 'comint-mode-map
-            "C-e" 'comint-previous-prompt
-            "C-n" 'comint-next-prompt
-            "M-e" 'comint-previous-matching-input-from-input
-            "M-n" 'comint-next-matching-input-from-input)
-  (:keymaps 'shell-mode-map :states '(normal emacs motion visual operater)
-            "g e" 'comint-previous-prompt
-            "g n" 'comint-next-prompt
             "M-e" 'comint-previous-matching-input-from-input
             "M-n" 'comint-next-matching-input-from-input))
 #+end_src
@@ -1159,8 +1154,8 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
   (:keymaps 'eshell-mode-map :states '(normal motion visual operater)
             "C-e" 'eshell-previous-prompt
             "C-n" 'eshell-next-prompt
-            "g e" 'eshell-previous-prompt
-            "g n" 'eshell-next-prompt
+            "gn"  'eshell-next-prompt
+            "ge"  'eshell-previous-prompt
             "B"   'eshell-backward-argument
             "W"   'eshell-forward-argument
             "M-e" 'eshell-previous-matching-input-from-input
@@ -1396,23 +1391,23 @@ open the directory in a `dired' buffer."
 
 ** dtache
  #+begin_src emacs-lisp :tangle yes
-(use-package dtache
-  :straight (dtache :type git :host gitlab :repo "niklaseklund/dtache"
-                    :fork (:host gitlab :repo "rosetail/dtache" :branch "personal"))
-  :init
-  (setq dtache-detach-key (kbd "C-\\")
-        ;; don't reuse the last input for shell commands
-        dtache-shell-command-initial-input nil
-        dtache-show-output-on-attach t
-        ;; use custom env script with unbuffer
-        dtache-env "~/.emacs.d/var/dtache/dtache-env"
-        ;; obey no-littering
-        dtache-db-directory "~/.emacs.d/var/dtache")
-  :config
-  ;; add embark actions to dtache-open-session
-  (defvar embark-dtache-map (make-composed-keymap dtache-action-map embark-general-map))
-  (add-to-list 'embark-keymap-alist '(dtache . embark-dtache-map))
-  :hook (after-init . dtache-setup))
+ (use-package dtache
+   :straight (dtache :type git :host gitlab :repo "niklaseklund/dtache"
+                     :fork (:host gitlab :repo "rosetail/dtache" :branch "personal"))
+   :init
+   (setq dtache-detach-key (kbd "C-\\")
+         ;; don't reuse the last input for shell commands
+         dtache-shell-command-initial-input nil
+         dtache-show-output-on-attach t
+         ;; use custom env program that runs commands in script
+         dtache-env "~/.emacs.d/var/dtache/dtache-env"
+         ;; obey no-littering
+         dtache-db-directory "~/.emacs.d/var/dtache")
+   :config
+   ;; add embark actions to dtache-open-session
+   (defvar embark-dtache-map (make-composed-keymap dtache-action-map embark-general-map))
+   (add-to-list 'embark-keymap-alist '(dtache . embark-dtache-map))
+   :hook (after-init . dtache-setup))
 #+end_src
 
 *** dtache-env
@@ -1432,7 +1427,10 @@ fi
 #+begin_src emacs-lisp :tangle yes
 (use-package dtache-eshell
   :straight nil
-  :hook (eshell-mode . dtache-eshell-mode))
+  :after (eshell dtache)
+  :demand t
+  :config
+  (dtache-eshell-setup))
 #+end_src
 
 ***** shell
