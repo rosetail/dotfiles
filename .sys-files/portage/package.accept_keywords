@@ -329,3 +329,5 @@ net-im/discord-bin ~amd64
 =dev-libs/olm-3.2.9 ~amd64
 # required by tdlib (argument)
 =net-libs/tdlib-1.8.0 ~amd64
+# required by skatebird (argument)
+=games-sports/skatebird-12 ~amd64
