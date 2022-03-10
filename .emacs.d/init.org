@@ -277,16 +277,14 @@
     "f" "e"
     "J" "F"
     "F" "E"
-    ;; make k function as n so as not to disrupt muscle memory when searching
+    ;; k -> n
     "k" "n"
     "K" "N"
-    ;; rotate u i and l so u -> i -> l -> u
-    "u" "i"
+    ;; swap l and i
+    "l" "i"
     "i" "l"
-    "l" "u"
-    "U" "I"
-    "I" "L"
-    "L" "U")
+    "L" "I"
+    "I" "L")
   (evil-mode 1))
 #+end_src
 
@@ -306,31 +304,38 @@
       "n" "j"
       "e" "k"
       "i" "l"
-      ;; rotate j t and f so j -> f -> e
+      "N" "J"
+      "E" "K"
+      "I" "L"
+      ;; rotate j f and e so j -> J > f -> e
       "j" "J" ; make j be J for convenience
       "J" "f" ; then we need to have J for f
       "f" "e"
-      ;; make k function as n so as not to disrupt muscle memory when searching
+      ;; k -> n
       "k" "n"
       "K" "N"
-      ;; rotate u i and l so u -> i -> l -> u
-      "u" "i"
+      ;; swap l and i
       "i" "l"
-      "l" "u"
-
-      ;; do this all over again for g-hnei and whatever
+      "l" "i"
+      "I" "L"
+      "L" "I"
+      ;; do this all over again for g-hnei and other changes
       "gn" "gj"
       "ge" "gk"
       "gi" "gl"
+      "gN" "gJ"
+      "gE" "gK"
+      "gI" "gL"
       "gj" "gf"
       "gf" "ge"
+      "gJ" "gF"
+      "gF" "gE"
       "gk" "gn"
       "gK" "gN"
-      "gu" "gi"
       "gi" "gl"
-      "gl" "gu"))
-
-
+      "gl" "gi"
+      "gI" "gL"
+      "gL" "gI"))
   ;; for some reason :hook doesn't work for this
   (add-hook 'evil-collection-setup-hook #'my-hjkl-rotation)
   
