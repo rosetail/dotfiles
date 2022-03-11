@@ -15,7 +15,34 @@ def remap_in_all_modes(remappings):
                 new_dict[new_key] = c.bindings.default[mode][key]
         c.bindings.default[mode] = new_dict
 
-remappings = {'i': 'u', 'j': 'n', 'k': 'e', 'l': 'i', 'n': 'k', 'u': 'l', 'I': 'U', 'J': 'N', 'K': 'E', 'L': 'I', 'N': 'K', 'U': 'L', 'x': 'd', 'd': 'x'}
+remappings = {
+    # hjkl -> hnei
+    'j': 'n',
+    'k': 'e',
+    'l': 'i',
+    'J': 'N',
+    'K': 'E',
+    'L': 'I',
+    # j -> f -> e
+    'f': 'j',
+    'e': 'f',
+    'F': 'J',
+    'E': 'F',
+    # k -> n
+    'n': 'k',
+    'N': 'K',
+    # l -> i -> l
+    'i': 'l',
+    'l': 'i',
+    'I': 'L',
+    'L': 'I',
+    # x -> d -> x
+    'x': 'd',
+    'd': 'x',
+    'X': 'D',
+    'D': 'X'
+}
+
 remap_in_all_modes(remappings)
 
 config.load_autoconfig()

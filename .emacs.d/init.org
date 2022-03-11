@@ -265,14 +265,14 @@
   :config
   ;; translate keybindings for colemak
   (general-translate-key nil '(motion normal visual operator)
-    ;; change hjkl to hnei
+    ;; hjkl -> hnei
     "n" "j"
     "e" "k"
     "i" "l"
     "N" "J"
     "E" "K"
     "I" "L"
-    ;; rotate j t and f so j -> f -> e
+    ;; j -> f -> e
     "j" "f"
     "f" "e"
     "J" "F"
@@ -280,7 +280,7 @@
     ;; k -> n
     "k" "n"
     "K" "N"
-    ;; swap l and i
+    ;; l -> i -> l
     "l" "i"
     "i" "l"
     "L" "I"
