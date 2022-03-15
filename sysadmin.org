@@ -600,4 +600,8 @@ other::---
 - ~vdo list~ to show all volumes
 
 * nfs
-- 
+- mount with ~mount -t nfs /host/://dir/ /mountpoint/~
+- add nfs in options column for fstab to persistently mount
+- autofs:
+  - install autofs package
+  - edit

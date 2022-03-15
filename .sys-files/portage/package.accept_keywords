@@ -334,4 +334,5 @@ net-im/discord-bin ~amd64
 # required by nyxt (argument)
 www-client/nyxt ~amd64
 # required by nyxt (argument)
-sys-libs/libfixposix ~amd64
+sys-libs/libfixposix ~amd64# required by app-misc/dragon (argument)
+=app-misc/dragon-1.2.0 ~amd64

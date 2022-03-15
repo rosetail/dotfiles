@@ -80,3 +80,6 @@ config.bind('Tsu', 'config-cycle -p -t -u {url} content.javascript.enabled ;; re
 config.bind('<Shift-Esc>', 'mode-enter passthrough')
 # config.bind('<Ctrl-Alt-v>', 'leave-mode', mode='passthrough')
 # config.bind('<Ctrl-Alt-g>', 'enter-mode passthrough')
+
+# enable qutenyan
+config.source('qutenyan/nyan.py')
