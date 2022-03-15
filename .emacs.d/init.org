@@ -662,10 +662,11 @@ _m_: jump to mark _G_: git grep
   :demand t
   :after corfu
   :init
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  (add-to-list 'completion-at-point-functions #'cape-ispell))
+  (dolist (i '(cape-dabbrev
+               cape-file
+               cape-keyword
+               cape-ispell))
+    (add-to-list 'completion-at-point-functions i)))
 #+end_src
 
 ***** pcmpl
@@ -927,12 +928,23 @@ _m_: jump to mark _G_: git grep
 * visual packages
 ** doom modeline
 #+begin_src emacs-lisp :tangle yes
+;; TODO: reformat this
 (use-package doom-modeline
   :demand t
   :init
   ;; show word count of region
   (setq doom-modeline-enable-word-count t)
-  (doom-modeline-mode 1))
+  ;; don't show percentage of buffer because we have nyan
+  ;; (setq doom-modeline-percent-position nil)
+  
+  :config
+  (doom-modeline-def-modeline 'my/custom
+    '(bar workspace-name window-number modals matches follow buffer-info remote-host word-count parrot selection-info buffer-position )
+    '(objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker))
+
+  (doom-modeline-mode 1)
+  ;; (doom-modeline-set-modeline 'my/custom 'default)
+  )
 #+end_src
 
 ** line numbers
@@ -1101,6 +1113,18 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 #+begin_src emacs-lisp :tangle yes
 (use-package which-key
   :init (which-key-mode 1))
+#+end_src
+
+** nyan
+#+begin_src emacs-lisp :tangle yes
+(use-package nyan-mode
+  :init
+  (setq nyan-wavy-trail t
+        ;; nyan-bar-length 32
+        nyan-minimum-window-width 80
+        nyan-animate-nyancat t)
+
+  (nyan-mode 1))
 #+end_src
 
 ** COMMENT pretty printing
@@ -1417,11 +1441,52 @@ open the directory in a `dired' buffer."
    (add-to-list 'embark-keymap-alist '(dtache . embark-dtache-map))
    :hook (after-init . dtache-setup)
    :general
-   ;; ([remap dired-do-async-shell-command] 'dired-do-dtache-shell-command)
-   )
+   ([remap dired-do-async-shell-command] 'dired-do-dtache-shell-command))
 #+end_src
 
-*** COMMENT dired
+*** dtache-env
+#+begin_src sh :tangle ./var/dtache/dtache-env :shebang "#!/bin/sh"
+TERM="eterm-color"
+dtache_command="$*"
+
+if eval script --quiet -f -e -c "\"$dtache_command\"" /dev/null; then
+    echo -e "\nDtache session finished"
+else
+    echo -e "\nDtache session exited abnormally with code $?"
+fi
+#+end_src
+
+*** functions
+**** app-launcher
+#+begin_src emacs-lisp :tangle yes
+(defun app-launcher--launch-in-dtache (selected)
+  "Function used to run the selected application with dtache."
+  (let* ((dtache-session-origin 'app-launcher)
+         (exec (cdr (assq 'exec (gethash selected app-launcher--cache))))
+	 (command (let (result)
+		    (dolist (chunk (split-string exec " ") result)
+		      (unless (or (equal chunk "%U")
+				  (equal chunk "%F")
+				  (equal chunk "%u")
+				  (equal chunk "%f"))
+			(setq result (concat result chunk " ")))))))
+    (dtache-start-session command)))
+
+(defun my/dtache-launch-app ()
+  "Use `app-launcher' to open a desktop application in dtache.
+
+It should be noted that `app-launcher' already makes apps fork to
+the background, so dtache is not necessary if you just want to
+keep the program alive after emacs exits."
+  (interactive)
+  (require 'app-launcher)
+  (let ((app-launcher--action-function #'app-launcher--launch-in-dtache))
+    (app-launcher-run-app)))
+
+(my/add-to-global-hydra '("L" my/dtache-launch-app "Launch App in Dtache" :column "Misc"))
+#+end_src
+
+**** dired
 #+begin_src emacs-lisp :tangle yes
 (defun dired-do-dtache-shell-command (command &optional arg file-list)
   "Run a shell command COMMAND on the marked files with dtache.
@@ -1482,18 +1547,6 @@ In shell syntax this means separating the individual commands with `;'."
            (dired-shell-stuff-it command file-list nil arg)))
       
       (message "Command canceled"))))
-#+end_src
-
-*** dtache-env
-#+begin_src sh :tangle ./var/dtache/dtache-env :shebang "#!/bin/sh"
-TERM="eterm-color"
-dtache_command="$*"
-
-if eval script --quiet -f -e -c "\"$dtache_command\"" /dev/null; then
-    echo -e "\nDtache session finished"
-else
-    echo -e "\nDtache session exited abnormally with code $?"
-fi
 #+end_src
 
 *** extensions
@@ -2472,9 +2525,17 @@ _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
 ** app launcher
 #+begin_src emacs-lisp :tangle yes
 (use-package app-launcher
-  :straight '(app-launcher :host github :repo "SebastienWae/app-launcher")
+  :straight (app-launcher :host github :repo "SebastienWae/app-launcher"
+                          :fork (:host github :repo "rosetail/app-launcher" :branch "annotation-face"))
   :init
-  (my/add-to-global-hydra '("l" app-launcher-run-app "Launch App" :column "Misc")))
+  (setq app-launcher--annotation-function #'my/app-launcher-annotator)
+  (my/add-to-global-hydra '("l" app-launcher-run-app "Launch App" :column "Misc"))
+  
+  (defun my/app-launcher-annotator (choice)
+    "Function to annotate the completion choices."
+    (let* ((str (cdr (assq 'comment (gethash choice app-launcher--cache))))
+           (padding (- (+ 30 (length str)) (length choice))))
+      (when str (format (concat "%" (number-to-string padding) "s") (propertize str 'face 'completions-annotations))))))
 #+end_src
 
 ** bookmarks
@@ -2491,7 +2552,9 @@ _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
 (use-package ebuild-mode)
 
 (use-package package.use-mode
-  :straight (package.use-mode :type git :host github :repo "C-xC-c/package.use-mode"))
+  :straight (package.use-mode
+             :type git :host github :repo "C-xC-c/package.use-mode"
+             :fork (:host github :repo "rosetail/package.use-mode" :branch "fix-autoload")))
 #+end_src
 
 ** magit
@@ -2537,6 +2600,16 @@ _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
 ;;        (transmission-files-mode . my/disable-cursor)
 ;;        (transmission-info-mode .  my/disable-cursor)
 ;;        (transmission-peers-mode . my/disable-cursor)))
+#+end_src
+
+** proced narrow
+#+begin_src emacs-lisp :tangle yes
+(use-package proced-narrow
+  :demand t
+  :after proced
+  :general (:keymaps 'proced-mode-map
+                     :states '(motion normal visual operator)
+                     "/" 'proced-narrow))
 #+end_src
 
 * cleanup and stuff

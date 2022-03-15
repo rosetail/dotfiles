@@ -331,3 +331,7 @@ net-im/discord-bin ~amd64
 =net-libs/tdlib-1.8.0 ~amd64
 # required by skatebird (argument)
 =games-sports/skatebird-12 ~amd64
+# required by nyxt (argument)
+www-client/nyxt ~amd64
+# required by nyxt (argument)
+sys-libs/libfixposix ~amd64

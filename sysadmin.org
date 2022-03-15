@@ -537,6 +537,7 @@ other::---
 - volume groups (VGs) are a pool of PVs
   - it is the lvm equivalent of an entire disk
 - logical volumes (LVs) are the lvm equivalent of partitions
+- physical extents (PEs) are smallest unit of physical storage
 - you can make partitions for lvm or you can use an entire disk
 - ~pvcreate /partition1/ /partition2/ ...~ to prep devices for lvm
   - this turns them into PVs
@@ -544,4 +545,59 @@ other::---
   - if there is already a VG then you can just add PVs to it
 - ~lvcreate -n /name/ -L /size/ /volumegroup/~
   - size can end in M or G for mega/gigabyte
+- run ~mkfs.ext4 /dev/<vgName>/<lvName>~ to format it
+- ~lvremove /path/to/lv~ to delete LV
+- ~vgremove /vgName/~ to delete VG
+- ~pvremove /pvNames/~ to delete PVs
+- ~pvdisply /PV/~ to show PV info
+- ~vgdisplay /VG/~ to show VG info
+- ~lvdisplay /path/to/lv~ to show lv info
+- growing a VG:
+  - first make a PV by creating a partition and running ~pvcreate~
+  - run ~vgextend /VG/ /PV/~ to add PV to the VG
+- shrink with ~pvremove /PV/~ to remove a PV. There needs to be space on the other PVs to accommodate the data
+- ~pvmove /PV/~ to move data from PV to other PVs without removing it
+  - this one is kinda sketchy so back up first
+- ~vgreduce /VG/ /PV/~ to remove PV from VG but still keep PV as a physical volume so it can be added to another VG
+- growing a LV:
+  - use vgdisplay to make sure there are enough extents available
+  - ~lvextend -L +300M /LV/~
+    - remove plus to dictate the absolute size of the LV
+  - afterwards you *MUST* extend the filesystem
+    - ~xfs_growfs~ for xfs
+    - ~resize2fs~ fox ext4
+    - to resize swap, ~swapoff~ before ~lvextend~, and just ~swapon~ after
+
+* advanced storage
+** stratis
+- stratis is like lvm but more dynamic
+  - partitions are put into pools and those pools can have multiple filesystems
+  - the filesystems dynamically grow as more data is added to them
+  - this lets you truly have filesystems that will auto grow and auto shrink so you don't have to resize them if 1 grows faster than the other or whatever
+- stratis needs a daemon of course
+- redhat packages are called stratis-cli and stratisd
+  - after installing run ~systemctl enable --now stratisd~
+- create pool with ~stratis pool create /name/ /device/~
+- ~stratis pool list~ to list pools
+- ~stratis blockdev list /pool/~ to show devices in pool
+- ~stratis pool add-data /pool/ /device/~ to add a device to the pool
+- ~stratis filesystem create /pool/ /filesystem/~
+- ~stratis filesystem list~ to show supported fs types
+- of course stratis breaks df and all that
+- ~stratis filesystem snapshot /pool/ /fs/ /name/~ to create a snapshot named name
+- example fstab entry: ~UUID=31b9363b-add8-4b46-a4bf-c199cd478c55 /dir1 xfs defaults,x-systemd.requires=stratisd.service 0 0~
+- needs to have the systemd mount option
+  
+** VDO
+- vdo is a driver include in rhel 8
+- contains kvdo module to compress data and uds module for deduplication
+- vdo reduces data footprint by eliminating blocks with only 0s, compression, and deduplication
+- use this to create vdo volumes, which are like disk partitions
+- enable by installing vdo and kmod-kvdo packages
+- create with ~vdo create --name=/name/ --device=/partition/ --vdoLogicalSize=50G~ to turn partition into a 50G volume. You can change the size of the volume to be more than the partition because of compression. If no size is specified, it will just be 1:1
+- you can then format and mount it like normal
+- ~vdo status --name=/name/~ to show info about a volume
+- ~vdo list~ to show all volumes
+
+* nfs
 - 
