@@ -516,7 +516,7 @@ other::---
   - then try looking at booleans
 - monitoring violations:
   - install ~setroubleshoot-server~ to send violations to ~/var/log/messages~ instead of just ~/var/log/audit/audit.log~
-#  LocalWords:  dirs rwx setfacl systemd acl rxw
+#  LocalWords:  dirs rwx setfacl systemd acl rxw autocreated
 
 * storage/permission
 - gpt also backs up partition info at end of disk
@@ -604,4 +604,25 @@ other::---
 - add nfs in options column for fstab to persistently mount
 - autofs:
   - install autofs package
-  - edit
+  - enable autofs service
+  - add a master map file to ~/etc/auto.master.d/demo.autofs~
+    - the file can be any name in that directory, just needs to end in ~.autofs~
+    - should contain: ~/shares /etc/auto.demo~ to have /shares be the base dir for mounting, and to have /etc/auto.demo file contain the mount details
+  - create auto.demo (or appropriate file)
+    - format is:  ~key -options source~
+      - key is mountpoint, autocreated under the base dir
+      - options area starts with - and options are separated with commas
+      - source is location of mountpoint, can be host:path
+      - ~work -rw,sync serverb:/shares/work~ mounts serverb:/shares/work in <basdir>/work with rw and sync options
+
+* boot
+- get boot targets with ~systemctl list-units --type=target --all~
+- common ones are graphical, multi-user (multiple text-only accounts), rescue, and emergency
+- select a target with ~systemctl isolate multi-user.target~
+- permanently select one with ~systemctl set-default graphical.target~
+- to select target before boot, boot with ~systemd.unit=rescu.target~ kernel flag
+  - edit parameters with e in grub
+
+- if boot gets stuck due to jobs, boot to rescue or emergency target and run ~systemctl list-jobs~ in the terminal (on tty 9 in those modes)
+
+- C-x boots from the area to edit kernel params
