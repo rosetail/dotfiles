@@ -109,6 +109,9 @@
         ignored-local-variable-values '((magit-todos-exclude-globs))
         warning-suppress-types '((org-element-cache)))
   
+  ;; don't prompt to save passwords in authinfo
+  (setq auth-source-save-behavior nil)
+  
   ;; enable word wrapping in modes deriving from text-mode
   (add-hook 'text-mode-hook 'visual-line-mode)
   ;; show column number in modeline
@@ -1177,7 +1180,7 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
             "C-n" 'eshell-next-prompt
             "M-h" 'eshell-backward-argument
             "M-i" 'eshell-forward-argument
-            "M-e" 'eshell-previous-matching-input-from-input ;
+            "M-e" 'eshell-previous-matching-input-from-input
             "M-n" 'eshell-next-matching-input-from-input
             "M-b" 'eshell-insert-buffer-name
             "C-c d" 'my/eshell-complete-recent-dir
@@ -1214,6 +1217,14 @@ setenv TERM eterm-color > /dev/null
 #+end_src
 
 *** extensions
+**** visual commands
+#+begin_src emacs-lisp :tangle yes
+(use-package em-term
+  :straight nil
+  :config
+  (add-to-list 'eshell-visual-commands "ncmpcpp")
+  (add-to-list 'eshell-visual-commands "nmtui-connect"))
+#+end_src
 **** autosuggestions
 #+begin_src emacs-lisp :tangle yes
 ;; enable autosuggestions
@@ -2595,8 +2606,7 @@ _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
 
 (use-package package.use-mode
   :straight (package.use-mode
-             :type git :host github :repo "C-xC-c/package.use-mode"
-             :fork (:host github :repo "rosetail/package.use-mode" :branch "fix-autoload")))
+             :type git :host github :repo "C-xC-c/package.use-mode"))
 #+end_src
 
 ** magit
