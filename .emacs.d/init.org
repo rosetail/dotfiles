@@ -344,6 +344,8 @@
   (add-hook 'evil-collection-setup-hook #'my-hjkl-rotation)
   
   :config
+  ;; emms bindings are all messed up
+  ;; (delete 'emms evil-collection-mode-list)
   (evil-collection-init))
 #+end_src
 
@@ -417,6 +419,20 @@
             "u"   'org-agenda-undo
             "l"   'org-agenda-diary-entry
             "L"   'org-agenda-clock-in))
+#+end_src
+
+*** goggles
+#+begin_src emacs-lisp :tangle yes
+(use-package evil-goggles
+  :init
+  (evil-goggles-mode)
+
+  ;; optionally use diff-mode's faces; as a result, deleted text
+  ;; will be highlighed with `diff-removed` face which is typically
+  ;; some red color (as defined by the color theme)
+  ;; other faces such as `diff-added` will be used for other actions
+  ;; (evil-goggles-use-diff-faces)
+  )
 #+end_src
 
 *** evil surround
@@ -2598,6 +2614,212 @@ _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
   :init
   ;; always save bookmarks
   (setq bookmark-save-flag 1))
+#+end_src
+
+** emms
+*** emms
+#+begin_src emacs-lisp :tangle yes
+;; TODO: make cover art actually be cached, sort albums by name, and start on album page
+;; TODO: setup stream mode bindings and maybe make a kcsm stream
+
+(use-package emms
+  :init
+  (setq emms-source-file-default-directory "~/Music/")
+  ;; (setq emms-playlist-buffer-name "*Music*")
+
+  ;; use find instead of builtin alternatives to find music files
+  (setq emms-source-file-directory-tree-function
+        'emms-source-file-directory-tree-find)
+
+  (setq emms-info-asynchronously t)
+  
+  
+  (setq emms-browser-covers 'emms-browser-cache-thumbnail-async)
+  ;; TODO: see why this doesn't work
+  ;; (setq emms-browser-album-sort-function #'emms-browser-sort-by-name)
+
+  :config
+  (require 'emms-setup)
+  (emms-all)
+  (emms-default-players)
+  (add-to-list 'emms-player-list 'emms-player-mpd t)
+  (add-to-list 'emms-info-functions 'emms-info-metaflac)
+  (add-to-list 'emms-info-functions #'emms-info-mpd)
+  :hook
+  (emms-browser-mode
+   . (lambda (&rest _)
+       (general-define-key
+        :keymaps
+        'emms-browser-mode-map
+        :states 'normal
+        "n" 'emms-browser-next-non-track
+        "e" 'emms-browser-prev-non-track
+        "C-n" 'evil-next-visual-line
+        "C-e" 'evil-previous-visual-line
+        "N" 'evil-next-visual-line
+        "E" 'evil-previous-visual-line
+        "k" 'isearch-repeat-forward
+        "K" 'isearch-repeat-backward
+        "q" 'quit-window))))
+#+end_src
+
+*** tag editor
+#+begin_src emacs-lisp :tangle yes
+(use-package emms-tag-editor
+  :straight nil
+  :init
+  
+  (setq emms-tag-editor-rename-format "%02n - %t")
+  
+  ;; add discnumber to tag editor
+  (setq emms-tag-editor-tags
+        '((info-artist      . "a")
+          (info-albumartist . "A")
+          (info-composer    . "C")
+          (info-performer   . "p")
+          (info-title       . "t")
+          (info-album       . "l")
+          (info-tracknumber . "n")
+          (info-year        . "y")
+          (info-genre       . "g")
+          (info-date        . "d")
+          (info-discnumber  . "D")
+          (info-note        . "c")))
+  :general
+  (:keymaps 'emms-tag-editor-mode-map
+            "C-c C-k" 'quit-window))
+#+end_src
+
+*** marking/playlist
+#+begin_src emacs-lisp :tangle yes
+(use-package emms-mark
+  :straight nil
+  :init
+  ;; use normal mode for playlist buffer
+  (evil-set-initial-state 'emms-mark-mode 'normal)
+  (evil-collection-inhibit-insert-state 'emms-mark-mode-map)
+
+  ;; fix mark face
+  (setq emms-mark-face-alist
+        '((?* . modus-themes-mark-sel)
+          (?\040 . emms-playlist-track-face)))
+  
+  :hook
+  ;; setting `emms-player-default-major-mode' doesn't work so we need a hook
+  (emms-playlist-mode . emms-mark-mode)
+  (evil-collection-setup
+   . (lambda (&rest _)
+       (general-define-key
+        :keymaps
+        'emms-mark-mode-map
+        :states 'normal
+        "n" (lambda () (interactive) (emms-playlist-next))
+        "e" (lambda () (interactive) (emms-playlist-previous))
+        "E" 'emms-tag-editor-edit
+        "C-n" 'emms-next
+        "C-e" 'emms-previous
+        "gn" 'emms-next
+        "ge" 'emms-previous
+        
+        ;; sorting
+        "sn" #'emms-playlist-sort-by-natural-order
+        "sa" #'emms-playlist-sort-by-info-artist
+        "sc" 'emms-playlist-sort-by-play-count
+        "sb" 'emms-playlist-sort-by-info-album
+        "sl" 'emms-playlist-sort-by-last-played
+        "st" 'emms-playlist-sort-by-info-title
+        "se" 'emms-playlist-sort-by-file-extension
+
+        "sp" 'emms-playlist-sort-by-info-performer
+        "sy" 'emms-playlist-sort-by-info-year
+        "so" 'emms-playlist-sort-by-info-note
+        "sC" 'emms-playlist-sort-by-info-composer
+        "sL" 'emms-playlist-sort-by-list
+        "sN" 'emms-playlist-sort-by-name
+        "sT" 'emms-playlist-sort-by-file-mtime
+
+        ;; filtering
+        "/n" 'emms-playlist-limit-to-name
+        "/a" 'emms-playlist-limit-to-info-artist
+        "/c" 'emms-playlist-limit-to-info-composer
+        "/p" 'emms-playlist-limit-to-info-performer
+        "/t" 'emms-playlist-limit-to-info-title
+        "/b" 'emms-playlist-limit-to-info-album
+        "/y" 'emms-playlist-limit-to-info-year
+        "/g" 'emms-playlist-limit-to-info-genre
+        "/d" 'emms-playlist-limit-to-description
+        "//" 'emms-playlist-limit-to-all
+
+        "D" (lambda ()
+              (interactive)
+              (if (emms-mark-has-markedp)
+                  (emms-mark-kill-marked-tracks)
+                (emms-playlist-mode-kill-track)))
+        "W" 'emms-mark-copy-marked-tracks
+
+        "m" 'emms-mark-forward
+
+        ;; either unmark track or undo
+        "u" (lambda ()
+              (interactive)
+              (if (emms-mark-has-markedp)
+                  (call-interactively #'emms-mark-unmark-forward)
+                (emms-playlist-mode-undo)))
+        ;; bind C-/ to undo so we can still access it when there are marks
+        "C-/" 'emms-playlist-mode-undo
+
+        "U" 'emms-mark-unmark-all
+        "t" 'emms-mark-toggle
+        "%m" 'emms-mark-regexp
+        "q" 'quit-window))))
+#+end_src
+
+*** mpd
+#+begin_src emacs-lisp :tangle yes
+;; TODO: make emms add songs to mpd playlist more often
+(use-package emms-player-mpd
+  :straight nil
+  :init
+  ;; Socket is not supported
+  (setq emms-player-mpd-server-name "localhost"
+        emms-player-mpd-server-port "6600"
+        emms-player-mpd-music-directory "~/Music")
+  :config
+  (emms-player-mpd-connect))
+#+end_src
+
+*** hydra
+#+begin_src emacs-lisp :tangle yes
+;; TODO: support metaplaylist/multiple playlist management
+
+(defhydra hydra-emms (:hint nil)
+  "
+%s(progn (require 'emms) (if emms-player-playing-p (format emms-show-format (emms-track-description (emms-playlist-current-selected-track))) \"Nothing playing right now\"))
+^-^-^-^----------------^^^^----------------------^^-------------------
+^ ^ ^Playlists^          ^^^Playback^              ^Seeking^
+^-^-^-^----------------^^^^----------------------^^-------------------
+^ ^ _s_: Smart Browse    ^^_SPC_: Play/Pause       _i_: +10s
+^ ^ _p_: Playlist        _<_/_>_: Next/Previous    _h_: -10s
+^ ^ _b_: Browser           ^^_x_: Stop             _n_: +1m
+_a_/_A_: Play/Add File   ^^^^                      _e_: -1m
+"
+  ("s" emms-smart-browse :color blue)
+  ("p" emms :color blue)
+  ("b" emms-browser :color blue)
+  ("a" emms-play-file :color blue)
+  ("A" emms-add-file :color blue)
+
+  ("SPC" emms-pause)
+  ("<"   emms-previous)
+  (">"   emms-next)
+  ("x"   emms-stop)
+
+  ("i" emms-seek-forward)
+  ("h" emms-seek-backward)
+  ("n" (lambda () (interactive) (emms-seek 60)))
+  ("e" (lambda () (interactive) (emms-seek -60))))
+
+(my/add-to-global-hydra '("e" hydra-emms/body "Emms" :column "Misc"))
 #+end_src
 
 ** gentoo stuff
