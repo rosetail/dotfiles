@@ -2642,9 +2642,9 @@ _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
   (require 'emms-setup)
   (emms-all)
   (emms-default-players)
-  (add-to-list 'emms-player-list 'emms-player-mpd t)
-  (add-to-list 'emms-info-functions 'emms-info-metaflac)
-  (add-to-list 'emms-info-functions #'emms-info-mpd)
+  (add-to-list 'emms-player-list #'emms-player-mpd t)
+  (add-to-list 'emms-info-functions #'emms-info-metaflac)
+  (add-to-list 'emms-info-functions #'emms-info-mpd t)
   :hook
   (emms-browser-mode
    . (lambda (&rest _)
@@ -2798,18 +2798,21 @@ _c_: Compile, _r_: Run, _s_: Run in shell, _a_: Run with arg, _R_: Run region"
 ^-^-^-^----------------^^^^----------------------^^-------------------
 ^ ^ ^Playlists^          ^^^Playback^              ^Seeking^
 ^-^-^-^----------------^^^^----------------------^^-------------------
-^ ^ _s_: Smart Browse    ^^_SPC_: Play/Pause       _i_: +10s
-^ ^ _p_: Playlist        _<_/_>_: Next/Previous    _h_: -10s
-^ ^ _b_: Browser           ^^_x_: Stop             _n_: +1m
-_a_/_A_: Play/Add File   ^^^^                      _e_: -1m
+^ ^ _s_: Smart Browse       ^^_SPC_: Play/Pause       _i_: +10s
+^ ^ _p_: Playlist         ^^_M-SPC_: Play/Pause       _h_: -10s
+^ ^ _b_: Browser            _<_/_>_: Next/Previous    _n_: +1m
+_a_/_A_: Play/Add File        ^^_x_: Stop             _e_: -1m
+^ ^ _u_: Update MPD DB
 "
   ("s" emms-smart-browse :color blue)
   ("p" emms :color blue)
   ("b" emms-browser :color blue)
   ("a" emms-play-file :color blue)
   ("A" emms-add-file :color blue)
+  ("u" (lambda () (interactive) (emms-player-mpd-update-all) (emms-cache-set-from-mpd-all)) :color blue)
 
-  ("SPC" emms-pause)
+  ("SPC" emms-pause :color blue)
+  ("M-SPC" emms-pause)
   ("<"   emms-previous)
   (">"   emms-next)
   ("x"   emms-stop)

@@ -210,6 +210,7 @@ settings:
   content.fullscreen.window:
     global: true
   content.geolocation:
+    https://dochub.com: false
     https://my.indeed.com: false
     https://www.bestbuy.com: false
     https://www.carfax.com: false
