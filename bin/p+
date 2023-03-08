@@ -1,9 +1,9 @@
 #!/bin/sh
-killall polybar
+# killall polybar
 # killall picom
-# fasterp+ -e "/data/dolphin/Launcher/Project+ Offline Launcher.elf"
-fasterp+ -b -e "/data/dolphin/Launcher/Project+ Offline Launcher.elf"
-killall picom
-polybar main &
-sleep 0.3
-picom -b
+# fasterp+ -b -e "/data/dolphin/Launcher/Project+ Offline Launcher.elf"
+fasterp+ -b -e "/data/dolphin/Launcher/Project+ Offline Launcher.dol"
+# killall picom
+# polybar main &
+# sleep 0.3
+# picom -b

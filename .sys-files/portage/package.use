@@ -694,3 +694,509 @@ media-libs/openal abi_x86_32# required by x11-libs/libXdmcp-1.1.3-r1::gentoo
 # required by @selected
 # required by @world (argument)
 >=sys-apps/systemd-utils-250.7 abi_x86_32
+# required by app-portage/repoman-3.0.3-r1::gentoo
+# required by @selected
+# required by @world (argument)
+>=sys-apps/portage-3.0.38.1 python_targets_python3_9
+# required by app-portage/repoman-3.0.3-r1::gentoo
+# required by @selected
+# required by @world (argument)
+>=dev-python/lxml-4.9.1 python_targets_python3_9
+# required by app-portage/repoman-3.0.3-r1::gentoo
+# required by @selected
+# required by @world (argument)
+>=dev-python/pyyaml-6.0-r1 python_targets_python3_9
+# required by dev-python/lxml-4.9.1::gentoo
+# required by app-eselect/eselect-repository-12::gentoo[python_single_target_python3_10]
+# required by @selected
+# required by @world (argument)
+>=dev-python/cython-0.29.32 python_targets_python3_9
+# required by dev-python/lxml-4.9.1::gentoo
+# required by app-eselect/eselect-repository-12::gentoo[python_single_target_python3_10]
+# required by @selected
+# required by @world (argument)
+>=dev-python/gpep517-9 python_targets_python3_9
+# required by dev-python/lxml-4.9.1::gentoo
+# required by app-eselect/eselect-repository-12::gentoo[python_single_target_python3_10]
+# required by @selected
+# required by @world (argument)
+>=dev-python/setuptools-65.3.0 python_targets_python3_9
+# required by dev-python/lxml-4.9.1::gentoo
+# required by app-eselect/eselect-repository-12::gentoo[python_single_target_python3_10]
+# required by @selected
+# required by @world (argument)
+>=dev-python/wheel-0.37.1-r1 python_targets_python3_9
+# required by media-video/handbrake-1.5.1::gentoo
+# required by handbrake (argument)
+>=media-video/ffmpeg-4.4.2 fdk
+# required by dev-python/nspektr-0.4.0::gentoo
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/packaging-21.3-r2 python_targets_python3_9
+# required by dev-python/jaraco-text-3.9.1::gentoo
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/flit_core-3.7.1 python_targets_python3_9
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/tomli-2.0.1-r1 python_targets_python3_9
+# required by dev-python/packaging-21.3-r2::gentoo
+# required by dev-python/nspektr-0.4.0::gentoo
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/pyparsing-3.0.9 python_targets_python3_9
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/appdirs-1.4.4-r2 python_targets_python3_9
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/jaraco-text-3.9.1 python_targets_python3_9
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/more-itertools-8.14.0 python_targets_python3_9
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/nspektr-0.4.0 python_targets_python3_9
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/ordered-set-4.1.0 python_targets_python3_9
+# required by dev-python/requests-2.27.1::gentoo
+# required by app-portage/gemato-16.2::gentoo[gpg]
+# required by sys-apps/portage-3.0.30-r3::gentoo[-build,rsync-verify]
+# required by app-admin/perl-cleaner-2.30::gentoo
+# required by dev-lang/perl-5.34.0-r9::gentoo[-minimal]
+# required by virtual/perl-IO-Socket-IP-0.410.0::gentoo
+# required by dev-perl/Net-HTTP-6.210.0::gentoo
+# required by dev-perl/LWP-Protocol-https-6.100.0::gentoo
+# required by dev-perl/libwww-perl-6.600.0-r1::gentoo[ssl]
+# required by dev-perl/XML-Parser-2.460.0-r2::gentoo
+# required by dev-perl/XML-SAX-Expat-0.510.0-r3::gentoo
+# required by dev-perl/XML-Simple-2.250.0-r1::gentoo
+# required by app-emulation/wine-vanilla-7.0::gentoo
+# required by virtual/wine-0-r7::gentoo
+# required by @selected
+# required by @world (argument)
+>=dev-python/certifi-3021.3.16-r2 python_targets_python3_9
+# required by dev-python/inflect-6.0.0::gentoo
+# required by dev-python/jaraco-text-3.9.1::gentoo
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+# move dev-python/setuptools_scm dev-python/setuptools-scm
+>=dev-python/setuptools-scm-7.0.5 python_targets_python3_9
+# required by dev-python/pydantic-1.10.2::gentoo
+# required by dev-python/inflect-6.0.0::gentoo
+# required by dev-python/jaraco-text-3.9.1::gentoo
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/typing-extensions-4.3.0 python_targets_python3_9
+# required by dev-python/nspektr-0.4.0::gentoo
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/jaraco-context-4.1.2 python_targets_python3_9
+# required by dev-python/nspektr-0.4.0::gentoo
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/jaraco-functools-3.5.1 python_targets_python3_9
+# required by dev-python/jaraco-text-3.9.1::gentoo
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/autocommand-2.2.1_p20211118 python_targets_python3_9
+# required by dev-python/jaraco-text-3.9.1::gentoo
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/inflect-6.0.0 python_targets_python3_9
+# required by dev-python/inflect-6.0.0::gentoo
+# required by dev-python/jaraco-text-3.9.1::gentoo
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/pycairo-1.21.0-r1::gentoo
+# required by dev-python/pygobject-3.42.2::gentoo[cairo]
+# required by dev-python/gst-python-1.20.3::gentoo
+# required by media-sound/soundconverter-4.0.3::gentoo[python_single_target_python3_10]
+# required by soundconverter (argument)
+>=dev-python/pydantic-1.10.2 python_targets_python3_9
+# required by dev-python/gpep517-9::gentoo
+# required by dev-util/meson-0.62.2::gentoo
+# required by media-plugins/gst-plugins-cdparanoia-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[cdda]
+# required by media-sound/soundconverter-4.0.3::gentoo
+# required by soundconverter (argument)
+>=dev-python/installer-0.5.1-r1 python_targets_python3_9
+# required by dev-python/nspektr-0.4.0::gentoo[python_targets_python3_9,-python_targets_python3_8]
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/m2crypto-0.38.0::gentoo
+# required by net-wireless/crda-4.14::gentoo
+# required by net-wireless/wpa_supplicant-2.10-r1::gentoo[crda]
+# required by net-misc/networkmanager-1.38.4::gentoo[-iwd,wifi]
+# required by net-libs/libnma-1.8.40-r1::gentoo
+# required by net-vpn/networkmanager-openvpn-1.8.18::gentoo[gtk]
+# required by net-vpn/nordvpn-3.14.2-r2::nordvpn
+# required by @selected
+# required by @world (argument)
+>=dev-python/importlib_metadata-4.12.0 python_targets_python3_9
+# required by dev-python/importlib_metadata-4.12.0::gentoo
+# required by dev-python/nspektr-0.4.0::gentoo[python_targets_python3_9,-python_targets_python3_8]
+# required by dev-python/setuptools-65.3.0::gentoo
+# required by dev-python/m2crypto-0.38.0::gentoo
+# required by net-wireless/crda-4.14::gentoo
+# required by net-wireless/wpa_supplicant-2.10-r1::gentoo[crda]
+# required by net-misc/networkmanager-1.38.4::gentoo[-iwd,wifi]
+# required by net-libs/libnma-1.8.40-r1::gentoo
+# required by net-vpn/networkmanager-openvpn-1.8.18::gentoo[gtk]
+# required by net-vpn/nordvpn-3.14.2-r2::nordvpn
+# required by @selected
+# required by @world (argument)
+>=dev-python/zipp-3.8.1 python_targets_python3_9
+# required by sys-apps/portage-3.0.38.1::gentoo[-build,rsync-verify]
+# required by app-portage/gentoolkit-0.5.1-r1::gentoo[-test]
+# required by @selected
+# required by @world (argument)
+>=app-portage/gemato-16.2 python_targets_python3_9
+# required by app-portage/gemato-16.2::gentoo[gpg]
+# required by sys-apps/portage-3.0.38.1::gentoo[-build,rsync-verify]
+# required by app-portage/gentoolkit-0.5.1-r1::gentoo[-test]
+# required by @selected
+# required by @world (argument)
+>=dev-python/requests-2.28.1 python_targets_python3_9
+# required by dev-python/requests-2.28.1::gentoo
+# required by app-portage/gemato-16.2::gentoo[gpg]
+# required by sys-apps/portage-3.0.38.1::gentoo[-build,rsync-verify]
+# required by app-portage/gentoolkit-0.5.1-r1::gentoo[-test]
+# required by @selected
+# required by @world (argument)
+>=dev-python/charset_normalizer-2.1.1-r1 python_targets_python3_9
+# required by dev-python/requests-2.28.1::gentoo
+# required by app-portage/gemato-16.2::gentoo[gpg]
+# required by sys-apps/portage-3.0.38.1::gentoo[-build,rsync-verify]
+# required by app-portage/gentoolkit-0.5.1-r1::gentoo[-test]
+# required by @selected
+# required by @world (argument)
+>=dev-python/idna-3.3-r1 python_targets_python3_9
+# required by dev-python/requests-2.28.1::gentoo
+# required by app-portage/gemato-16.2::gentoo[gpg]
+# required by sys-apps/portage-3.0.38.1::gentoo[-build,rsync-verify]
+# required by app-portage/gentoolkit-0.5.1-r1::gentoo[-test]
+# required by @selected
+# required by @world (argument)
+>=dev-python/urllib3-1.26.12 python_targets_python3_9
+# required by dev-python/urllib3-1.26.12::gentoo
+# required by dev-python/requests-2.28.1::gentoo
+# required by app-portage/gemato-16.2::gentoo[gpg]
+# required by sys-apps/portage-3.0.38.1::gentoo[-build,rsync-verify]
+# required by app-portage/gentoolkit-0.5.1-r1::gentoo[-test]
+# required by @selected
+# required by @world (argument)
+>=dev-python/PySocks-1.7.1-r2 python_targets_python3_9
+# required by dev-python/urllib3-1.26.12::gentoo
+# required by dev-python/requests-2.28.1::gentoo
+# required by app-portage/gemato-16.2::gentoo[gpg]
+# required by sys-apps/portage-3.0.38.1::gentoo[-build,rsync-verify]
+# required by app-portage/gentoolkit-0.5.1-r1::gentoo[-test]
+# required by @selected
+# required by @world (argument)
+>=dev-python/six-1.16.0-r1 python_targets_python3_9
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[vulkan]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/vulkan-loader-1.3.224 abi_x86_32
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/gst-plugins-base-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-cdparanoia-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[cdda]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/gstreamer-1.20.3 abi_x86_32
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[vkd3d]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=app-emulation/vkd3d-1.5 abi_x86_32
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-meta-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-flac-1.20.3-r1::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[flac]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/gst-plugins-good-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[a52,dvd]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-a52dec-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[aac]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-faad-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[dts]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-dts-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[dvd,mp3]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/gst-plugins-ugly-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[dvd]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-dvdread-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[mpeg,-vcd,dvd]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-mpeg2dec-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[dvd]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-resindvd-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[flac]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-flac-1.20.3-r1 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[jack]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-jack-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[mp3]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-mpg123-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[pulseaudio]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-pulse-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[x264]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-x264-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-x264-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[x264]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/x264-0.0.20220222 abi_x86_32
+# required by media-plugins/gst-plugins-resindvd-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[dvd]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/libdvdnav-6.1.1 abi_x86_32
+# required by media-libs/libdvdnav-6.1.1::gentoo
+# required by media-plugins/gst-plugins-resindvd-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[dvd]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/libdvdread-6.1.2 abi_x86_32
+# required by media-plugins/gst-plugins-dts-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[dts]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/gst-plugins-bad-1.20.3 abi_x86_32
+# required by media-libs/gst-plugins-base-1.20.3::gentoo[orc]
+# required by app-office/libreoffice-bin-7.3.6.2::gentoo
+# required by @selected
+# required by @world (argument)
+>=dev-lang/orc-0.4.31 abi_x86_32
+# required by media-libs/libdvdread-6.1.2::gentoo[css]
+# required by media-plugins/gst-plugins-dvdread-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[dvd]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/libdvdcss-1.4.3 abi_x86_32
+# required by media-plugins/gst-plugins-mpeg2dec-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[mpeg,-vcd,dvd]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/libmpeg2-0.5.1-r3 abi_x86_32
+# required by media-plugins/gst-plugins-dts-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[dts]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/libdca-0.0.7 abi_x86_32
+# required by media-plugins/gst-plugins-faad-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[aac]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/faad2-2.10.0 abi_x86_32
+# required by media-plugins/gst-plugins-a52dec-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[a52,dvd]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/a52dec-0.7.4-r8 abi_x86_32
+# required by media-libs/gst-plugins-base-1.20.3::gentoo[pango]
+# required by app-office/libreoffice-bin-7.3.6.2::gentoo
+# required by @selected
+# required by @world (argument)
+>=x11-libs/pango-1.50.9 abi_x86_32
+# required by media-libs/gst-plugins-base-1.20.3::gentoo[X]
+# required by app-office/libreoffice-bin-7.3.6.2::gentoo
+# required by @selected
+# required by @world (argument)
+>=x11-libs/libXv-1.0.11-r2 abi_x86_32
+# required by media-libs/gst-plugins-base-1.20.3::gentoo[-gles2,opengl]
+# required by app-office/libreoffice-bin-7.3.6.2::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-libs/graphene-1.10.8 abi_x86_32
+# required by x11-libs/pango-1.50.9::gentoo
+# required by app-office/libreoffice-bin-7.3.6.2::gentoo[-kde]
+# required by @selected
+# required by @world (argument)
+>=dev-libs/fribidi-1.0.12 abi_x86_32
+# required by x11-libs/pango-1.50.9::gentoo
+# required by app-office/libreoffice-bin-7.3.6.2::gentoo[-kde]
+# required by @selected
+# required by @world (argument)
+>=x11-libs/cairo-1.16.0-r6 abi_x86_32
+# required by x11-libs/pango-1.50.9::gentoo[X]
+# required by app-office/libreoffice-bin-7.3.6.2::gentoo[-kde]
+# required by @selected
+# required by @world (argument)
+>=x11-libs/libXft-2.3.4 abi_x86_32
+# required by x11-libs/cairo-1.16.0-r6::gentoo
+# required by app-office/libreoffice-bin-7.3.6.2::gentoo
+# required by @selected
+# required by @world (argument)
+>=dev-libs/lzo-2.10 abi_x86_32
+# required by x11-libs/cairo-1.16.0-r6::gentoo
+# required by app-office/libreoffice-bin-7.3.6.2::gentoo
+# required by @selected
+# required by @world (argument)
+>=sys-libs/binutils-libs-2.38-r2 abi_x86_32
+# required by x11-libs/cairo-1.16.0-r6::gentoo
+# required by app-office/libreoffice-bin-7.3.6.2::gentoo
+# required by @selected
+# required by @world (argument)
+>=x11-libs/pixman-0.40.0 abi_x86_32
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[cdda]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-plugins/gst-plugins-cdparanoia-1.20.3 abi_x86_32
+# required by media-plugins/gst-plugins-cdparanoia-1.20.3::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.3::gentoo[cdda]
+# required by app-emulation/wine-vanilla-7.0-r3::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=media-sound/cdparanoia-3.10.2-r7 abi_x86_32
+# required by dev-libs/glib-2.74.4::gentoo
+# required by media-plugins/gst-plugins-cdparanoia-1.20.4::gentoo
+# required by media-plugins/gst-plugins-meta-1.20.4::gentoo[cdda]
+# required by app-emulation/wine-vanilla-7.0.1::gentoo[gstreamer]
+# required by virtual/wine-0-r10::gentoo
+# required by @selected
+# required by @world (argument)
+>=dev-libs/libpcre2-10.42-r1 abi_x86_32
+# required by dev-python/setuptools-67.2.0-r1::gentoo
+# required by sys-apps/portage-3.0.44::gentoo
+# required by portage (argument)
+>=dev-python/platformdirs-2.6.2-r1 python_targets_python3_9

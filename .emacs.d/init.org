@@ -52,16 +52,22 @@
 ;; make straight obey no-littering
 (setq straight-base-dir "~/.emacs.d/var")
 
+;; fix error due to renamed variable in emacs 29
+(define-obsolete-variable-alias
+  'native-comp-deferred-compilation-deny-list
+  'native-comp-jit-compilation-deny-list
+  "Renamed in emacs#95692f6")
+
 ;; install straight
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "var/straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 5))
+      (bootstrap-version 5)) 
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
+	(url-retrieve-synchronously
+	 "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+	 'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
@@ -532,6 +538,16 @@ my/add-to-global-hydra to add entries")
   (add-to-list 'consult-buffer-filter "\\*Native-compile-log\\*")
   (add-to-list 'consult-buffer-filter "\\*Async-native-compile-log\\*")
   
+  :general
+  ("M-'" 'consult-line)
+  ("C-x b" 'consult-buffer)
+  (:keymaps 'consult-narrow-map
+            "<" 'consult-narrow-help))
+#+end_src
+
+**** extensions
+***** COMMENT don't preview tramp buffers
+#+begin_src emacs-lisp :tangle yes
   ;; TODO: make this work for all tramp bookmarks, not just portage
   (defun my/consult-dont-preview-portage-bookmark ()
     "Buffer state function that doesn't preview Tramp buffers."
@@ -546,6 +562,7 @@ my/add-to-global-hydra to add entries")
         (funcall orig-state (funcall filter cand restore) restore))))
   (setq consult--source-bookmark
         (plist-put consult--source-bookmark :state #'my/consult-dont-preview-portage-bookmark))
+  
   ;; TODO: make this work for all tramp files, not just portage
   (defun my/consult-dont-preview-portage-recentf ()
     "Buffer state function that doesn't preview Tramp buffers."
@@ -560,14 +577,8 @@ my/add-to-global-hydra to add entries")
         (funcall orig-state (funcall filter cand restore) restore))))
   (setq consult--source-recent-file
         (plist-put consult--source-recent-file :state #'my/consult-dont-preview-portage-recentf))
-  :general
-  ("M-'" 'consult-line)
-  ("C-x b" 'consult-buffer)
-  (:keymaps 'consult-narrow-map
-            "<" 'consult-narrow-help))
 #+end_src
 
-**** extensions
 ***** consult dir
 #+begin_src emacs-lisp :tangle yes
 (use-package consult-dir
@@ -651,7 +662,7 @@ _m_: jump to mark _G_: git grep
           completion-cycle-threshold completion-cycling)
       (apply #'consult-completion-in-region completion-in-region--data)))
   
-  (corfu-global-mode 1)
+  (global-corfu-mode 1)
   :config
   ;; from corfu issue #12
   (evil-make-overriding-map corfu-map)
@@ -744,16 +755,18 @@ _m_: jump to mark _G_: git grep
   :config
   ;; add actionr for straight commands
   ;; from embark wiki
-  (embark-define-keymap embark-straight-map
-    "Keymap for straight commands"
-    ("v" straight-visit-package-website)
-    ("r" straight-get-recipe)
-    ("c" straight-check-package)
-    ("F" straight-pull-package)
-    ("f" straight-fetch-package)
-    ("p" straight-push-package)
-    ("n" straight-normalize-package)
-    ("m" straight-merge-package))
+  (defvar-keymap embark-straight-map
+    :parent embark-general-map
+    "u" #'straight-visit-package-website
+    "r" #'straight-get-recipe
+    "i" #'straight-use-package
+    "c" #'straight-check-package
+    "F" #'straight-pull-package
+    "f" #'straight-fetch-package
+    "p" #'straight-push-package
+    "n" #'straight-normalize-package
+    "m" #'straight-merge-package)
+
   (add-to-list 'embark-keymap-alist '(straight . embark-straight-map))
   (add-to-list 'marginalia-prompt-categories '("recipe\\|package" . straight))
   
@@ -1031,25 +1044,27 @@ _SPC_: switch to popup  _s_: make popup sticky  _s_: open eshell
 *** modus
 #+begin_src emacs-lisp :tangle yes
 (use-package modus-themes
-  :demand t
   :init
   (setq modus-themes-slanted-constructs t
+        
         modus-themes-region '(bg-only)
+        
         modus-themes-completions '(moderate)
         modus-themes-prompts '(bold background)
+        
         modus-themes-fringes 'intense
+        
         modus-themes-org-blocks 'grayscale ;
         modus-themes-headings '((t . (1.1 overline)))
         modus-themes-bold-constructs nil
+        
         modus-themes-hl-line '(accented intense)
+        
         modus-themes-markup '(background intense))
   
-  ;; Load the theme files before enabling a theme
-  (modus-themes-load-themes)
-  :config
-  ;; Load the theme of your choice:
-  (modus-themes-load-vivendi)
-  :general ("<f5>" 'modus-themes-toggle))
+  (load-theme 'modus-vivendi t)
+  :general ("<f5>" 'modus-themes-toggle)
+  :straight nil)
 #+end_src
 
 *** COMMENT archive
@@ -1252,7 +1267,7 @@ setenv TERM eterm-color > /dev/null
             "C-t" 'company-complete-selection))
 #+end_src
 
-**** fish completion
+**** COMMENT fish completion
 #+begin_src emacs-lisp :tangle yes
 (use-package fish-completion
   :demand t

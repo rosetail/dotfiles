@@ -218,7 +218,8 @@ sys-power/linux-x86-power-tools ~amd64
 # required by xcape (argument)
 =x11-misc/xcape-1.2 ~amd64
 # required by discord-bin (argument)
-net-im/discord-bin ~amd64
+# move net-im/discord-bin net-im/discord
+net-im/discord ~amd64
 # required by yadm (argument)
 =app-admin/yadm-2.4.0 ~amd64
 # required by xkcdpass (argument)
@@ -309,7 +310,7 @@ net-im/discord-bin ~amd64
 # required by @world (argument)
 =dev-python/pyyaml-6.0 ~amd64
 # required by emacs:29-vcs (argument)
-=app-editors/emacs-29.0.9999 **
+=app-editors/emacs-29.0.9999-r1 **
 # required by git-filter-repo (argument)
 =dev-vcs/git-filter-repo-2.34.0 ~amd64
 # required by x11-wm/xmonad-contrib-0.17.0::haskell
@@ -338,3 +339,16 @@ sys-libs/libfixposix ~amd64# required by app-misc/dragon (argument)
 =app-misc/dragon-1.2.0 ~amd64
 # required by pychess (argument)
 =games-board/pychess-1.0.3-r2 ~amd64
+# required by dev-libs/libthai-0.1.29::guru
+# required by libthai (argument)
+=dev-libs/libdatrie-0.2.13 ~amd64
+# required by libthai (argument)
+=dev-libs/libthai-0.1.29 ~amd64
+# required by go-mtpfs (argument)
+=sys-fs/go-mtpfs-1.0.0 ~amd64
+# required by x11-terms/kitty-0.27.1::gentoo
+# required by @selected
+# required by @world (argument)
+=dev-lang/go-1.20 ~amd64
+# required by @__auto_slot_operator_replace_installed__ (argument)
+=app-editors/emacs-29.0.9999-r1 **

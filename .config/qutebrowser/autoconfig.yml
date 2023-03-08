@@ -339,6 +339,7 @@ settings:
     '*://*.www.fastmail.com/*': true
     '*://*.www.gentoo.org/*': true
     '*://*.www.labcorp.com/*': true
+    '*://*.www.liberationinstitute.org/*': true
     '*://*.www.linuxfoundation.org/*': true
     '*://*.www.meleeitonme.com/*': true
     '*://*.www.namecheap.com/*': true

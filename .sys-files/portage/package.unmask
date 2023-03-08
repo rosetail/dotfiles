@@ -1,0 +1,3 @@
+# required by net-im/zoom (argument)
+# /etc/portage/package.mask:
+=net-im/zoom-5.13.4.711
